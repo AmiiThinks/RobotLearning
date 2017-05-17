@@ -1,8 +1,6 @@
 Instructions here
 
-### (Optional) Ad-hoc Networking
-Since we don't have a wireless network set up, we use an ad-hoc network originating from the turtlebot netbook. Note: you will not be able to access the internet while connected to this network.
+### (Optional) Hospot/AP Networking
+Since we don't have a wireless network set up, we use an access point (ap) network originating from the turtlebot netbook. Note: you will not be able to access the internet while connected to this network.
 
-We followed the instructions [here](http://wiki.ros.org/turtlebot/Tutorials/Advanced%20Networking%20Setup#Fallback_to_AdHoc_Networking).
-
-We also created an ad-hoc network using Ubuntu's wireless settings. Go to the Wi-fi menu bar icon and click `Create New Wifi Network...`. Then choose a network name and security settings. The network should be visible to other computers, which can connect according to the chosen security options.
+We followed the instructions [here](https://askubuntu.com/questions/180733/how-to-setup-an-access-point-mode-wi-fi-hotspot/180734#180734) (Pay attention to step 3.1!).
