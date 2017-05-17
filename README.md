@@ -18,5 +18,4 @@ To create an experimental environment that makes it easy for researchers to cond
 To perform some learning task using the experimental environment. In addition to contributing to knowledge in reinforcement learning and robotics, performing such a task will help achieve the prior goal of creating an experimental setup for conducting experiments. 
 
 ## Links
-Instructions for configuring the turtlebot 
-![alt text](Documentation/TurtlebotSetup.md "Turtlebot 2 setup")
+[Turtlebot 2 setup](Documentation/TurtlebotSetup.md)
