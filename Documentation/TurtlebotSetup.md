@@ -12,7 +12,11 @@ catkin_make --pkg astra_camera -DFILTER=OFF
 roscd astra_camera && ./scripts/create_udev_rules
 ```
 
-Finally, to use the camera call `roslaunch astra_launch astra.launch`.
+Finally, to use the camera call:
+```
+source ~/catkin_ws/devel/setup.bash
+roslaunch astra_launch astra.launch
+```
 
 
 
