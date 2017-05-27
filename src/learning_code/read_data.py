@@ -8,7 +8,7 @@ import std_msgs.msg as std_msg
 import sensor_msgs.msg as sens_msg
 import kobuki_msgs.msg as kob_msg
 import numpy as np
-# from cv_bridge.CvBridge import bridge
+from cv_bridge.core import CvBridge
 import sensor_msgs.point_cloud2 as pc2
 
 class SensorParser:
@@ -48,8 +48,8 @@ class SensorParser:
 
         # build callback function
         def publishSensorPacket(*sensors):
-            parsers = [format_parser[sens[1]] for sens in self.sensors]
-            data = {sens:pars(sensors)}
+            # parsers = [format_parser[sens[1]] for sens in self.sensors]
+            # data = {sens:pars(sensors)}
 
             # msg = std_msg.Byte()
             msg = std_msg.String()
@@ -75,8 +75,8 @@ class SensorParser:
 
     def image_parse(self, img, enc="passthrough"):
         # convert ros image to numpy array
-        cv_image = bridge.imgmsg_to_cv2(image_message, desired_encoding=enc)
-        return np.asarray(cv_image) 
+        br = CvBridge()
+        return np.asarray(br.imgmsg_to_cv2(image_message, desired_encoding=enc)) 
 
     def pc2_parse(self, cloud):
         # pc2.read_points returns a generator
