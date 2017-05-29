@@ -9,12 +9,12 @@ Then make the astra_camera package and create the udev rules.
 ```
 cd ~/catkin_ws
 catkin_make --pkg astra_camera -DFILTER=OFF
+source devel/setup.bash
 roscd astra_camera && ./scripts/create_udev_rules
 ```
 
 Finally, to use the camera call:
 ```
-source ~/catkin_ws/devel/setup.bash
 roslaunch astra_launch astra.launch
 ```
 
@@ -37,9 +37,12 @@ if ! ([ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]); then
   export ROS_MASTER_URI=http://$ROS_HOSTNAME:11311
 
   # as per your install
-  source ~/catkin_ws/devel/setup.bash
+  source /home/turtlebot/catkin_ws/devel/setup.bash
 
   roscore &
+  # wait for roscore to start so we can start
+  # other ros packages
+  sleep 10 
   roslaunch turtlebot_bringup minimal.launch &
   roslaunch astra_launch astra.launch &
 fi
