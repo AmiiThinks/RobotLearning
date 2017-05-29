@@ -18,6 +18,28 @@ source ~/catkin_ws/devel/setup.bash
 roslaunch astra_launch astra.launch
 ```
 
+### Automatically start ROS on Netbook Boot
+
+#### Turn on automatic login in the system settings:
+In the top right, click the `power gear icon`. Then go to `System Settings` and click `User Accounts` in the bottom right. Click `unlock` in the top right of the window if the options are locked, then click `Automatic Login` so that the slider icon reads "on".
+
+#### Edit the login script
+In your favorite text editor, open `~/.profile` or your preffered login script. Paste into it the following:
+```{bash}
+# as per your install
+source /opt/ros/indigo/setup.bash 
+
+export ROS_IP=$(hostname -I | awk '{print $1;}')
+export ROS_HOSTNAME=$ROS_IP
+export ROS_MASTER_URI=http://$ROS_HOSTNAME:11311
+
+# as per your install
+source ~/catkin_ws/devel/setup.bash
+
+roscore &
+roslaunch turtlebot_bringup minimal.launch &
+roslaunch astra_launch astra.launch &
+```
 
 
 ### (Optional) Hospot/AP Networking
