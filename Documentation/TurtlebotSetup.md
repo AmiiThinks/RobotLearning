@@ -26,19 +26,24 @@ In the top right, click the `power gear icon`. Then go to `System Settings` and 
 #### Edit the login script
 In your favorite text editor, open `~/.profile` or your preffered login script. Paste into it the following:
 ```{bash}
-# as per your install
-source /opt/ros/indigo/setup.bash 
+if ! ([ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]); then  
 
-export ROS_IP=$(hostname -I | awk '{print $1;}')
-export ROS_HOSTNAME=$ROS_IP
-export ROS_MASTER_URI=http://$ROS_HOSTNAME:11311
+  # as per your install
+  source /opt/ros/indigo/setup.bash
 
-# as per your install
-source ~/catkin_ws/devel/setup.bash
+  # get the IP of this machine
+  export ROS_IP=$(hostname -I | awk '{print $1;}')
+  export ROS_HOSTNAME=$ROS_IP
+  export ROS_MASTER_URI=http://$ROS_HOSTNAME:11311
 
-roscore &
-roslaunch turtlebot_bringup minimal.launch &
-roslaunch astra_launch astra.launch &
+  # as per your install
+  source ~/catkin_ws/devel/setup.bash
+
+  roscore &
+  roslaunch turtlebot_bringup minimal.launch &
+  roslaunch astra_launch astra.launch &
+fi
+
 ```
 
 
