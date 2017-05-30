@@ -5,6 +5,7 @@ import itertools
 from functools import wraps
 from time import time
 
+# DEBUG: This is for debugging purposes
 def timing(f):
     @wraps(f)
     def wrap(*args, **kw):
@@ -19,21 +20,27 @@ def timing(f):
 
 
 """
-Picks 300 random rgb values from an image and tiles those 
+StateRepresentation.py:
+
+Picks NUM_RANDOM_POINTS random rgb values from an image and tiles those 
 values to obtain the state representation
 """
 
-DIFF_BW_R = 50
-DIFF_BW_G = 50
-DIFF_BW_B = 50
+# regards the generalization between tile dimensions
+DIFF_BW_R = 100
+DIFF_BW_G = 100
+DIFF_BW_B = 100
 DIFF_BW_BUMP = 1
 
-NUM_RANDOM_POINTS = 10
+NUM_RANDOM_POINTS = 300
+NUM_TILINGS = 50
 
 class StateRepresentation:
     def __init__(self):
         self.iht = tiles3.IHT(1000000)
 
+    # Grabs a number of random pixels from an image (see NUM_RANDOM_POINTS)
+    # Not used by user
     # image: a 2D array with
     @timing
     def RandomPoints(self, image):
@@ -50,8 +57,11 @@ class StateRepresentation:
 
         return random_points
 
+    # Gets the state representation of NUM_RANDOM_POINTS pixels
     @timing
-    def GetStateRepresentation(self, points, action):
+    def GetStateRepresentation(self, image, action):
+        points = self.RandomPoints(image)
+        
         state_representation_raw = []
 
         rgbpoints_raw = list(itertools.chain.from_iterable(points))
@@ -70,9 +80,10 @@ class StateRepresentation:
         # TODO: ADD BUMP SENSOR DATA TO STATE REPRESENTATION
         # TODO: ADD ACTION TO THE STATE REPRESENTATION
         # TODO: PROCESS ACTION APPROPRIATELY
-        
-        return tiles3.tiles(self.iht, 8, state_representation_raw, [action] ) 
+        return tiles3.tiles(self.iht, NUM_TILINGS, state_representation_raw, [action] ) 
 
+
+# This is a debugging function. It just generates a random image.
 @timing
 def DEBUG_generate_rand_image():
     dimensions = [1080, 1080]
@@ -85,12 +96,11 @@ def DEBUG_generate_rand_image():
             return_matrix[i][j] = color
 
     return return_matrix
-            
+
 if __name__ == "__main__":
     state_rep = StateRepresentation()
 
     for i in range(10):
         image = DEBUG_generate_rand_image()
-        rand_points = state_rep.RandomPoints(image)
-        sr = state_rep.GetStateRepresentation(rand_points, 1)
+        sr = state_rep.GetStateRepresentation(image, 1)
         print(sr)
