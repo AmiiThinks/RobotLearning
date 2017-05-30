@@ -18,6 +18,11 @@ Finally, to use the camera call:
 roslaunch astra_launch astra.launch
 ```
 
+To use convert images from the ROS image format and to transport them efficiently between ROS nodes the following plugins are needed:
+```{bash}
+sudo apt install ros-kinetic-vision-opencv
+```
+
 ### Automatically start ROS on Netbook Boot
 
 #### Turn on automatic login in the system settings:
