@@ -1,6 +1,9 @@
+#!/usr/bin/env python
+
 import math
 import numpy as np
 import rospy
+import threading
 
 from cv_bridge.core import CvBridge
 import kobuki_msgs.msg as kob_msg
@@ -11,57 +14,64 @@ import std_msgs.msg as std_msg
 class SensorParser:
 
     def __init__(self, topic):
-        self.interval = 0.1 # Seconds between updates
-        self.most_recent = None
-        self.topic = topic
-
         # maps each topic to the format of message in the topic
-        topic_format = {
-        "/camera/depth/image":sens_msg.Image,
-        "/camera/depth/points":sens_msg.PointCloud2,
-        "/camera/ir/image":sens_msg.Image,
-        "/camera/rgb/image_raw":sens_msg.Image,
-        "/camera/rgb/image_rect_color":sens_msg.Image,
-        "/mobile_base/sensors/core":kob_msg.SensorState,
-        "/mobile_base/sensors/dock_ir":kob_msg.DockInfraRed,
-        "/mobile_base/sensors/imu_data":sens_msg.Imu,
-        }
+        self.topic_format = {
+            "/camera/depth/image":sens_msg.Image,
+            "/camera/depth/points":sens_msg.PointCloud2,
+            "/camera/ir/image":sens_msg.Image,
+            "/camera/rgb/image_raw":sens_msg.Image,
+            "/camera/rgb/image_rect_color":sens_msg.Image,
+            "/mobile_base/sensors/core":kob_msg.SensorState,
+            "/mobile_base/sensors/dock_ir":kob_msg.DockInfraRed,
+            "/mobile_base/sensors/imu_data":sens_msg.Imu,
+            }
 
         # maps each format to its parser
-        format_parser = {
-        sens_msg.Image: self.image_parse,
-        sens_msg.PointCloud2: self.pc2_parse,
-        kob_msg.SensorState: self.sensor_state_parse,
-        kob_msg.DockInfraRed: self.dock_ir_parse,
-        sens_msg.Imu: self.imu_parse
-        }
+        self.format_parser = {
+            sens_msg.Image: self.image_parse,
+            sens_msg.PointCloud2: self.pc2_parse,
+            kob_msg.SensorState: self.sensor_state_parse,
+            kob_msg.DockInfraRed: self.dock_ir_parse,
+            sens_msg.Imu: self.imu_parse
+            }
 
-        self.format = topic_format[topic]
-        self.parser = format_parser[self.format]
+        self.topic = topic
+ 
+    def make_callback(self, topic, most_recent):
+        parser = self.format_parser[self.topic_format[topic]]
 
-    def callback(self, packet):
+        def callback(packet):
+            most_recent.update(parser(packet))
+
+        return callback
+
+    def start(self, most_recent):
+        # subscribe to the topic
+        rospy.Subscriber(self.topic, 
+                         self.topic_format[self.topic],
+                         self.make_callback(self.topic, most_recent))
+        rospy.spin()
+
+
+    def callback_nothread(self, packet):
+        print("calling back")
         self.most_recent = self.parser(packet)
 
-    def start(self):
-
+    def start_nothread(self):
         # subscribe to the topic
-        rospy.Subscriber("sensor_parser/{}".format(self.topic), 
-                         self.message_type,
-                         self.callback)
+        rospy.Subscriber(self.topic, self.format, self.callback_nothread)
 
-        # keep python awake until the ROS node dies
-        rospy.spin()
 
     def image_parse(self, img, enc="passthrough"):
         # convert ros image to numpy array
         br = CvBridge()
-        return np.asarray(br.imgmsg_to_cv2(image_message, desired_encoding=enc)) 
+        image = np.asarray(br.imgmsg_to_cv2(img, desired_encoding=enc)) 
+        return {self.topic: image.tolist()}
 
-    def pc2_parse(self, cloud):
-        # pc2.read_points returns a generator
-        return list(pc2.read_points(cloud, 
-                                    skip_nans=True, 
-                                    field_names=("x", "y", "z")))
+    def pc2_parse(self, dat):
+        # pc2.read_points returns a generator of (x,y,z) tuples
+        gen = pc2.read_points(dat, skip_nans=True, field_names=("x","y","z"))
+        return {self.topic: list(gen)}
 
     def sensor_state_parse(self, data):
         return {
@@ -82,26 +92,26 @@ class SensorParser:
         "overcurrent_left": True if data.over_current % 2 else False,
         "overcurrent_right": True if data.over_current > 2 else False,
         "battery_voltage": data.battery * 0.1,
-        "dist_left": data.bottom[2],   # cliff PSD sensor (0 - 4095, distance
-        "dist_right": data.bottom[0],  # measure is non-linear)
-        "dist_center": data.bottom[1],
+        "bottom_dist_left": data.bottom[2],  # cliff PSD sensor (0 - 4095, 
+        "bottom_dist_right": data.bottom[0], # distance measure is non-linear)
+        "bottom_dist_center": data.bottom[1],
         }
 
     def dock_ir_parse(self, dock_ir):
         return {
-        "near_left": bool(dock_ir.NEAR_LEFT),
-        "near_center": bool(dock_ir.NEAR_CENTER),
-        "near_right": bool(dock_ir.NEAR_RIGHT),
-        "far_left": bool(dock_ir.FAR_LEFT),
-        "far_center": bool(dock_ir.FAR_CENTER),
-        "far_right": bool(dock_ir.FAR_RIGHT),
+        "ir_near_left": bool(dock_ir.NEAR_LEFT),
+        "ir_near_center": bool(dock_ir.NEAR_CENTER),
+        "ir_near_right": bool(dock_ir.NEAR_RIGHT),
+        "ir_far_left": bool(dock_ir.FAR_LEFT),
+        "ir_far_center": bool(dock_ir.FAR_CENTER),
+        "ir_far_right": bool(dock_ir.FAR_RIGHT),
         }
 
     def imu_parse(self, data):
         covar = [data.orientation_covariance,
                  data.angular_velocity_covariance,
                  data.linear_acceleration_covariance]
-        covar = [np.asarray(cov).reshape(3,3) for cov in covar]
+        covar = [np.asarray(cov).reshape(3,3).tolist() for cov in covar]
 
         return {
         "orient_x": data.orientation.x,

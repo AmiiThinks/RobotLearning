@@ -8,35 +8,16 @@ LearningForeground contains a collection of GVF's. It accepts new state represen
 
 """
 
-
+import numpy
 import rospy
-import threading
-import yaml
-
-from std_msgs.msg import String
-from std_msgs.msg import Int16
-from std_msgs.msg import Float64
-
-
-from diagnostic_msgs.msg import DiagnosticArray
-from diagnostic_msgs.msg import DiagnosticStatus
-from diagnostic_msgs.msg import KeyValue
-
-#from horde.msg import StateRepresentation
-from TileCoder import *
-from GVF import *
-from Verifier import *
-from PredictLoadDemon import *
-from BehaviorPolicy import *
-
-
+import std_msgs.msg as std_msg
 import time
 
-import numpy
+from BehaviorPolicy import BehaviorPolicy
+from TileCoder import TileCoder
+from ObservationManager import ObservationManager
 
-"""
-sets up the subscribers and starts to broadcast the results in a thread every 0.1 seconds
-"""
+
 alpha = 0.1
 
 def directLeftPolicy(state):
@@ -194,7 +175,7 @@ class LearningForeground:
         self.increasingRadians = False
         print("Switching direction")
         print("Going to radians: " + str(self.currentRadians))
-        pub = rospy.Publisher('tilt_controller/command', Float64, queue_size=10)
+        pub = rospy.Publisher('tilt_controller/command', std_msg.Float64, queue_size=10)
         pub.publish(self.currentRadians)
 
     def performSlowBackAndForth(self):
@@ -215,13 +196,13 @@ class LearningForeground:
                 self.increasingRadians = True
 
         print("Going to radians: " + str(self.currentRadians))
-        pub = rospy.Publisher('tilt_controller/command', Float64, queue_size=10)
+        pub = rospy.Publisher('tilt_controller/command', std_msg.Float64, queue_size=10)
         pub.publish(self.currentRadians)
 
     def performAction(self, action):
         print("Performing action: "  + str(action))
         #Take the action and issue the actual dynamixel command
-        pub = rospy.Publisher('tilt_controller/command', Float64, queue_size=10)
+        pub = rospy.Publisher('tilt_controller/command', std_msg.Float64, queue_size=10)
 
         if (action ==1):
             #Move left
@@ -263,18 +244,18 @@ class LearningForeground:
 
             i = i + 1
 
-            pubPrediction = rospy.Publisher('horde_verifier/' + demon.name + 'Prediction', Float64, queue_size=10)
+            pubPrediction = rospy.Publisher('horde_verifier/' + demon.name + 'Prediction', std_msg.Float64, queue_size=10)
             pubPrediction.publish(pred)
 
-            pubRupee = rospy.Publisher('horde_verifier/' + demon.name + 'Rupee', Float64, queue_size=10)
+            pubRupee = rospy.Publisher('horde_verifier/' + demon.name + 'Rupee', std_msg.Float64, queue_size=10)
             pubRupee.publish(rupee)
-            pubUDE = rospy.Publisher('horde_verifier/' + demon.name + 'UDE', Float64, queue_size=10)
+            pubUDE = rospy.Publisher('horde_verifier/' + demon.name + 'UDE', std_msg.Float64, queue_size=10)
             pubUDE.publish(ude)
 
-        avgRupee = rospy.Publisher('horde_verifier/AverageRupee', Float64, queue_size=10)
+        avgRupee = rospy.Publisher('horde_verifier/AverageRupee', std_msg.Float64, queue_size=10)
         avgRupee.publish(averageRupee)
 
-        avgUDE = rospy.Publisher('horde_verifier/AverageUDE', Float64, queue_size=10)
+        avgUDE = rospy.Publisher('horde_verifier/AverageUDE', std_msg.Float64, queue_size=10)
         avgUDE.publish(averageUDE)
 
 
@@ -288,7 +269,7 @@ class LearningForeground:
         e = (newState.encoder)
         #e = 100 * (e - 510.0) / (1023.0 - 510.0)
         #e = 100 * (e - 510.0) / (1023.0 - 510.0)
-        pubCumulant = rospy.Publisher('horde_verifier/EncoderPosition', Float64, queue_size=10)
+        pubCumulant = rospy.Publisher('horde_verifier/EncoderPosition', std_msg.Float64, queue_size=10)
         pubCumulant.publish(e)
         #1. Learn
         #Convert the list of X's into an actual numpy array
@@ -324,7 +305,7 @@ class LearningForeground:
     def start(self):
         print("In Horde foreground start")
         # Subscribe to all of the relevent sensor information. To start, we're only interested in motor_states, produced by the dynamixels
-        #rospy.Subscriber("observation_manager/servo_position", Int16, self.receiveObservationCallback)
+        #rospy.Subscriber("observation_manager/servo_position", std_msg.Int16, self.receiveObservationCallback)
         rospy.Subscriber("observation_manager/state_update", StateRepresentation, self.receiveStateUpdateCallback)
 
         rospy.spin()
@@ -333,7 +314,7 @@ if __name__ == '__main__':
     foreground = LearningForeground()
     #Set the mixels to 0
     rospy.init_node('horde_foreground', anonymous=True)
-    pub = rospy.Publisher('tilt_controller/command', Float64, queue_size=10)
+    pub = rospy.Publisher('tilt_controller/command', std_msg.Float64, queue_size=10)
     pub.publish(0.0)
 
     time.sleep(3)
