@@ -66,7 +66,7 @@ class IHT(object):
         size = self.size
         count = self.count()
         if count >= size:
-            if self.overfullCount==0: print('IHT full, starting to allow collisions')
+            # if self.overfullCount==0: print('IHT full, starting to allow collisions')
             self.overfullCount += 1
             return basehash(obj) % self.size
         else:
@@ -113,9 +113,21 @@ def tileswrap (ihtORsize, numtilings, floats, wrawidths, ints=[], readonly=False
     return Tiles
 
 if __name__ == "__main__":
-    iht = IHT(1024)
-    indices = tiles(iht, 3, [0, 0, 0])
-    print(indices)
-    indices = tiles(iht, 3, [0.5, 0.5, 0.5])
-    print(indices)
- 
+    iht = IHT(16)
+
+    from random import shuffle
+
+    x = list(range(0,256))
+    shuffle(x)
+
+    result = []
+    
+    for i in x:
+        indices = tiles(iht, 4, [i/(256/4)])
+        result.append((i, indices))
+
+    s = sorted(result, key = lambda obj : obj[0])
+
+    for a in s:
+        print(a)
+
