@@ -3,26 +3,12 @@ import tiles3
 import itertools
 import numpy as np
 
-from functools import wraps
-from time import time
+from tools import timing
 
-np.set_printoptions(threshold=np.nan)
-
-# DEBUG: This is for debugging purposes
-def timing(f):
-    @wraps(f)
-    def wrap(*args, **kw):
-        ts = time()
-        result = f(*args, **kw)
-        te = time()
-        # print 'func:%r args:[%r, %r] took: %2.4f sec' % \
-        # (f.__name__, args, kw, te-ts)
-        print 'func:%r took: %2.4f sec' % (f.__name__, te-ts)
-        return result
-    return wrap
+# np.set_printoptions(threshold=np.nan)
 
 """
-# StateRepresentation.py:
+# StateManager.py:
 
 Picks NUM_RANDOM_POINTS random rgb values from an image and tiles those
 values to obtain the state representation
@@ -41,7 +27,7 @@ DIFF_BW_RGB = 256/NUM_TILINGS
 DIFF_BW_BUMP = 1
 
 
-class StateRepresentation:
+class StateManager:
     def __init__(self):
         self.ihts = [tiles3.IHT(NUM_INTERVALS) for i in
                      xrange(NUM_RANDOM_POINTS * 3)]
@@ -49,7 +35,6 @@ class StateRepresentation:
     # Grabs a number of random pixels from an image (see NUM_RANDOM_POINTS)
     # Not used by user
     # image: a 2D array with
-    @timing
     def random_points(self, image):
         
         random_points = []
@@ -84,6 +69,9 @@ class StateRepresentation:
                 index+=1
         return state_representation_raw
 
+    def get_num_tilings(self):
+        return NUM_TILINGS
+
 # This is a debugging function. It just generates a random image.
 @timing
 def DEBUG_generate_rand_image():
@@ -102,7 +90,7 @@ def DEBUG_generate_rand_image():
     return return_matrix
 
 if __name__ == "__main__":
-    state_rep = StateRepresentation()
+    state_rep = StateManager()
 
     for i in range(10):
         image = DEBUG_generate_rand_image()

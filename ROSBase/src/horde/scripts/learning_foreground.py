@@ -16,6 +16,7 @@ import time
 
 from behavior_policy import BehaviorPolicy
 from observation_manager import ObservationManager
+from state_representation import StateManager
 
 class LearningForeground:
 
@@ -23,7 +24,7 @@ class LearningForeground:
         
         # set up dictionary to share sensor info
         self.most_recent_obs = dict()
-        
+
         # set up observation manager
         rospy.init_node('observation_manager', anonymous=True)
         t = threading.Thread(target=ObservationManager, 
@@ -42,6 +43,7 @@ class LearningForeground:
         self.alpha = learning_rate
         self.gvfs = gvfs
         self.behavior_policy = BehaviorPolicy()
+        self.state_manager = StateManager()
 
         # previous timestep information
         self.last_action = None
@@ -97,7 +99,15 @@ class LearningForeground:
     def create_state(self):
         # Do something
         try:
-            my_state = self.most_recent_obs['bump_right']
+            my_state = self.most_recent_obs['/camera/rgb/image_rect_color']
+
+            # check if this is a valid image
+            if (my_state is None or len(my_state) == 0
+                or len(my_state[0]) == 0):
+                return False
+
+            return self.state_manager.get_state_representation(my_state, 0)
+
         except KeyError:
             my_state = False
         return my_state
@@ -129,7 +139,7 @@ class LearningForeground:
                                                   args=[action])
             self.action_thread.start()
 
-            if self.last_state:
+            if self.last_state is not None and self.gvfs:
                 # learn
                 self.update_gvfs(new_state)
 
@@ -151,7 +161,7 @@ if __name__ == '__main__':
             # "/camera/depth/points",
             # "/camera/ir/image",
             # "/camera/rgb/image_raw",
-            # "/camera/rgb/image_rect_color",
+            "/camera/rgb/image_rect_color",
             "/mobile_base/sensors/core",
             "/mobile_base/sensors/dock_ir",
             "/mobile_base/sensors/imu_data",
