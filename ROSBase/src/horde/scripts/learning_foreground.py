@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Author: David Quail, Niko Yasui, June 1, 2017.
+Author: Michele Albach, David Quail, Parash Rahman, Niko Yasui, June 1, 2017.
 
 Description:
 LearningForeground contains a collection of GVF's. It accepts new state representations, learns, and then takes action.
@@ -157,10 +157,10 @@ if __name__ == '__main__':
         learning_rate = 0.5
         time_scale = 0.5
         topics = [
-            # "/camera/depth/image",
-            # "/camera/depth/points",
-            # "/camera/ir/image",
-            # "/camera/rgb/image_raw",
+            "/camera/depth/image",
+            "/camera/depth/points",
+            "/camera/ir/image",
+            "/camera/rgb/image_raw",
             "/camera/rgb/image_rect_color",
             "/mobile_base/sensors/core",
             "/mobile_base/sensors/dock_ir",

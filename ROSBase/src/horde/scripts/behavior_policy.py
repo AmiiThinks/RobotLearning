@@ -1,5 +1,5 @@
 """
-Author: Niko Yasui, June 1, 2017.
+Author: Michele Albach, David Quail, Niko Yasui, June 1, 2017.
 
 Description:
 Behavior policy is responsibility for returning the desired action to take.
