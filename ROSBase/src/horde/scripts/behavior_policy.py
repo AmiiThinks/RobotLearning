@@ -23,15 +23,28 @@ class BehaviorPolicy:
             twist - Twist object
         """
 
-        # create Twist object
+        # build Twist object
         action = geom_msg.Twist()
 
         # linear velocity
         action.linear.x = 0.05
 
-        # angular velocity
-        action.angular.z = 0
+        # # Possible setup
+        # # 1: Go forward (meters/s)
+        # # 2: Go Backwards (meters/s)
+        # # 3: Turn right (rad/s)
+        # # 4: Turn left (rad/s)
 
+        # if action==1:
+        #     move_cmd.linear.x = 0.2
+        # if action==2:
+        #     move_cmd.linear.x = -0.2
+        # if action==3:
+        #     move_cmd.angular.z = 0.5
+        # if action==4:
+        #     move_cmd.angular.z = -0.5
+
+        # save last action
         self.last_action = action
 
         return action
