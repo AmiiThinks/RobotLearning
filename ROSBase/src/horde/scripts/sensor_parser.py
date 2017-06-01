@@ -60,13 +60,12 @@ class SensorParser:
         rospy.Subscriber(self.topic, 
                          self.topic_format[self.topic],
                          self.make_callback(self.topic, most_recent))
-        rospy.spin()
 
     def image_parse(self, img, enc="passthrough"):
         # convert ros image to numpy array
         br = CvBridge()
         image = np.asarray(br.imgmsg_to_cv2(img, desired_encoding=enc)) 
-        return {self.topic: image.tolist()}
+        return {self.topic: image}
 
     def pc2_parse(self, dat):
         # pc2.read_points returns a generator of (x,y,z) tuples
