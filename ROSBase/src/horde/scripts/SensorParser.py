@@ -1,5 +1,15 @@
 #!/usr/bin/env python
 
+"""
+Author: Niko Yasui, June 1, 2017.
+
+Description:
+The sensor parser manager will:
+1. listen for various different sensor data coming from various 
+   different data sources (servos, cameras, etc).
+2. Update the "most_recent" dictionary it is passed to hold new data.
+"""
+
 import math
 import numpy as np
 import rospy
@@ -51,16 +61,6 @@ class SensorParser:
                          self.topic_format[self.topic],
                          self.make_callback(self.topic, most_recent))
         rospy.spin()
-
-
-    def callback_nothread(self, packet):
-        print("calling back")
-        self.most_recent = self.parser(packet)
-
-    def start_nothread(self):
-        # subscribe to the topic
-        rospy.Subscriber(self.topic, self.format, self.callback_nothread)
-
 
     def image_parse(self, img, enc="passthrough"):
         # convert ros image to numpy array
@@ -128,13 +128,6 @@ class SensorParser:
         "lin_accel_z": data.linear_acceleration.z,
         "lin_accel_covar": covar[2],
         }
-
-if __name__ == '__main__':
-    try:
-        manager = SensorParser()
-        manager.start()
-    except rospy.ROSInterruptException:
-        pass
 
 
 
