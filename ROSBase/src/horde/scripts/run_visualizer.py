@@ -1,4 +1,4 @@
-import visualizePixels
+import visualize_pixels
 
 # Continuously calls the function from visualizePixels.py
 # To use, first open the image (if it exists yet) using 'eog visualization.png',
