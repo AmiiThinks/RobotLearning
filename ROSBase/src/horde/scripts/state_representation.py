@@ -49,24 +49,30 @@ class StateManager:
 
     # Gets the state representation of NUM_RANDOM_POINTS pixels
     @timing
-    def get_state_representation(self, image, action):
+    def get_state_representation(self, image, lbump, cbump, rbump, action):
         if image is None or len(image) == 0 or len(image[0]) == 0:
             print ("empty image has no representation")
             return []
 
         points = self.random_points(image)
         state_representation_raw = \
-            np.zeros(NUM_RANDOM_POINTS * 3 * NUM_FEATURES_PER_COL_VAL)
+            np.zeros(NUM_RANDOM_POINTS * 3 * NUM_FEATURES_PER_COL_VAL + 3)
         rgbpoints_raw = np.array(list(itertools.chain.from_iterable(points)))
         
+        # adding bumper data to the state
+        state_representation_raw[0] = 0 if lbump else 1
+        state_representation_raw[1] = 0 if cbump else 1
+        state_representation_raw[2] = 0 if rbump else 1
+
         for color_index in xrange(len(rgbpoints_raw)):
             tiles = tiles3.tiles(self.ihts[color_index], NUM_TILINGS,
                                  [rgbpoints_raw[color_index] / DIFF_BW_RGB])
             index = 0 
             for t in tiles:
                 state_representation_raw[color_index * NUM_FEATURES_PER_COL_VAL
-                                         + index * NUM_INTERVALS + t] = 1
+                                         + index * NUM_INTERVALS + t + 3] = 1
                 index+=1
+
         return state_representation_raw
 
     def get_num_tilings(self):

@@ -99,18 +99,21 @@ class LearningForeground:
     def create_state(self):
         # Do something
         try:
-            my_state = self.most_recent_obs['/camera/rgb/image_rect_color']
+            my_image = self.most_recent_obs['/camera/rgb/image_rect_color']
+            lbump = self.most_recent_obs['bump_left']
+            rbump = self.most_recent_obs['bump_right']
+            cbump = self.most_recent_obs['bump_center']
 
             # check if this is a valid image
-            if (my_state is None or len(my_state) == 0
-                or len(my_state[0]) == 0):
+            if (my_image is None or len(my_image) == 0
+                or len(my_image[0]) == 0):
                 return False
 
-            return self.state_manager.get_state_representation(my_state, 0)
+            return self.state_manager.get_state_representation(my_image, lbump, cbump, rbump, 0)
 
         except KeyError:
-            my_state = False
-        return my_state
+            my_image = False
+        return my_image
 
     def take_action(self, action):
         rospy.loginfo("Sending action to Turtlebot.")
