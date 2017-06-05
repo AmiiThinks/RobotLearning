@@ -9,33 +9,34 @@ LearningForeground contains a collection of GVF's. It accepts new state represen
 """
 
 import geometry_msgs.msg as geo_msg
+from Queue import Queue
 import rospy
 import std_msgs.msg as std_msg
 import threading
 import time
 
 from behavior_policy import BehaviorPolicy
-from observation_manager import ObservationManager
 from state_representation import StateManager
+from tools import timing, topic_format
 
 class LearningForeground:
 
     def __init__(self, learning_rate, time_scale, gvfs, topics):
         
         # set up dictionary to share sensor info
-        self.most_recent_obs = dict()
+        self.recent = {topic:Queue(0) for topic in topics}
 
-        # set up observation manager
-        rospy.init_node('observation_manager', anonymous=True)
-        t = threading.Thread(target=ObservationManager, 
-                             args=(topics, self.most_recent_obs))
-        t.daemon = True
-        t.start()
+        # set up ros
+        rospy.init_node('agent', anonymous=True)
+        # setup sensor parsers
+        for topic in topics:
+            rospy.Subscriber(topic, 
+                             topic_format[topic],
+                             lambda dat: self.recent[topic].put(dat))
 
-        rospy.loginfo("Started ObservationManager thread.")
+        rospy.loginfo("Started sensor threads.")
 
         # smooth out the actions
-        self.action_thread = None
         self.t_len = time_scale
         self.q_len = max(int(time_scale / 0.01), 1)
 
@@ -47,7 +48,7 @@ class LearningForeground:
 
         # previous timestep information
         self.last_action = None
-        self.last_state = False
+        self.last_state = None
         self.last_preds = {g:None for g in self.gvfs}
 
         # Set up publishers
@@ -55,7 +56,7 @@ class LearningForeground:
         pub = lambda g, lab: rospy.Publisher(pub_name(g, lab), 
                                              std_msg.Float64, 
                                              queue_size=10)
-        action_publisher = rospy.Publisher('/cmd_vel_mux/input/teleop', 
+        action_publisher = rospy.Publisher('cmd_vel_mux/input/teleop', 
                                            geo_msg.Twist,
                                            queue_size=self.q_len)
         self.publishers = {'avg_rupee': pub('avg', 'rupee'),
@@ -69,14 +70,15 @@ class LearningForeground:
 
     def update_gvfs(self, new_state):
         for gvf in self.gvfs:
-            self.last_preds[gvf] = gvf.prediction(self.last_state)
+            pred_before = gvf.prediction(self.last_state)
             gvf.learn(self.last_state, self.last_action, new_state)
 
             # log predictions (optional)
-            pred_before = str(self.last_preds[gvf])
             pred_after = str(gvf.prediction(self.last_state))
             rospy.loginfo("GVF prediction before: " + pred_before)
             rospy.loginfo("GVF prediction after: " + pred_after)
+
+            self.last_preds[gvf] = gvf.prediction(new_state)
 
 
     def publish_predictions_and_errors(self, state):
@@ -97,23 +99,24 @@ class LearningForeground:
         self.publishers['avg_ude'].publish(avg_ude)
 
     def create_state(self):
-        # Do something
+        rospy.loginfo("Creating state.")
         try:
-            my_image = self.most_recent_obs['/camera/rgb/image_rect_color']
-            lbump = self.most_recent_obs['bump_left']
-            rbump = self.most_recent_obs['bump_right']
-            cbump = self.most_recent_obs['bump_center']
+            # don't create a new variable, this is just for demonstration
+            queue = self.recent['mobile_base/sensors/core']
 
-            # check if this is a valid image
-            if (my_image is None or len(my_image) == 0
-                or len(my_image[0]) == 0):
-                return False
+            # get queue size from ALL sensors before reading any of them
+            num_recent_obs = queue.qsize()
+            obs = []
 
-            return self.state_manager.get_state_representation(my_image, lbump, cbump, rbump, 0)
+            # read the sensors
+            for _ in num_recent_obs:
+                # do whatever parsing you need to do here
+                obs =  self.recent['/mobile_base/sensors/core'].get().bumper
+
+            return obs
 
         except KeyError:
-            my_image = False
-        return my_image
+            return False
 
     def take_action(self, action):
         rospy.loginfo("Sending action to Turtlebot.")
@@ -132,16 +135,10 @@ class LearningForeground:
             # get new state
             new_state = self.create_state()
 
-            # reset action thread
-            if self.action_thread:
-                self.action_thread.join()
-
             # take action
-            action = self.behavior_policy(new_state)
-            self.action_thread = threading.Thread(target=self.take_action,
-                                                  args=[action])
-            self.action_thread.start()
+            self.take_action(self.behavior_policy(new_state))
 
+            # decide if learning should happen
             if self.last_state is not None and self.gvfs:
                 # learn
                 self.update_gvfs(new_state)
@@ -160,14 +157,14 @@ if __name__ == '__main__':
         learning_rate = 0.5
         time_scale = 0.5
         topics = [
-            "/camera/depth/image",
-            "/camera/depth/points",
-            "/camera/ir/image",
-            "/camera/rgb/image_raw",
+            # "/camera/depth/image",
+            # "/camera/depth/points",
+            # "/camera/ir/image",
+            # "/camera/rgb/image_raw",
             "/camera/rgb/image_rect_color",
             "/mobile_base/sensors/core",
-            "/mobile_base/sensors/dock_ir",
-            "/mobile_base/sensors/imu_data",
+            # "/mobile_base/sensors/dock_ir",
+            # "/mobile_base/sensors/imu_data",
             ]
         foreground = LearningForeground(learning_rate, time_scale, [], topics)
         foreground.run()
