@@ -8,7 +8,7 @@ from tools import timing
 # np.set_printoptions(threshold=np.nan)
 
 """
-# StateManager.py:
+# StateManager:
 
 Picks NUM_RANDOM_POINTS random rgb values from an image and tiles those
 values to obtain the state representation

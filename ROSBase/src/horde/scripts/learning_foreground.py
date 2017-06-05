@@ -8,6 +8,8 @@ LearningForeground contains a collection of GVF's. It accepts new state represen
 
 """
 
+from cv_bridge.core import CvBridge
+import numpy as np
 import geometry_msgs.msg as geo_msg
 from Queue import Queue
 import rospy
@@ -32,7 +34,9 @@ class LearningForeground:
         for topic in topics:
             rospy.Subscriber(topic, 
                              topic_format[topic],
-                             lambda dat: self.recent[topic].put(dat))
+                             self.recent[topic].put)
+
+        print(self.recent)
 
         rospy.loginfo("Started sensor threads.")
 
@@ -99,24 +103,58 @@ class LearningForeground:
         self.publishers['avg_ude'].publish(avg_ude)
 
     def create_state(self):
-        rospy.loginfo("Creating state.")
-        try:
-            # don't create a new variable, this is just for demonstration
-            queue = self.recent['mobile_base/sensors/core']
+        # TODO: consider moving the data processing elsewhere
 
-            # get queue size from ALL sensors before reading any of them
-            num_recent_obs = queue.qsize()
-            obs = []
+        print("Creating state...")
+        # get queue size from ALL sensors before reading any of them
+        bumper_num_obs = self.recent['/mobile_base/sensors/core'].qsize()
 
-            # read the sensors
-            for _ in num_recent_obs:
-                # do whatever parsing you need to do here
-                obs =  self.recent['/mobile_base/sensors/core'].get().bumper
+        # bumper constants from http://docs.ros.org/hydro/api/kobuki_msgs/html/msg/SensorState.html
+        BUMPER_RIGHT  = 1
+        BUMPER_CENTRE = 2
+        BUMPER_LEFT   = 4
 
-            return obs
+        # variables that will be passed to the state manager to create the state
+        # they are either 1 for bumper activation or 0 otherwise
+        bumper_right_status = 0
+        bumper_centre_status = 0
+        bumper_left_status = 0
 
-        except KeyError:
-            return False
+        # clear the bumper queue of unused/old observations
+        for _ in range(bumper_num_obs - 1):
+            self.recent['/mobile_base/sensors/core'].get()
+
+        # get the last bumper information
+        if (bumper_num_obs > 0):
+            last_bump_raw = self.recent['/mobile_base/sensors/core'].get().bumper
+            if (BUMPER_RIGHT & last_bump_raw):
+                bumper_right_status = 1
+            if (BUMPER_LEFT & last_bump_raw):
+                bumper_left_status = 1
+            if (BUMPER_CENTRE & last_bump_raw):
+                bumper_centre_status = 1
+
+
+        # get the image processed for the state representation
+        image_data = None
+        image_num_obs = self.recent['/camera/rgb/image_rect_color'].qsize()
+
+        # clear the image queue of unused/old observations
+        for _ in range(image_num_obs - 1):
+            self.recent['/camera/rgb/image_rect_color'].get()
+
+        # get the last image information
+        if (image_num_obs > 0):
+
+            br = CvBridge()
+            image_data = np.asarray(br.imgmsg_to_cv2(self.recent['/camera/rgb/image_rect_color'].get(),
+                desired_encoding="passthrough")) 
+
+        state_rep = self.state_manager.get_state_representation(image_data, bumper_right_status, bumper_centre_status, bumper_left_status, 0)
+
+        print(state_rep)
+
+        return state_rep
 
     def take_action(self, action):
         rospy.loginfo("Sending action to Turtlebot.")
@@ -169,7 +207,7 @@ if __name__ == '__main__':
         foreground = LearningForeground(learning_rate, time_scale, [], topics)
         foreground.run()
 
-    except rospy.ROSInterruptException:
-        pass
+    except rospy.ROSInterruptException as detail:
+        print "Handling: ", detail
 
     
