@@ -17,13 +17,19 @@ import std_msgs.msg as std_msg
 import threading
 import time
 
-from behavior_policy import BehaviorPolicy
+from policy import Policy
+from gvf import GVF
 from state_representation import StateManager
 from tools import timing, topic_format
 
 class LearningForeground:
 
-    def __init__(self, learning_rate, time_scale, gvfs, topics):
+    def __init__(self, 
+                 learning_rate, 
+                 time_scale, 
+                 gvfs, 
+                 topics, 
+                 behavior_policy):
         
         # set up dictionary to share sensor info
         self.recent = {topic:Queue(0) for topic in topics}
@@ -47,7 +53,7 @@ class LearningForeground:
         # agent info
         self.alpha = learning_rate
         self.gvfs = gvfs
-        self.behavior_policy = BehaviorPolicy()
+        self.behavior_policy = behavior_policy
         self.state_manager = StateManager()
 
         # previous timestep information
@@ -63,11 +69,12 @@ class LearningForeground:
         action_publisher = rospy.Publisher('cmd_vel_mux/input/teleop', 
                                            geo_msg.Twist,
                                            queue_size=self.q_len)
+        # action_publisher = rospy.Publisher('dev/null', geo_msg.Twist, queue_size=self.q_len)
         self.publishers = {'avg_rupee': pub('avg', 'rupee'),
                            'avg_ude': pub('avg', 'ude'),
                            'action': action_publisher}
         labels = ['prediction', 'rupee', 'ude']
-        label_pubs = {g:{l:pub(g, l) for l in labels} for g in self.gvfs}
+        label_pubs = {g:{l:pub(g.name, l) for l in labels} for g in self.gvfs}
         self.publishers.update(label_pubs)
 
         rospy.loginfo("Done LearningForeground init.")
@@ -79,8 +86,8 @@ class LearningForeground:
 
             # log predictions (optional)
             pred_after = str(gvf.prediction(self.last_state))
-            rospy.loginfo("GVF prediction before: " + pred_before)
-            rospy.loginfo("GVF prediction after: " + pred_after)
+            rospy.loginfo("GVF prediction before: {}".format(pred_before))
+            rospy.loginfo("GVF prediction after: {}".format(pred_after))
 
             self.last_preds[gvf] = gvf.prediction(new_state)
 
@@ -105,9 +112,10 @@ class LearningForeground:
     def create_state(self):
         # TODO: consider moving the data processing elsewhere
 
-        print("Creating state...")
+        rospy.loginfo("Creating state...")
         # get queue size from ALL sensors before reading any of them
         bumper_num_obs = self.recent['/mobile_base/sensors/core'].qsize()
+        image_num_obs = self.recent['/camera/rgb/image_rect_color'].qsize()
 
         # bumper constants from http://docs.ros.org/hydro/api/kobuki_msgs/html/msg/SensorState.html
         BUMPER_RIGHT  = 1
@@ -137,7 +145,6 @@ class LearningForeground:
 
         # get the image processed for the state representation
         image_data = None
-        image_num_obs = self.recent['/camera/rgb/image_rect_color'].qsize()
 
         # clear the image queue of unused/old observations
         for _ in range(image_num_obs - 1):
@@ -152,12 +159,15 @@ class LearningForeground:
 
         state_rep = self.state_manager.get_state_representation(image_data, bumper_right_status, bumper_centre_status, bumper_left_status, 0)
 
-        print(state_rep)
+        rospy.loginfo(state_rep)
 
         return state_rep
 
     def take_action(self, action):
-        rospy.loginfo("Sending action to Turtlebot.")
+        print_action = "linear: {}, angular: {}".format(action.linear.x,
+                                                        action.angular.z)
+        rospy.loginfo("Sending action to Turtlebot: {}".format(print_action))
+        
         [self.publishers['action'].publish(action) for _ in range(self.q_len)]
 
     def run(self):
@@ -184,7 +194,7 @@ class LearningForeground:
                 # publish predictions and errors
                 self.publish_predictions_and_errors(self.last_state)
 
-            self.last_state = new_state
+            self.last_state = new_state if len(new_state) else None
 
             # reset tic
             tic += sleep_time
@@ -194,6 +204,7 @@ if __name__ == '__main__':
     try:
         learning_rate = 0.5
         time_scale = 0.5
+
         topics = [
             # "/camera/depth/image",
             # "/camera/depth/points",
@@ -204,10 +215,14 @@ if __name__ == '__main__':
             # "/mobile_base/sensors/dock_ir",
             # "/mobile_base/sensors/imu_data",
             ]
-        foreground = LearningForeground(learning_rate, time_scale, [], topics)
+        foreground = LearningForeground(learning_rate, 
+                                        time_scale,
+                                        [],
+                                        topics,
+                                        Policy())
         foreground.run()
 
     except rospy.ROSInterruptException as detail:
-        print "Handling: ", detail
+        rospy.loginfo("Handling: {}".format(detail))
 
     

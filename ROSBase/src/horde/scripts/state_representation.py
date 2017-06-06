@@ -2,6 +2,7 @@ import random
 import tiles3
 import itertools
 import numpy as np
+import rospy 
 
 from tools import timing
 
@@ -55,7 +56,7 @@ class StateManager:
     @timing
     def get_state_representation(self, image, lbump, cbump, rbump, action):
         if image is None or len(image) == 0 or len(image[0]) == 0:
-            print ("empty image has no representation")
+            rospy.loginfo("empty image has no representation")
             return []
 
         points = self.random_points(image)
@@ -64,9 +65,9 @@ class StateManager:
         rgbpoints_raw = np.array(list(itertools.chain.from_iterable(points)))
         
         # adding bumper data to the state
-        state_representation_raw[0] = 0 if lbump else 1
-        state_representation_raw[1] = 0 if cbump else 1
-        state_representation_raw[2] = 0 if rbump else 1
+        state_representation_raw[0] = lbump
+        state_representation_raw[1] = cbump
+        state_representation_raw[2] = rbump
 
         for color_index in xrange(len(rgbpoints_raw)):
             tiles = tiles3.tiles(self.ihts[color_index], NUM_TILINGS,

@@ -1,15 +1,17 @@
 """
-Author: Michele Albach, David Quail, Niko Yasui, June 1, 2017.
+Author: Michele Albach, David Quail, Parash Rahman, Niko Yasui, June 2017.
 
 Description:
-Behavior policy is responsibility for returning the desired action to take.
+Behavior policy is responsible for returning the desired action to take.
 """
 import geometry_msgs.msg as geom_msg
 import random
 
-class BehaviorPolicy:
+class Policy:
 
     def __init__(self):
+        # good forward speed is 0.35
+        # good angular speed is 2
         self.last_action = None
 
     def __call__(self, state):
@@ -48,5 +50,4 @@ class BehaviorPolicy:
         self.last_action = action
 
         return action
-
 

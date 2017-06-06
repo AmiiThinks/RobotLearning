@@ -1,5 +1,6 @@
 from functools import wraps
 import kobuki_msgs.msg as kob_msg
+import rospy
 import sensor_msgs.msg as sens_msg
 import sensor_msgs.point_cloud2 as pc2
 import std_msgs.msg as std_msg
@@ -39,6 +40,6 @@ def timing(f):
         te = time()
         # print 'func:%r args:[%r, %r] took: %2.4f sec' % \
         # (f.__name__, args, kw, te-ts)
-        print 'func:%r took: %2.4f sec' % (f.__name__, te-ts)
+        rospy.loginfo('func:%r took: %2.4f sec' % (f.__name__, te-ts))
         return result
     return wrap
