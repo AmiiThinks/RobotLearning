@@ -18,6 +18,10 @@ NUM_RANDOM_POINTS = 300
 NUM_TILINGS = 4
 NUM_INTERVALS = 4 
 NUM_FEATURES_PER_COL_VAL = NUM_TILINGS * NUM_INTERVALS
+NUM_BUMPERS = 3
+NUM_FEATURES_PER_BUMPER = 1
+TOTAL_FEATURE_LENGTH = NUM_RANDOM_POINTS * 3 *  \
+	NUM_FEATURES_PER_COL_VAL + NUM_BUMPERS * NUM_FEATURES_PER_BUMPER
 
 # regards the generalization between tile dimensions
 DIFF_BW_R = 100
@@ -56,7 +60,7 @@ class StateManager:
 
         points = self.random_points(image)
         state_representation_raw = \
-            np.zeros(NUM_RANDOM_POINTS * 3 * NUM_FEATURES_PER_COL_VAL + 3)
+            np.zeros(TOTAL_FEATURE_LENGTH)
         rgbpoints_raw = np.array(list(itertools.chain.from_iterable(points)))
         
         # adding bumper data to the state
