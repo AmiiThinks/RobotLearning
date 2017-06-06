@@ -30,43 +30,46 @@ DIFF_BW_B = 100
 DIFF_BW_RGB = 256/NUM_TILINGS
 DIFF_BW_BUMP = 1
 
+# constants relating to image size recieved
+IMAGE_LI = 480
+IMAGE_CO = 640
 
 class StateManager:
     def __init__(self):
         self.ihts = [tiles3.IHT(NUM_INTERVALS) for i in
                      xrange(NUM_RANDOM_POINTS * 3)]
+        self.chosen_points = self.random_points()
+        self.last_representation = None
 
-    # Grabs a number of random pixels from an image (see NUM_RANDOM_POINTS)
-    # Not used by user
-    # image: a 2D array with
-    def random_points(self, image):
-        
-        random_points = []
-
+    # Generates the list of pixels to be sampled
+    def random_points(self):
         for p in range(NUM_RANDOM_POINTS):
-            p1 = random.randint(0, len(image) - 1)
-            p2 = random.randint(0, len(image[0]) - 1)
+            p1 = random.randint(0, IMAGE_LI)
+            p2 = random.randint(0, IMAGE_CO)
 
             random_points.append(image[p1][p2])
 
         return random_points
 
-    # Gets the state representation of NUM_RANDOM_POINTS pixels
     @timing
     def get_state_representation(self, image, lbump, cbump, rbump, action):
-        if image is None or len(image) == 0 or len(image[0]) == 0:
-            print ("empty image has no representation")
-            return []
+        state_representation_raw = np.zeros(TOTAL_FEATURE_LENGTH)
 
-        points = self.random_points(image)
-        state_representation_raw = \
-            np.zeros(TOTAL_FEATURE_LENGTH)
-        rgbpoints_raw = np.array(list(itertools.chain.from_iterable(points)))
-        
         # adding bumper data to the state
-        state_representation_raw[0] = 0 if lbump else 1
-        state_representation_raw[1] = 0 if cbump else 1
-        state_representation_raw[2] = 0 if rbump else 1
+        state_representation_raw[0] = lbump
+        state_representation_raw[1] = cbump
+        state_representation_raw[2] = rbump
+
+        # adding image data to state
+        if image is None or len(image) == 0 or len(image[0]) == 0:
+        	if (self.last_representation is None):
+        		return self.state_representation_raw
+        	else:
+        		return self.last_representation
+
+        points = self.chosen_points
+        
+        rgbpoints_raw = np.array(list(itertools.chain.from_iterable(points)))
 
         for color_index in xrange(len(rgbpoints_raw)):
             tiles = tiles3.tiles(self.ihts[color_index], NUM_TILINGS,
