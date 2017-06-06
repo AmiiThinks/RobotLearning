@@ -1,6 +1,7 @@
 import random
 import tiles3
 import itertools
+import visualize_pixels
 import numpy as np
 
 from tools import timing
@@ -38,13 +39,16 @@ class StateManager:
     def random_points(self, image):
         
         random_points = []
+        positions = []
 
         for p in range(NUM_RANDOM_POINTS):
             p1 = random.randint(0, len(image) - 1)
             p2 = random.randint(0, len(image[0]) - 1)
 
             random_points.append(image[p1][p2])
+            positions.append([p1, p2])
 
+        visualize_pixels.update_colours(positions,image)
         return random_points
 
     # Gets the state representation of NUM_RANDOM_POINTS pixels
