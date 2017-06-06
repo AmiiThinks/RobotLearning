@@ -2,6 +2,7 @@ import random
 import tiles3
 import itertools
 import numpy as np
+import rospy 
 
 from tools import timing
 
@@ -21,7 +22,7 @@ NUM_FEATURES_PER_COL_VAL = NUM_TILINGS * NUM_INTERVALS
 NUM_BUMPERS = 3
 NUM_FEATURES_PER_BUMPER = 1
 TOTAL_FEATURE_LENGTH = NUM_RANDOM_POINTS * 3 *  \
-	NUM_FEATURES_PER_COL_VAL + NUM_BUMPERS * NUM_FEATURES_PER_BUMPER
+    NUM_FEATURES_PER_COL_VAL + NUM_BUMPERS * NUM_FEATURES_PER_BUMPER
 
 # regards the generalization between tile dimensions
 DIFF_BW_R = 100
@@ -43,11 +44,13 @@ class StateManager:
 
     # Generates the list of pixels to be sampled
     def random_points(self):
-        for p in range(NUM_RANDOM_POINTS):
-            p1 = random.randint(0, IMAGE_LI)
-            p2 = random.randint(0, IMAGE_CO)
+        random_points = []
 
-            random_points.append(image[p1][p2])
+        for p in range(NUM_RANDOM_POINTS):
+            p1 = random.randint(0, IMAGE_LI - 1)
+            p2 = random.randint(0, IMAGE_CO - 1)
+
+            random_points.append((p1, p2))
 
         return random_points
 
@@ -62,13 +65,13 @@ class StateManager:
 
         # adding image data to state
         if image is None or len(image) == 0 or len(image[0]) == 0:
-        	if (self.last_representation is None):
-        		return self.state_representation_raw
-        	else:
-        		return self.last_representation
+            rospy.loginfo("empty image has no representation")
+            if self.last_representation is None:
+                return state_representation_raw
+            else:
+                return self.last_representation
 
-        points = self.chosen_points
-        
+        points = [image[p[0]][p[1]] for p in self.chosen_points]
         rgbpoints_raw = np.array(list(itertools.chain.from_iterable(points)))
 
         for color_index in xrange(len(rgbpoints_raw)):
