@@ -48,13 +48,13 @@ class StateManager:
     # Generates the list of pixels to be sampled
     def random_points(self):
         random_points = []
-
+        
         for p in range(NUM_RANDOM_POINTS):
             p1 = random.randint(0, IMAGE_LI - 1)
             p2 = random.randint(0, IMAGE_CO - 1)
 
             random_points.append((p1, p2))
-
+            
         return random_points
 
     @timing
