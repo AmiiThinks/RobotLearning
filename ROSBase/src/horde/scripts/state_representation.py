@@ -3,6 +3,8 @@ import tiles3
 import itertools
 import numpy as np
 import rospy 
+import visualize_pixels
+
 
 from tools import timing
 
