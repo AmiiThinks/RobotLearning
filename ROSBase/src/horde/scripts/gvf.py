@@ -49,22 +49,35 @@ def makeVectorBitCumulantFunction(bitIndex):
     return gvfs
 """
 
-import numpy
+import numpy as np
 import rospy
 
-class GVF:
-    def __init__(self, n_features, alpha, isOffPolicy, name = "GVF name"):
+from tools import equal_twists
 
+class GVF:
+    def __init__(self, n_features, alpha, isOffPolicy, learner, name = "GVF name"):
+
+        learners = {"GTD":self._gtdLearn,
+                    "TO GTD": self._toGTDlearn,
+                    "TD": self._tdLearn}
+                    
         self.name = name #Can be useful for debugging, logging, plotting. But not needed otherwise.
         self.isOffPolicy = isOffPolicy #Determines whether td or gtdlearn is used for learning
-        self.learn = self._gtdLearn if isOffPolicy else self._tdLearn
-        self.lastState = 0
+        self.learn = learners[learner]
+        self.lastState = None
         self.lastObservation = 0
-        self.weights = numpy.zeros(n_features)
-        self.hWeights = numpy.zeros(n_features) #For GTD off policy learning
-        self.hHatWeights = numpy.zeros(n_features) #For RUPEE error estimation
-        self.eligibilityTrace = numpy.zeros(n_features)
+        self.weights = np.zeros((1,n_features))
+        self.hWeights = np.zeros((1,n_features)) #For GTD off policy learning
+        self.hHatWeights = np.zeros((1,n_features)) #For RUPEE error estimation
+        self.eligibilityTrace = np.zeros((1,n_features))
+        self.elig_delta = np.zeros((1,n_features))
+        self.elig_w = np.zeros((1,n_features))
         self.gammaLast = 1
+        self.rhoLast = 1
+        self.lambdaLast = 0
+        self.weightsLast = np.zeros((1,n_features))
+        self.weightsL = np.zeros((1,n_features))
+
 
         self.alpha = (1.0 - 0.90) * alpha
         self.alphaH = 0.01 * self.alpha #Same alpha for H vector and each HHat vector
@@ -107,19 +120,56 @@ class GVF:
     applied or not.
     """
     def rho(self, action, state):
-        return action == self.policy(state) if self.isOffPolicy else 1
+        if self.isOffPolicy:
+            return equal_twists(action, self.policy(state))
+        else:
+            return 1
 
     """
     Prediction and error functions
     """
     def prediction(self, phi):
-        return numpy.inner(self.weights, phi)
+        return np.inner(self.weights, phi)
 
     def rupee(self):
-        return numpy.sqrt(numpy.absolute(numpy.inner(self.hHatWeights, self.movingtdEligErrorAverage)))
+        return np.sqrt(np.absolute(np.inner(self.hHatWeights, self.movingtdEligErrorAverage)))
 
     def ude(self):
-        return numpy.absolute(self.averageTD / (numpy.sqrt(self.tdVariance) + 0.000001))
+        return np.absolute(self.averageTD / (np.sqrt(self.tdVariance) + 0.000001))
+
+    def _toGTDlearn(self, lastState, action, newState):
+        if len(lastState) == 0 or len(newState) == 0:
+            return None
+
+        rospy.loginfo("!!!!! LEARN  !!!!!!!")
+        rospy.loginfo("GVF name: " + str(self.name))
+
+        self.weightsLast = self.weightsL
+        self.weightsL = self.weights
+        zNext = self.cumulant(newState)
+        gammaNext = self.gamma(newState)
+        lambdaNext = self.lam(newState)
+        rho = self.rho(action, lastState)
+
+        td_err = zNext + gammaNext * np.inner(newState, self.weights) - np.inner(lastState, self.weights)
+
+        self.eligibilityTrace = rho * (self.gammaLast*self.lambdaLast*self.eligibilityTrace + self.alpha*(1-rho*self.gammaLast*self.lambdaLast*np.inner(lastState, self.eligibilityTrace)) * lastState)
+
+        self.elig_delta = rho * (self.gammaLast * self.lambdaLast * self.elig_delta + lastState)
+
+        self.elig_w = self.rhoLast * self.gammaLast * self.lambdaLast * self.elig_w + self.alphaH * (1 - self.rhoLast * self.gammaLast * self.lambdaLast * np.inner(lastState, self.elig_w)) * lastState
+
+        self.weights += td_err * self.eligibilityTrace + (self.eligibilityTrace - self.alpha * rho * newState) * np.inner(self.weights - self.weightsLast, newState) - self.alpha * gammaNext * (1- lambdaNext) * np.inner(self.hWeights, self.elig_delta) * newState
+
+        self.hWeights += rho * td_err * self.elig_w - self.alphaH * np.inner(lastState, self.hWeights) * lastState
+ 
+        self.rhoLast = rho
+        self.lambdaLast = lambdaNext
+        self.gammaLast = gammaNext
+
+
+
+
 
     def _gtdLearn(self, lastState, action, newState):
 
@@ -142,16 +192,15 @@ class GVF:
         rho = self.rho(action, lastState)
         #rospy.loginfo("rho: " + str(rho))
         self.eligibilityTrace = rho * (self.gammaLast * lam * self.eligibilityTrace + lastState)
-        tdError = zNext + gammaNext * numpy.inner(newState, self.weights) - numpy.inner(lastState, self.weights)
+        tdError = zNext + gammaNext * np.inner(newState, self.weights) - np.inner(lastState, self.weights)
 
 
         #rospy.loginfo("tdError: " + str(tdError))
 
-
-        self.hWeights = self.hWeights + self.alphaH  * (tdError * self.eligibilityTrace - (numpy.inner(self.hWeights, lastState)) * lastState)
+        self.hWeights = self.hWeights + self.alphaH  * (tdError * self.eligibilityTrace - (np.inner(self.hWeights, lastState)) * lastState)
 
         #update Rupee
-        self.hHatWeights = self.hHatWeights + self.alphaRUPEE * (tdError * self.eligibilityTrace - (numpy.inner(self.hHatWeights, lastState)) * lastState)
+        self.hHatWeights = self.hHatWeights + self.alphaRUPEE * (tdError * self.eligibilityTrace - (np.inner(self.hHatWeights, lastState)) * lastState)
         #rospy.loginfo("tao before: " + str(self.tao))
         self.taoRUPEE = (1.0 - self.betaNotRUPEE) * self.taoRUPEE + self.betaNotRUPEE
         #rospy.loginfo("tao after: " + str(self.tao))
@@ -175,7 +224,7 @@ class GVF:
         #rospy.loginfo("td variance after: " + str(self.tdVariance))
         self.i = self.i + 1
 
-        self.weights = self.weights + self.alpha * (tdError * self.eligibilityTrace - gammaNext * (1-lam)  * (numpy.inner(self.eligibilityTrace, self.hWeights) * newState))
+        self.weights = self.weights + self.alpha * (tdError * self.eligibilityTrace - gammaNext * (1-lam)  * (np.inner(self.eligibilityTrace, self.hWeights) * newState))
 
         self.gammaLast = gammaNext
 
@@ -194,12 +243,12 @@ class GVF:
         #rospy.loginfo("lambda: " + str(lam))
         self.eligibilityTrace = self.gammaLast * lam * self.eligibilityTrace + lastState
 
-        tdError = zNext + gammaNext * numpy.inner(newState, self.weights) - numpy.inner(lastState, self.weights)
+        tdError = zNext + gammaNext * np.inner(newState, self.weights) - np.inner(lastState, self.weights)
 
         #rospy.loginfo("tdError: " + str(tdError))
 
         #update Rupee
-        self.hHatWeights = self.hHatWeights + self.alphaRUPEE * (tdError * self.eligibilityTrace - (numpy.inner(self.hHatWeights, lastState)) * lastState)
+        self.hHatWeights = self.hHatWeights + self.alphaRUPEE * (tdError * self.eligibilityTrace - (np.inner(self.hHatWeights, lastState)) * lastState)
         #rospy.loginfo("tao before: " + str(self.tao))
         self.taoRUPEE = (1.0 - self.betaNotRUPEE) * self.taoRUPEE + self.betaNotRUPEE
         #rospy.loginfo("tao after: " + str(self.taoRUPEE))
