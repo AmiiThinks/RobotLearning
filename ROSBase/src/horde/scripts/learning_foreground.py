@@ -21,6 +21,7 @@ from policy import Policy
 from gvf import GVF
 from state_representation import StateManager
 from tools import timing, topic_format
+from visualize_pixels import Visualize
 
 
 class LearningForeground:
@@ -54,6 +55,10 @@ class LearningForeground:
         self.gvfs = gvfs
         self.behavior_policy = behavior_policy
         self.state_manager = StateManager()
+
+        # set up voronoi for image visualization
+        # note: this takes a while but only has to be done once
+        self.visualization = Visualize(self.state_manager.chosen_points,1080,1080) # Should give size of images received from robot
 
         # previous timestep information
         self.last_action = None
@@ -122,10 +127,7 @@ class LearningForeground:
         BUMPER_LEFT   = 4
 
         # variables that will be passed to the state manager to create the state
-        # they are either 1 for bumper activation or 0 otherwise
-        bumper_right_status = 0
-        bumper_centre_status = 0
-        bumper_left_status = 0
+        bumper_status = None
 
         # clear the bumper queue of unused/old observations
         for _ in range(bumper_num_obs - 1):
@@ -134,17 +136,18 @@ class LearningForeground:
         # get the last bumper information
         if (bumper_num_obs > 0):
             last_bump_raw = self.recent['/mobile_base/sensors/core'].get().bumper
-            if (BUMPER_RIGHT & last_bump_raw):
-                bumper_right_status = 1
-            if (BUMPER_LEFT & last_bump_raw):
-                bumper_left_status = 1
-            if (BUMPER_CENTRE & last_bump_raw):
-                bumper_centre_status = 1
+            bumper_status = (BUMPER_RIGHT & last_bump_raw, 
+                             BUMPER_LEFT & last_bump_raw, 
+                             BUMPER_CENTRE & last_bump_raw)
+               
 
 
         # get the image processed for the state representation
         image_data = None
 
+        # update the visualization of the image data
+        self.visualization.update_colours(image_data)
+        
         # clear the image queue of unused/old observations
         for _ in range(image_num_obs - 1):
             self.recent['/camera/rgb/image_rect_color'].get()
@@ -156,7 +159,7 @@ class LearningForeground:
             image_data = np.asarray(br.imgmsg_to_cv2(self.recent['/camera/rgb/image_rect_color'].get(),
                 desired_encoding="passthrough")) 
 
-        state_rep = self.state_manager.get_state_representation(image_data, bumper_right_status, bumper_centre_status, bumper_left_status, 0)
+        state_rep = self.state_manager.get_state_representation(image_data, bumper_status, 0)
 
         rospy.loginfo(state_rep)
 

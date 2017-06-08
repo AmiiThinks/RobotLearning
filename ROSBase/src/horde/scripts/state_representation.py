@@ -3,6 +3,8 @@ import tiles3
 import itertools
 import numpy as np
 import rospy 
+import visualize_pixels
+
 
 from tools import timing
 
@@ -40,36 +42,46 @@ class StateManager:
         self.ihts = [tiles3.IHT(NUM_INTERVALS) for i in
                      xrange(NUM_RANDOM_POINTS * 3)]
         self.chosen_points = self.random_points()
-        self.last_representation = None
+        self.last_image_raw = None
+        self.last_bumper_raw = None
 
     # Generates the list of pixels to be sampled
     def random_points(self):
         random_points = []
-
+        
         for p in range(NUM_RANDOM_POINTS):
             p1 = random.randint(0, IMAGE_LI - 1)
             p2 = random.randint(0, IMAGE_CO - 1)
 
             random_points.append((p1, p2))
-
+            
         return random_points
 
     @timing
-    def get_state_representation(self, image, lbump, cbump, rbump, action):
+    def get_state_representation(self, image, bumper_information, action):
         state_representation_raw = np.zeros(TOTAL_FEATURE_LENGTH)
 
+
         # adding bumper data to the state
-        state_representation_raw[0] = lbump
-        state_representation_raw[1] = cbump
-        state_representation_raw[2] = rbump
+        if bumper_information is None:
+            if self.last_bumper_raw is None:
+                bumper_information = (0,0,0)
+            else:
+                bumper_information = self.last_bumper_raw
+
+        state_representation_raw[0] = bumper_information[0]
+        state_representation_raw[1] = bumper_information[1]
+        state_representation_raw[2] = bumper_information[2]
 
         # adding image data to state
         if image is None or len(image) == 0 or len(image[0]) == 0:
             rospy.loginfo("empty image has no representation")
-            if self.last_representation is None:
+            if self.last_image_raw is None:
                 return state_representation_raw
             else:
-                return self.last_representation
+                return self.last_image_raw
+
+        last_image_raw = image
 
         points = [image[p[0]][p[1]] for p in self.chosen_points]
         rgbpoints_raw = np.array(list(itertools.chain.from_iterable(points)))
