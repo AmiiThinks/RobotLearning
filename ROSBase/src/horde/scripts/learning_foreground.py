@@ -10,7 +10,7 @@ LearningForeground contains a collection of GVF's. It accepts new state represen
 
 from cv_bridge.core import CvBridge
 import numpy as np
-import geometry_msgs.msg as geo_msg
+import geometry_msgs.msg as geom_msg
 from Queue import Queue
 import rospy
 import std_msgs.msg as std_msg
@@ -21,6 +21,7 @@ from policy import Policy
 from gvf import GVF
 from state_representation import StateManager
 from tools import timing, topic_format
+
 
 class LearningForeground:
 
@@ -42,13 +43,11 @@ class LearningForeground:
                              topic_format[topic],
                              self.recent[topic].put)
 
-        print(self.recent)
-
         rospy.loginfo("Started sensor threads.")
 
         # smooth out the actions
         self.t_len = time_scale
-        self.q_len = max(int(time_scale / 0.01), 1)
+        self.q_len = max(int(time_scale / 0.1), 1)
 
         # agent info
         self.alpha = learning_rate
@@ -67,9 +66,9 @@ class LearningForeground:
                                              std_msg.Float64, 
                                              queue_size=10)
         action_publisher = rospy.Publisher('cmd_vel_mux/input/teleop', 
-                                           geo_msg.Twist,
+                                           geom_msg.Twist,
                                            queue_size=self.q_len)
-        # action_publisher = rospy.Publisher('dev/null', geo_msg.Twist, queue_size=self.q_len)
+
         self.publishers = {'avg_rupee': pub('avg', 'rupee'),
                            'avg_ude': pub('avg', 'ude'),
                            'action': action_publisher}
@@ -164,10 +163,13 @@ class LearningForeground:
         return state_rep
 
     def take_action(self, action):
+
+        # log action
         print_action = "linear: {}, angular: {}".format(action.linear.x,
                                                         action.angular.z)
         rospy.loginfo("Sending action to Turtlebot: {}".format(print_action))
-        
+
+        # send new actions
         [self.publishers['action'].publish(action) for _ in range(self.q_len)]
 
     def run(self):
@@ -184,7 +186,8 @@ class LearningForeground:
             new_state = self.create_state()
 
             # take action
-            self.take_action(self.behavior_policy(new_state))
+            action = self.behavior_policy(new_state)
+            self.take_action(action)
 
             # decide if learning should happen
             if self.last_state is not None and self.gvfs:
@@ -195,6 +198,7 @@ class LearningForeground:
                 self.publish_predictions_and_errors(self.last_state)
 
             self.last_state = new_state if len(new_state) else None
+            self.last_action = action
 
             # reset tic
             tic += sleep_time

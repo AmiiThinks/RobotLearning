@@ -1,6 +1,6 @@
 import random
 import rospy
-import geometry_msgs.msg as geom_msg
+from geometry_msgs.msg import Twist, Vector3
 
 from gvf import GVF
 from learning_foreground import LearningForeground
@@ -12,9 +12,7 @@ class GoForward(Policy):
         self.speed = speed
 
     def __call__(self, state):
-        action = geom_msg.Twist()
-        action.linear.x = self.speed
-        return action
+        return Twist(Vector3(self.speed, 0, 0), Vector3(0, 0, 0))
 
 class ForwardIfClear(Policy):
     def __init__(self, gvf, vel_linear=0.35, vel_angular=2):
@@ -24,29 +22,57 @@ class ForwardIfClear(Policy):
         self.vel_angular = vel_angular
 
     def __call__(self, state):
-        action = geom_msg.Twist()
 
-        if (len(state) and self.gvf.prediction(state) > random.random()) or sum(state[:3]):
-            action.angular.z = self.vel_angular
+        if self.gvf.prediction(state) > random.random() or sum(state[:3]):
+            action = Twist(Vector3(0, 0, 0), Vector3(0, 0, self.vel_angular))
         else:
-            action.linear.x = self.vel_linear
+            action = Twist(Vector3(self.vel_linear, 0, 0), Vector3(0, 0, 0))
+
         return action 
+
+class ForwardIfClearTurtle(Policy):
+    def __init__(self, gvf, vel_linear=0.35, vel_angular=2):
+        Policy.__init__(self)
+        self.gvf = gvf
+        self.vel_linear = vel_linear
+        self.vel_angular = vel_angular
+        self.bump = False
+
+    def __call__(self, state):
+        if self.bump:
+            state[0] = 0
+            self.bump = False
+
+        if self.gvf.prediction(state) > random.random() or state[0]:
+            action = Twist(Vector3(0, 0, 0), Vector3(0, 0, self.vel_angular))
+            self.bump = True
+        else:
+            action = Twist(Vector3(self.vel_linear, 0, 0), Vector3(0, 0, 0))
+
+        return action 
+
 
 if __name__ == "__main__":
     try:
-        learning_rate = 0.5
-        time_scale = 0.5
 
-        one_if_bump = lambda state: bool(sum(state[:3]))      
+        learning_rate = 0.000001
+        time_scale = 0.1
+        speed = 3
+        turn = 2
+
+        one_if_bump = lambda state: int(bool(sum(state[:3])))
         wall_demo = GVF(n_features=14403,
                         alpha=learning_rate,
                         isOffPolicy=True,
-                        name='WallDemo')
+                        name='WallDemo',
+                        learner='GTD')
         wall_demo.gamma = one_if_bump
         wall_demo.cumulant = one_if_bump
-        wall_demo.policy = GoForward(speed=0.05)
+        wall_demo.policy = GoForward(speed=speed)
 
-        behavior_policy = ForwardIfClear(wall_demo)
+        behavior_policy = ForwardIfClearTurtle(wall_demo, 
+                                               vel_linear=speed,
+                                               vel_angular=turn)
 
         topics = [
             # "/camera/depth/image",
