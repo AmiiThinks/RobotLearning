@@ -21,6 +21,7 @@ from policy import Policy
 from gvf import GVF
 from state_representation import StateManager
 from tools import timing, topic_format
+from visualize_pixels import Visualize
 
 class LearningForeground:
 
@@ -55,6 +56,10 @@ class LearningForeground:
         self.gvfs = gvfs
         self.behavior_policy = behavior_policy
         self.state_manager = StateManager()
+
+        # set up voronoi for image visualization
+        # note: this takes a while but only has to be done once
+        self.visualization = Visualize(self.state_manager.chosen_points,1080,1080) # Should give size of images received from robot
 
         # previous timestep information
         self.last_action = None
@@ -141,6 +146,9 @@ class LearningForeground:
         # get the image processed for the state representation
         image_data = None
 
+        # update the visualization of the image data
+        self.visualization.update_colours(image_data)
+        
         # clear the image queue of unused/old observations
         for _ in range(image_num_obs - 1):
             self.recent['/camera/rgb/image_rect_color'].get()
