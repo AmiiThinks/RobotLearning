@@ -1,7 +1,9 @@
+import numpy as np
 import random
 import rospy
 from geometry_msgs.msg import Twist, Vector3
 
+from algorithms import GTD
 from gvf import GVF
 from learning_foreground import LearningForeground
 from policy import Policy
@@ -23,7 +25,7 @@ class ForwardIfClear(Policy):
 
     def __call__(self, state):
 
-        if self.gvf.prediction(state) > random.random() or sum(state[:3]):
+        if self.gvf.predict(state) > random.random() or sum(state[:3]):
             action = Twist(Vector3(0, 0, 0), Vector3(0, 0, self.vel_angular))
         else:
             action = Twist(Vector3(self.vel_linear, 0, 0), Vector3(0, 0, 0))
@@ -43,7 +45,7 @@ class ForwardIfClearTurtle(Policy):
             state[0] = 0
             self.bump = False
 
-        if self.gvf.prediction(state) > random.random() or state[0]:
+        if self.gvf.predict(state) > random.random() or state[0]:
             action = Twist(Vector3(0, 0, 0), Vector3(0, 0, self.vel_angular))
             self.bump = True
         else:
@@ -55,24 +57,28 @@ class ForwardIfClearTurtle(Policy):
 if __name__ == "__main__":
     try:
 
-        learning_rate = 0.000001
         time_scale = 0.1
-        speed = 3
-        turn = 2
+        forward_speed = 0.2
+        turn_speed = 2
+
+        alpha = 0.000001
+        beta = alpha / 10
 
         one_if_bump = lambda state: int(bool(sum(state[:3])))
-        wall_demo = GVF(n_features=14403,
-                        alpha=learning_rate,
-                        isOffPolicy=True,
+        wall_demo = GVF(num_features=14403,
+                        alpha=alpha,
+                        beta=beta,
+                        gamma=one_if_bump,
+                        cumulant=one_if_bump,
+                        policy=GoForward(speed=forward_speed),
+                        off_policy=True,
+                        alg=GTD,
                         name='WallDemo',
-                        learner='GTD')
-        wall_demo.gamma = one_if_bump
-        wall_demo.cumulant = one_if_bump
-        wall_demo.policy = GoForward(speed=speed)
+                        logger=rospy.loginfo)
 
         behavior_policy = ForwardIfClearTurtle(wall_demo, 
-                                               vel_linear=speed,
-                                               vel_angular=turn)
+                                               vel_linear=forward_speed,
+                                               vel_angular=turn_speed)
 
         topics = [
             # "/camera/depth/image",
@@ -85,7 +91,7 @@ if __name__ == "__main__":
             # "/mobile_base/sensors/imu_data",
             ]
 
-        foreground = LearningForeground(learning_rate, 
+        foreground = LearningForeground(alpha, 
                                         time_scale,
                                         [wall_demo],
                                         topics,
