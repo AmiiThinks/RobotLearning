@@ -58,11 +58,11 @@ class LearningForeground:
 
         # set up voronoi for image visualization
         # note: this takes a while but only has to be done once
-        self.visualization = Visualize(self.state_manager.chosen_points,1080,1080) # Should give size of images received from robot
+        # self.visualization = Visualize(self.state_manager.chosen_points,1080,1080) # Should give size of images received from robot
 
         # previous timestep information
         self.last_action = None
-        self.last_state = None
+        self.last_state = self.gvfs[0].learner._phi if self.gvfs else None
         self.last_preds = {g:None for g in self.gvfs}
 
         # Set up publishers
@@ -85,20 +85,20 @@ class LearningForeground:
 
     def update_gvfs(self, new_state):
         for gvf in self.gvfs:
-            pred_before = gvf.prediction(self.last_state)
-            gvf.learn(self.last_state, self.last_action, new_state)
+            pred_before = gvf.predict(self.last_state)
+            gvf.update(self.last_action, new_state)
 
             # log predictions (optional)
-            pred_after = str(gvf.prediction(self.last_state))
+            pred_after = str(gvf.predict(self.last_state))
             rospy.loginfo("GVF prediction before: {}".format(pred_before))
             rospy.loginfo("GVF prediction after: {}".format(pred_after))
 
-            self.last_preds[gvf] = gvf.prediction(new_state)
+            self.last_preds[gvf] = gvf.predict(new_state)
 
 
     def publish_predictions_and_errors(self, state):
 
-        preds = [g.prediction(state) for g in self.gvfs]
+        preds = [g.predict(state) for g in self.gvfs]
         rupee = [g.rupee() for g in self.gvfs]
         ude = [g.ude() for g in self.gvfs]
 
@@ -144,9 +144,6 @@ class LearningForeground:
 
         # get the image processed for the state representation
         image_data = None
-
-        # update the visualization of the image data
-        self.visualization.update_colours(image_data)
         
         # clear the image queue of unused/old observations
         for _ in range(image_num_obs - 1):
@@ -159,11 +156,14 @@ class LearningForeground:
             image_data = np.asarray(br.imgmsg_to_cv2(self.recent['/camera/rgb/image_rect_color'].get(),
                 desired_encoding="passthrough")) 
 
-        state_rep = self.state_manager.get_state_representation(image_data, bumper_status, 0)
+        phi = self.state_manager.get_state_representation(image_data, bumper_status, 0)
 
-        rospy.loginfo(state_rep)
+        # update the visualization of the image data
+        # self.visualization.update_colours(image_data)
 
-        return state_rep
+        rospy.loginfo(phi)
+
+        return phi
 
     def take_action(self, action):
 
@@ -192,13 +192,8 @@ class LearningForeground:
             action = self.behavior_policy(new_state)
             self.take_action(action)
 
-            # decide if learning should happen
-            if self.last_state is not None and self.gvfs:
-                # learn
-                self.update_gvfs(new_state)
-
-                # publish predictions and errors
-                self.publish_predictions_and_errors(self.last_state)
+            # learn
+            self.update_gvfs(new_state)
 
             self.last_state = new_state if len(new_state) else None
             self.last_action = action
