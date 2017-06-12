@@ -5,6 +5,7 @@ import sensor_msgs.msg as sens_msg
 import sensor_msgs.point_cloud2 as pc2
 import std_msgs.msg as std_msg
 from turtlesim.msg import Pose
+import numpy as np
 
 from time import time
 
@@ -22,12 +23,12 @@ topic_format = {
     }
 
 def equal_twists(t1, t2):
-    return all([t1.linear.x == t2.linear.x,
-                t1.linear.y == t2.linear.y,
-                t1.linear.z == t2.linear.z,
-                t1.angular.x == t2.angular.x,
-                t1.angular.y == t2.angular.y,
-                t1.angular.z == t2.angular.z])
+    return all([np.isclose(t1.linear.x, t2.linear.x),
+                np.isclose(t1.linear.y, t2.linear.y),
+                np.isclose(t1.linear.z, t2.linear.z),
+                np.isclose(t1.angular.x, t2.angular.x),
+                np.isclose(t1.angular.y, t2.angular.y),
+                np.isclose(t1.angular.z, t2.angular.z)])
 
 def merge_dicts(*dict_args):
     """

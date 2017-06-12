@@ -136,11 +136,9 @@ class LearningForeground:
         # get the last bumper information
         if (bumper_num_obs > 0):
             last_bump_raw = self.recent['/mobile_base/sensors/core'].get().bumper
-            bumper_status = (BUMPER_RIGHT & last_bump_raw, 
-                             BUMPER_LEFT & last_bump_raw, 
-                             BUMPER_CENTRE & last_bump_raw)
-               
-
+            bumper_status = (1 if BUMPER_RIGHT & last_bump_raw else 0, 
+                             1 if BUMPER_LEFT & last_bump_raw else 0, 
+                             1 if BUMPER_CENTRE & last_bump_raw else 0)
 
         # get the image processed for the state representation
         image_data = None
@@ -226,5 +224,3 @@ if __name__ == '__main__':
 
     except rospy.ROSInterruptException as detail:
         rospy.loginfo("Handling: {}".format(detail))
-
-    
