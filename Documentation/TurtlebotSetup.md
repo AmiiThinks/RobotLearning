@@ -1,5 +1,27 @@
-### Astra Camera
-First, clone the `ros_astra_camera` and `ros_astra_launch` repos into `~/catkin_ws/src` as follows:
+### 1. Installation
+```
+sudo apt install ros-kinetic-kobuki
+sudo pip install future
+```
+
+### 2. Bash Environment Setup
+Add the following to your ~/.bashrc file, which will be run when you open a terminal. Make sure to change any paths to match your installation.
+
+```
+# ROS setup.bash
+source /opt/ros/kinetic/setup.bash
+# Catkin setup.bash
+source ~/Work/catkin_ws/devel/setup.bash
+# Find your IP address
+export ROS_IP=$(hostname -I | awk '{print $1;}')
+# Replace 10.0.1.20 with your kobuki netbook IP address
+export ROS_MASTER_URI=http://10.0.1.20:11311
+# ROS needs this sometimes; just in case
+export ROS_HOSTNAME=$ROS_IP
+```
+
+### 3. Astra Camera
+First, clone the `ros_astra_camera` and `ros_astra_launch` repos into `~/catkin_ws/src` as follows: 
 ```
 cd ~/catkin_ws/src
 git clone https://github.com/orbbec/ros_astra_camera
@@ -23,7 +45,7 @@ To use convert images from the ROS image format and to transport them efficientl
 sudo apt install ros-kinetic-vision-opencv
 ```
 
-### Automatically start ROS on Netbook Boot
+### 4. Automatically start ROS on Netbook Boot
 
 #### Turn on automatic login in the system settings:
 In the top right, click the `power gear icon`. Then go to `System Settings` and click `User Accounts` in the bottom right. Click `unlock` in the top right of the window if the options are locked, then click `Automatic Login` so that the slider icon reads "on".
@@ -55,7 +77,7 @@ fi
 ```
 
 
-### (Optional) Hospot/AP Networking
+### 5. (Optional) Hospot/AP Networking
 Since we don't have a wireless network set up, we use an access point (ap) network originating from the turtlebot netbook. Note: you will not be able to access the internet while connected to this network.
 
 We followed the instructions [here](https://askubuntu.com/questions/180733/how-to-setup-an-access-point-mode-wi-fi-hotspot/180734#180734) (Pay attention to step 3.1!).
