@@ -23,42 +23,33 @@ class ForwardIfClear(Policy):
         self.vel_linear = vel_linear
         self.vel_angular = vel_angular
 
-    def __call__(self, state):
+        # where the last action is recorded according
+        # to its respective constants
+        self.last_action = None
+        self.TURN = 0
+        self.FORWARD = 1
+        self.STOP = 2
 
+    def __call__(self, state):
+        
         if self.gvf.predict(state) > random.random() or sum(state[:3]):
             action = Twist(Vector3(0, 0, 0), Vector3(0, 0, self.vel_angular))
+            self.last_action = self.TURN
         else:
-            action = Twist(Vector3(self.vel_linear, 0, 0), Vector3(0, 0, 0))
+            if self.last_action == self.TURN:
+                action = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0))
+                self.last_action = self.STOP
+            else:
+                action = Twist(Vector3(self.vel_linear, 0, 0), Vector3(0, 0, 0))
+                self.last_action = self.FORWARD
 
         return action 
-
-class ForwardIfClearTurtle(Policy):
-    def __init__(self, gvf, vel_linear=0.35, vel_angular=2):
-        Policy.__init__(self)
-        self.gvf = gvf
-        self.vel_linear = vel_linear
-        self.vel_angular = vel_angular
-        self.bump = False
-
-    def __call__(self, state):
-        if self.bump:
-            state[0] = 0
-            self.bump = False
-
-        if self.gvf.predict(state) > random.random() or state[0]:
-            action = Twist(Vector3(0, 0, 0), Vector3(0, 0, self.vel_angular))
-            self.bump = True
-        else:
-            action = Twist(Vector3(self.vel_linear, 0, 0), Vector3(0, 0, 0))
-
-        return action 
-
 
 if __name__ == "__main__":
     try:
 
         time_scale = 0.1
-        forward_speed = 0.2
+        forward_speed = 0.3
         turn_speed = 2
 
         alpha = 0.000001
@@ -76,7 +67,7 @@ if __name__ == "__main__":
                         name='WallDemo',
                         logger=rospy.loginfo)
 
-        behavior_policy = ForwardIfClearTurtle(wall_demo, 
+        behavior_policy = ForwardIfClear(wall_demo, 
                                                vel_linear=forward_speed,
                                                vel_angular=turn_speed)
 

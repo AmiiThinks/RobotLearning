@@ -4,7 +4,7 @@ import itertools
 import numpy as np
 import rospy 
 import visualize_pixels
-
+import cv2
 
 from tools import timing
 
@@ -57,10 +57,28 @@ class StateManager:
             
         return random_points
 
+
+    def get_state_representation_SIFT(self, image, bumper_information, action):
+        if image is None:
+            return
+
+        gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
+        sift = cv2.xfeatures2d.SIFT_create()
+        kp = sift.detect(gray, None)
+
+        img = cv2.drawKeypoints(gray, kp, image)
+
+        cv2.imwrite('sift_keypoints.jpg', img)
+
+        kp,des = sift.compute(gray,kp)
+
+        rospy.loginfo("%s %s %s"%("SIFT FEATURES: ", len(kp), len(des)))
+
     @timing
     def get_state_representation(self, image, bumper_information, action):
         state_representation_raw = np.zeros(TOTAL_FEATURE_LENGTH)
 
+        StateManager.get_state_representation_SIFT(self, image, bumper_information, action)
 
         # adding bumper data to the state
         if bumper_information is None:
