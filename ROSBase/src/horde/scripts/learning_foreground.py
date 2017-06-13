@@ -17,6 +17,7 @@ import std_msgs.msg as std_msg
 import threading
 import time
 
+
 from policy import Policy
 from gvf import GVF
 from state_representation import StateManager
@@ -56,9 +57,12 @@ class LearningForeground:
         self.behavior_policy = behavior_policy
         self.state_manager = StateManager()
 
-        # set up voronoi for image visualization
-        # note: this takes a while but only has to be done once
-        # self.visualization = Visualize(self.state_manager.chosen_points,1080,1080) # Should give size of images received from robot
+        # currently costs about 0.0275s per timestep
+        rospy.loginfo("Creating visualization.")
+        self.visualization = Visualize(self.state_manager.chosen_points,
+                                       imsizex=640,
+                                       imsizey=480)
+        rospy.loginfo("Done creatiing visualization.")
 
         # previous timestep information
         self.last_action = None
@@ -157,7 +161,7 @@ class LearningForeground:
         phi = self.state_manager.get_state_representation(image_data, bumper_status, 0)
 
         # update the visualization of the image data
-        # self.visualization.update_colours(image_data)
+        self.visualization.update_colours(image_data)
 
         rospy.loginfo(phi)
 

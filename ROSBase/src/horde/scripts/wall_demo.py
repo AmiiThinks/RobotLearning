@@ -47,9 +47,10 @@ class ForwardIfClear(Policy):
 
 if __name__ == "__main__":
     try:
-
-        time_scale = 0.1
-        forward_speed = 0.3
+        # random.seed(20170612)
+        
+        time_scale = 0.5
+        forward_speed = 0.2
         turn_speed = 2
 
         alpha = 0.000001

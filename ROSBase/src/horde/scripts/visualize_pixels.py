@@ -1,59 +1,77 @@
 """
-Michele Albach
+Michele Albach, Niko Yasui
 June 8th 2017
 
 Visualizer:
 
-initializes by creating a voronoi diagram to match the image size
+initializes by creating a Voronoi diagram to match the image size
 and set of points
 
 then update_colours can be called with image data to properly 
-colorize the voronoi diagram
+colorize the Voronoi diagram
 
-updates an image called visualization.png which will update 
-automatically with each change (even when open)
+the Voronoi diagram is plotted using matplotlib
 """
 
-from PIL import Image
-import csv
+import cv2
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+
 from tools import timing
 
+# turn off toolbar
+matplotlib.rcParams['toolbar'] = 'None'
+
 class Visualize():
-    # Note: creating the diagram takes some time, but should only
-    #       need to be done once when the random points are chosen
-    def __init__(self,points,imsizex,imsizey):
+    def __init__(self, points, imsizex, imsizey, dpi=100):
 
-        # the diagram is saved as a dictionary
-        self.voronoi={(p[0],p[1]):[] for p in points}
+        # make subdivision
+        rect = (0, 0, imsizex, imsizey)
+        self.subdiv = cv2.Subdiv2D(rect)
+        self.subdiv.insert([[y,x] for (x, y) in points])
 
-        # for every pixel in the image:
-        for x in range(imsizex):
-            for y in range(imsizey):
-                # check every point to see if it's closer than the
-                #      closest so far
-                mini=imsizex*imsizex+imsizey*imsizey
-                for p in points:
-                    dist = (p[0]-x)*(p[0]-x)+(p[1]-y)*(p[1]-y)
-                    if dist < mini:
-                        mini=dist
-                        fp=p
-                # save the pixel into the value of the closest point
-                self.voronoi[(fp[0],fp[1])].append([x,y])
+        # initialize figure
+        self.fig = plt.figure("Image Stream",
+                              figsize=(imsizex/dpi, imsizey/dpi),
+                              dpi=dpi)
 
-    # update_colours: goes through each region in the voronoi diagram and
-    #      colours all pixels in that region the colour of the point
+        # initialize ax
+        self.ax = self.fig.add_axes([0, 0, 1, 1], frame_on=False)
+        self.ax.xaxis.set_visible(False)
+        self.ax.yaxis.set_visible(False)
+
+        # initialize image
+        self.im = self.ax.imshow(np.zeros((imsizey,imsizex)),
+                                  interpolation='none',
+                                  animated=True)
+
+        # start figure
+        self.fig.show()
+        self.fig.canvas.draw()
+
+
     @timing
-    def update_colours(self,image):
-    
-        # Create blank image
-        im=Image.new("RGB",(len(image),len(image[0])))
-        pix = im.load()
-        
-        # for each pixel in each region, colour it to match the region's point
-        for r in self.voronoi:
-            for p in self.voronoi[r]:
-                pix[p[0],p[1]]=(int(image[r[0]][r[1]][0]),int(image[r[0]][r[1]][1]),int(image[r[0]][r[1]][2]))
+    def update_colours(self, image):
+        if image is None: return None
 
+        (facets, centers) = self.subdiv.getVoronoiFacetList([])
+        img = np.zeros(image.shape, dtype=image.dtype)
 
-        # Save the image
-        im.save("visualization.png", "PNG")
+        # color image
+        for i in range(len(facets)):
+            ifacet_arr = []
+            for f in facets[i]:
+                ifacet_arr.append(f)
+             
+            ifacet = np.array(ifacet_arr, np.int)
+            color = image[int(centers[i][1])][int(centers[i][0])].tolist()
+            cv2.fillConvexPoly(img, ifacet, color)
+
+        # update image data
+        self.im.set_data(img)
+
+        # draw image
+        self.ax.draw_artist(self.im)
+        self.fig.canvas.blit(self.ax.bbox)
+        self.fig.canvas.flush_events()
