@@ -17,9 +17,8 @@ import std_msgs.msg as std_msg
 import threading
 import time
 
-
-from policy import Policy
 from gvf import GVF
+from policy import Policy
 from state_representation import StateManager
 from tools import timing, topic_format
 from visualize_pixels import Visualize
@@ -28,7 +27,6 @@ from visualize_pixels import Visualize
 class LearningForeground:
 
     def __init__(self, 
-                 learning_rate, 
                  time_scale, 
                  gvfs, 
                  topics, 
@@ -48,11 +46,9 @@ class LearningForeground:
         rospy.loginfo("Started sensor threads.")
 
         # smooth out the actions
-        self.t_len = time_scale
-        self.q_len = max(int(time_scale / 0.1), 1)
+        self.time_scale = time_scale
 
         # agent info
-        self.alpha = learning_rate
         self.gvfs = gvfs
         self.behavior_policy = behavior_policy
         self.state_manager = StateManager()
@@ -66,17 +62,19 @@ class LearningForeground:
 
         # previous timestep information
         self.last_action = None
-        self.last_state = self.gvfs[0].learner._phi if self.gvfs else None
+        self.last_phi = self.gvfs[0].learner._phi if self.gvfs else None
         self.last_preds = {g:None for g in self.gvfs}
+        self.last_observation = None
+        self.last_mu = 1
 
         # Set up publishers
         pub_name = lambda g, lab: 'horde_verifier/{}_{}'.format(g, lab)
         pub = lambda g, lab: rospy.Publisher(pub_name(g, lab), 
                                              std_msg.Float64, 
                                              queue_size=10)
-        action_publisher = rospy.Publisher('cmd_vel_mux/input/teleop', 
+        action_publisher = rospy.Publisher('action_cmd', 
                                            geom_msg.Twist,
-                                           queue_size=self.q_len)
+                                           queue_size=1)
 
         self.publishers = {'avg_rupee': pub('avg', 'rupee'),
                            'avg_ude': pub('avg', 'ude'),
@@ -87,18 +85,21 @@ class LearningForeground:
 
         rospy.loginfo("Done LearningForeground init.")
 
-    def update_gvfs(self, new_state):
+    def update_gvfs(self, phi_prime, observation):
         for gvf in self.gvfs:
-            pred_before = gvf.predict(self.last_state)
-            gvf.update(self.last_action, new_state)
+            pred_before = gvf.predict(self.last_phi)
+            gvf.update(self.last_action, 
+                       phi_prime,
+                       observation, 
+                       self.last_observation,
+                       self.last_mu)
 
             # log predictions (optional)
-            pred_after = str(gvf.predict(self.last_state))
+            pred_after = str(gvf.predict(self.last_phi))
             rospy.loginfo("GVF prediction before: {}".format(pred_before))
             rospy.loginfo("GVF prediction after: {}".format(pred_after))
 
-            self.last_preds[gvf] = gvf.predict(new_state)
-
+            self.last_preds[gvf] = gvf.predict(phi_prime)
 
     def publish_predictions_and_errors(self, state):
 
@@ -165,21 +166,15 @@ class LearningForeground:
 
         rospy.loginfo(phi)
 
-        return phi
+        observation = self.state_manager.get_observations(bumper_status)
+        return phi, observation
 
     def take_action(self, action):
-
-        # log action
-        print_action = "linear: {}, angular: {}".format(action.linear.x,
-                                                        action.angular.z)
-        rospy.loginfo("Sending action to Turtlebot: {}".format(print_action))
-
-        # send new actions
-        [self.publishers['action'].publish(action) for _ in range(self.q_len)]
+        self.publishers['action'].publish(action)
 
     def run(self):
         # Keep track of time for when to avoid sleeping
-        sleep_time = self.t_len - 0.0001
+        sleep_time = self.time_scale - 0.0001
         tic = time.time()
 
         while not rospy.is_shutdown():
@@ -188,25 +183,39 @@ class LearningForeground:
                 time.sleep(0.0001)
 
             # get new state
-            new_state = self.create_state()
+            phi_prime, observation = self.create_state()
 
             # take action
-            action = self.behavior_policy(new_state)
+            action, mu = self.behavior_policy(phi_prime, observation)
             self.take_action(action)
 
             # learn
-            self.update_gvfs(new_state)
+            if self.last_observation is not None:
+                self.update_gvfs(phi_prime, observation)
 
-            self.last_state = new_state if len(new_state) else None
+            self.last_phi = phi_prime if len(phi_prime) else None
             self.last_action = action
+            self.last_mu = mu
+            self.last_observation = observation
 
             # reset tic
             tic += sleep_time
 
+def start_learning_foreground(time_scale,
+                              GVFs,
+                              topics,
+                              Policy):
+    try:
+        foreground = LearningForeground(time_scale,
+                                        GVFs,
+                                        topics,
+                                        Policy)
+        foreground.run()
+    except rospy.ROSInterruptException as detail:
+        rospy.loginfo("Handling: {}".format(detail))
 
 if __name__ == '__main__':
     try:
-        learning_rate = 0.5
         time_scale = 0.5
 
         topics = [

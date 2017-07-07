@@ -118,6 +118,16 @@ class StateManager:
     def get_num_tilings(self):
         return NUM_TILINGS
 
+    def get_observations(self, bumper_information):
+        observations = dict()
+        if bumper_information is None:
+            if self.last_bumper_raw is None:
+                bumper_information = (0,0,0)
+            else:
+                bumper_information = self.last_bumper_raw
+        observations["bump"] = bumper_information
+        return observations
+
 # This is a debugging function. It just generates a random image.
 @timing
 def DEBUG_generate_rand_image():

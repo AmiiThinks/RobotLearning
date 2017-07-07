@@ -1,11 +1,13 @@
+import multiprocessing as mp
 import numpy as np
 import random
 import rospy
 from geometry_msgs.msg import Twist, Vector3
 
+from action_manager import start_action_manager
 from algorithms import GTD
 from gvf import GVF
-from learning_foreground import LearningForeground
+from learning_foreground import start_learning_foreground
 from policy import Policy
 
 class GoForward(Policy):
@@ -13,8 +15,8 @@ class GoForward(Policy):
         Policy.__init__(self)
         self.speed = speed
 
-    def __call__(self, state):
-        return Twist(Vector3(self.speed, 0, 0), Vector3(0, 0, 0))
+    def __call__(self, phi, observation):
+        return Twist(Vector3(self.speed, 0, 0), Vector3(0, 0, 0)), 1
 
 class ForwardIfClear(Policy):
     def __init__(self, gvf, vel_linear=0.35, vel_angular=2):
@@ -30,9 +32,9 @@ class ForwardIfClear(Policy):
         self.FORWARD = 1
         self.STOP = 2
 
-    def __call__(self, state):
+    def __call__(self, phi, observation):
         
-        if self.gvf.predict(state) > random.random() or sum(state[:3]):
+        if self.gvf.predict(phi) > random.random() or sum(observation['bump']):
             action = Twist(Vector3(0, 0, 0), Vector3(0, 0, self.vel_angular))
             self.last_action = self.TURN
         else:
@@ -43,7 +45,7 @@ class ForwardIfClear(Policy):
                 action = Twist(Vector3(self.vel_linear, 0, 0), Vector3(0, 0, 0))
                 self.last_action = self.FORWARD
 
-        return action 
+        return action, 1
 
 if __name__ == "__main__":
     try:
@@ -56,21 +58,22 @@ if __name__ == "__main__":
         alpha = 0.000001
         beta = alpha / 10
 
-        one_if_bump = lambda state: int(bool(sum(state[:3])))
+        one_if_bump = lambda observation: int(any(observation['bump'])) if observation is not None else 0
+        go_forward = GoForward(speed=forward_speed)
         wall_demo = GVF(num_features=14403,
                         alpha=alpha,
                         beta=beta,
                         gamma=one_if_bump,
                         cumulant=one_if_bump,
-                        policy=GoForward(speed=forward_speed),
+                        policy=go_forward,
                         off_policy=True,
                         alg=GTD,
                         name='WallDemo',
                         logger=rospy.loginfo)
 
         behavior_policy = ForwardIfClear(wall_demo, 
-                                               vel_linear=forward_speed,
-                                               vel_angular=turn_speed)
+                                         vel_linear=forward_speed,
+                                         vel_angular=turn_speed)
 
         topics = [
             # "/camera/depth/image",
@@ -83,12 +86,21 @@ if __name__ == "__main__":
             # "/mobile_base/sensors/imu_data",
             ]
 
-        foreground = LearningForeground(alpha, 
-                                        time_scale,
-                                        [wall_demo],
-                                        topics,
-                                        behavior_policy)
-        foreground.run()
+        foreground_process = mp.Process(target=start_learning_foreground,
+                                        name="foreground",
+                                        args=(time_scale,
+                                              [wall_demo],
+                                              topics,
+                                              behavior_policy))
+
+        action_manager_process = mp.Process(target=start_action_manager,
+                                            name="action_manager",
+                                            args=())
+        foreground_process.start()
+        action_manager_process.start()
 
     except rospy.ROSInterruptException as detail:
         rospy.loginfo("Handling: {}".format(detail))
+    finally:
+        foreground_process.join()
+        action_manager_process.join()        
