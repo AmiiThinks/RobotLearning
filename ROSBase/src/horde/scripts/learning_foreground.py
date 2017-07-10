@@ -68,7 +68,7 @@ class LearningForeground:
         self.last_mu = 1
 
         # Set up publishers
-        pub_name = lambda g, lab: 'horde_verifier/{}_{}'.format(g, lab)
+        pub_name = lambda g, lab: '{}/{}'.format(g, lab) if g else lab
         pub = lambda g, lab: rospy.Publisher(pub_name(g, lab), 
                                              std_msg.Float64, 
                                              queue_size=10)
@@ -76,10 +76,10 @@ class LearningForeground:
                                            geom_msg.Twist,
                                            queue_size=1)
 
-        self.publishers = {'avg_rupee': pub('avg', 'rupee'),
-                           'avg_ude': pub('avg', 'ude'),
+        self.publishers = {'avg_rupee': pub('', 'avg_rupee'),
+                           'avg_ude': pub('', 'avg_ude'),
                            'action': action_publisher}
-        labels = ['prediction', 'rupee', 'ude']
+        labels = ['prediction', 'rupee', 'ude', 'td_error']
         label_pubs = {g:{l:pub(g.name, l) for l in labels} for g in self.gvfs}
         self.publishers.update(label_pubs)
 
@@ -101,22 +101,25 @@ class LearningForeground:
 
             self.last_preds[gvf] = gvf.predict(phi_prime)
 
-    def publish_predictions_and_errors(self, state):
+        self.publish_predictions_and_errors()
 
-        preds = [g.predict(state) for g in self.gvfs]
-        rupee = [g.rupee() for g in self.gvfs]
-        ude = [g.ude() for g in self.gvfs]
+    def publish_predictions_and_errors(self):
 
-        avg_rupee = sum(rupee)/len(rupee)
-        avg_ude = sum(ude)/len(ude)
+        td = {g:g.learner.delta for g in self.gvfs}
+        # rupee = [g.rupee() for g in self.gvfs]
+        # ude = [g.ude() for g in self.gvfs]
 
-        for i in range(len(self.gvfs)):
-            self.publishers[self.gvfs[i]]['prediction'].publish(preds[i])
-            self.publishers[self.gvfs[i]]['rupee'].publish(rupee[i])
-            self.publishers[self.gvfs[i]]['ude'].publish(ude[i])
+        # avg_rupee = sum(rupee)/len(rupee)
+        # avg_ude = sum(ude)/len(ude)
 
-        self.publishers['avg_rupee'].publish(avg_rupee)
-        self.publishers['avg_ude'].publish(avg_ude)
+        for g in self.gvfs:
+            self.publishers[g]['prediction'].publish(self.last_preds[g])
+            # self.publishers[self.gvfs[i]]['rupee'].publish(rupee[i])
+            # self.publishers[self.gvfs[i]]['ude'].publish(ude[i])
+            self.publishers[g]['td_error'].publish(td[g])
+
+        # self.publishers['avg_rupee'].publish(avg_rupee)
+        # self.publishers['avg_ude'].publish(avg_ude)
 
     def create_state(self):
         # TODO: consider moving the data processing elsewhere

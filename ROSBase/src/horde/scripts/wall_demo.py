@@ -34,7 +34,13 @@ class ForwardIfClear(Policy):
 
     def __call__(self, phi, observation):
         
-        if self.gvf.predict(phi) > random.random() or sum(observation['bump']):
+        # if self.gvf.predict(phi) > random.random() or sum(observation['bump']):
+        #     action = Twist(Vector3(0, 0, 0), Vector3(0, 0, self.vel_angular))
+        #     self.last_action = self.TURN
+        # else:
+            
+
+        if sum(observation['bump']):
             action = Twist(Vector3(0, 0, 0), Vector3(0, 0, self.vel_angular))
             self.last_action = self.TURN
         else:
@@ -44,7 +50,6 @@ class ForwardIfClear(Policy):
             else:
                 action = Twist(Vector3(self.vel_linear, 0, 0), Vector3(0, 0, 0))
                 self.last_action = self.FORWARD
-
         return action, 1
 
 if __name__ == "__main__":
@@ -55,7 +60,7 @@ if __name__ == "__main__":
         forward_speed = 0.2
         turn_speed = 2
 
-        alpha = 0.000001
+        alpha = 0.0001
         beta = alpha / 10
 
         one_if_bump = lambda observation: int(any(observation['bump'])) if observation is not None else 0
@@ -65,6 +70,7 @@ if __name__ == "__main__":
                         beta=beta,
                         gamma=one_if_bump,
                         cumulant=one_if_bump,
+                        lambda_= lambda observation: 0.95,
                         policy=go_forward,
                         off_policy=True,
                         alg=GTD,

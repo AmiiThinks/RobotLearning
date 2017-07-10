@@ -2,19 +2,16 @@
 Author: David Quail, Niko Yasui, June, 2017.
 
 Description:
-The GVF base class allows users to instantiate a specific general value function. The GVF could answer any specific question
- by overwriting the behavior policy, cumulant function, or gamma.
+The GVF base class allows users to instantiate a specific general value
+function. The GVF could answer any specific question by overwriting the 
+behavior policy, cumulant function, or gamma.
 
- Reference:
- See Adam White's thesis for refernce on GTD, TD, RUPEE and UDE algorithms
- http://homes.soic.indiana.edu/adamw/phd.pdf
 """
 from __future__ import print_function
 import numpy as np
 
 from algorithms import GTD
 from policy import Policy
-from tools import equal_twists
 
 class GVF:
     def __init__(self, 

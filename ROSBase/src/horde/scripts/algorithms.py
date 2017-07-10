@@ -24,6 +24,7 @@ class GTD:
         self._phi = np.array(np.copy(phi)) # use a copy of phi
         self._e = np.zeros(np.shape(self.theta))
         self._w = np.zeros(np.shape(self.theta))
+        self.delta = 0
 
     def update(self, phi_prime, reward, rho, alpha=None, beta=None, lambda_=None, gamma=None):
         """
@@ -47,6 +48,7 @@ class GTD:
 
         # calculate delta
         delta = reward + self.gamma * V_prime - V
+        self.delta = delta
 
         # update eligibility traces
         self._e *= (rho * self.old_lambda * self.old_gamma)[..., np.newaxis]
@@ -95,6 +97,7 @@ class BinaryGTD:
         self._phi = np.array(np.copy(phi)) # use a copy of phi
         self._e = np.zeros(np.shape(self.theta))
         self._w = np.zeros(np.shape(self.theta))
+        self.delta = 0
 
     def update(self, phi_prime, reward, rho, alpha=None, beta=None, lambda_=None, gamma=None):
         """
@@ -118,6 +121,7 @@ class BinaryGTD:
 
         # calculate delta
         delta = reward + self.gamma * V_prime - V
+        self.delta = delta
 
         # update eligibility traces
         self._e *= (rho * self.old_lambda * self.old_gamma)[..., np.newaxis]
