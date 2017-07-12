@@ -65,7 +65,7 @@ if __name__ == "__main__":
 
         one_if_bump = lambda observation: int(any(observation['bump'])) if observation is not None else 0
         go_forward = GoForward(speed=forward_speed)
-        wall_demo = GVF(num_features=14403,
+        wall_demo = GVF(num_features=14400,
                         alpha=alpha,
                         beta=beta,
                         gamma=one_if_bump,

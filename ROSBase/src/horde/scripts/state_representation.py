@@ -21,17 +21,10 @@ class StateConstants:
     NUM_TILINGS = 4
     NUM_INTERVALS = 4 
     NUM_FEATURES_PER_COL_VAL = NUM_TILINGS * NUM_INTERVALS
-    NUM_BUMPERS = 3
-    NUM_FEATURES_PER_BUMPER = 1
-    TOTAL_FEATURE_LENGTH = NUM_RANDOM_POINTS * 3 *  \
-        NUM_FEATURES_PER_COL_VAL + NUM_BUMPERS * NUM_FEATURES_PER_BUMPER
+    TOTAL_FEATURE_LENGTH = NUM_RANDOM_POINTS * 3 * NUM_FEATURES_PER_COL_VAL 
 
     # regards the generalization between tile dimensions
-    DIFF_BW_R = 100
-    DIFF_BW_G = 100
-    DIFF_BW_B = 100
     DIFF_BW_RGB = 256/NUM_TILINGS
-    DIFF_BW_BUMP = 1
 
     # constants relating to image size recieved
     IMAGE_LI = 480 # lines
@@ -42,41 +35,23 @@ class StateManager(object):
     def __init__(self):
         self.ihts = [tiles3.IHT(StateConstants.NUM_INTERVALS) for i in
                      xrange(StateConstants.NUM_RANDOM_POINTS * 3)]
-        self.chosen_points = self.random_points()
+
+        # set up mask to chose pixelsNNUM_TILINGS * NUM_INTERVALSUM_TILINGS * NUM_INTERVALS
+        self.chosen_indices = np.random.choice(a=StateConstants.IMAGE_LI*StateConstants.IMAGE_CO, 
+                                            size=StateConstants.NUM_RANDOM_POINTS, 
+                                            replace=False)
+        self.chosen_points = [(index // 640, index % 640) for index in self.chosen_indices]
+        self.pixel_mask = np.zeros(StateConstants.IMAGE_LI*StateConstants.IMAGE_CO, dtype=np.bool)
+        self.pixel_mask[self.chosen_indices] = True
+        self.pixel_mask = self.pixel_mask.reshape(StateConstants.IMAGE_LI, StateConstants.IMAGE_CO)
+
         self.last_image_raw = None
         self.last_bumper_raw = None
 
-    # Generates the list of pixels to be sampled
-    def random_points(self, number = StateConstants.NUM_RANDOM_POINTS):
-        random_points = []
-        
-        for p in range(number):
-            p1 = random.randint(0, StateConstants.IMAGE_LI - 1)
-            p2 = random.randint(0, StateConstants.IMAGE_CO - 1)
-
-            # ensuring distinctiveness in random point set
-            while ((p1, p2) in random_points):
-                p1 = random.randint(0, StateConstants.IMAGE_LI - 1)
-                p2 = random.randint(0, StateConstants.IMAGE_CO - 1)
-
-            random_points.append((p1, p2))
-
-        return random_points
-
     @timing
     def get_state_representation(self, image, bumper_information, action):
-        state_representation_raw = np.zeros(StateConstants.TOTAL_FEATURE_LENGTH)
-
-        # adding bumper data to the state
-        if bumper_information is None:
-            if self.last_bumper_raw is None:
-                bumper_information = (0,0,0)
-            else:
-                bumper_information = self.last_bumper_raw
-
-        state_representation_raw[0] = bumper_information[0]
-        state_representation_raw[1] = bumper_information[1]
-        state_representation_raw[2] = bumper_information[2]
+        state_representation_raw = np.zeros(StateConstants.TOTAL_FEATURE_LENGTH,
+                                            dtype=np.bool)
 
         # adding image data to state
         if image is None or len(image) == 0 or len(image[0]) == 0:
@@ -88,19 +63,16 @@ class StateManager(object):
 
         last_image_raw = image
 
-        points = [image[p[0]][p[1]] for p in self.chosen_points]
-        rgbpoints_raw = np.array(list(itertools.chain.from_iterable(points)))
+        rgbpoints_raw = image[self.pixel_mask].flatten()
 
         for color_index in xrange(len(rgbpoints_raw)):
             tiles = tiles3.tiles(self.ihts[color_index], StateConstants.NUM_TILINGS,
                                  [rgbpoints_raw[color_index] / StateConstants.DIFF_BW_RGB])
-            index = 0 
-            for t in tiles:
-                state_representation_raw[color_index * StateConstants.NUM_FEATURES_PER_COL_VAL
-                                         + index * StateConstants.NUM_INTERVALS 
-                                         + t + StateConstants.NUM_BUMPERS 
-                                         * StateConstants.NUM_FEATURES_PER_BUMPER] = 1
-                index+=1
+
+            index = 0
+            for i in xrange(len(tiles)):
+                state_representation_raw[color_index * StateConstants.NUM_FEATURES_PER_COL_VAL + index * StateConstants.NUM_TILINGS + tiles[i]] = True
+                index += 1
 
         return state_representation_raw
 
