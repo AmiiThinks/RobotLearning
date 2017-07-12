@@ -16,42 +16,48 @@ from tools import timing
 Picks NUM_RANDOM_POINTS random rgb values from an image and tiles those
 values to obtain the state representation
 """
+class StateConstants:
+    NUM_RANDOM_POINTS = 300
+    NUM_TILINGS = 4
+    NUM_INTERVALS = 4 
+    NUM_FEATURES_PER_COL_VAL = NUM_TILINGS * NUM_INTERVALS
+    NUM_BUMPERS = 3
+    NUM_FEATURES_PER_BUMPER = 1
+    TOTAL_FEATURE_LENGTH = NUM_RANDOM_POINTS * 3 *  \
+        NUM_FEATURES_PER_COL_VAL + NUM_BUMPERS * NUM_FEATURES_PER_BUMPER
 
-NUM_RANDOM_POINTS = 300
-NUM_TILINGS = 4
-NUM_INTERVALS = 4 
-NUM_FEATURES_PER_COL_VAL = NUM_TILINGS * NUM_INTERVALS
-NUM_BUMPERS = 3
-NUM_FEATURES_PER_BUMPER = 1
-TOTAL_FEATURE_LENGTH = NUM_RANDOM_POINTS * 3 *  \
-    NUM_FEATURES_PER_COL_VAL + NUM_BUMPERS * NUM_FEATURES_PER_BUMPER
+    # regards the generalization between tile dimensions
+    DIFF_BW_R = 100
+    DIFF_BW_G = 100
+    DIFF_BW_B = 100
+    DIFF_BW_RGB = 256/NUM_TILINGS
+    DIFF_BW_BUMP = 1
 
-# regards the generalization between tile dimensions
-DIFF_BW_R = 100
-DIFF_BW_G = 100
-DIFF_BW_B = 100
-DIFF_BW_RGB = 256/NUM_TILINGS
-DIFF_BW_BUMP = 1
+    # constants relating to image size recieved
+    IMAGE_LI = 480 # lines
+    IMAGE_CO = 640 # columns
 
-# constants relating to image size recieved
-IMAGE_LI = 480 # lines
-IMAGE_CO = 640 # columns
 
-class StateManager:
+class StateManager(object):
     def __init__(self):
-        self.ihts = [tiles3.IHT(NUM_INTERVALS) for i in
-                     xrange(NUM_RANDOM_POINTS * 3)]
+        self.ihts = [tiles3.IHT(StateConstants.NUM_INTERVALS) for i in
+                     xrange(StateConstants.NUM_RANDOM_POINTS * 3)]
         self.chosen_points = self.random_points()
         self.last_image_raw = None
         self.last_bumper_raw = None
 
     # Generates the list of pixels to be sampled
-    def random_points(self):
+    def random_points(self, number = StateConstants.NUM_RANDOM_POINTS):
         random_points = []
         
-        for p in range(NUM_RANDOM_POINTS):
-            p1 = random.randint(0, IMAGE_LI - 1)
-            p2 = random.randint(0, IMAGE_CO - 1)
+        for p in range(number):
+            p1 = random.randint(0, StateConstants.IMAGE_LI - 1)
+            p2 = random.randint(0, StateConstants.IMAGE_CO - 1)
+
+            # ensuring distinctiveness in random point set
+            while ((p1, p2) in random_points):
+                p1 = random.randint(0, StateConstants.IMAGE_LI - 1)
+                p2 = random.randint(0, StateConstants.IMAGE_CO - 1)
 
             random_points.append((p1, p2))
 
@@ -59,7 +65,7 @@ class StateManager:
 
     @timing
     def get_state_representation(self, image, bumper_information, action):
-        state_representation_raw = np.zeros(TOTAL_FEATURE_LENGTH)
+        state_representation_raw = np.zeros(StateConstants.TOTAL_FEATURE_LENGTH)
 
         # adding bumper data to the state
         if bumper_information is None:
@@ -86,18 +92,20 @@ class StateManager:
         rgbpoints_raw = np.array(list(itertools.chain.from_iterable(points)))
 
         for color_index in xrange(len(rgbpoints_raw)):
-            tiles = tiles3.tiles(self.ihts[color_index], NUM_TILINGS,
-                                 [rgbpoints_raw[color_index] / DIFF_BW_RGB])
+            tiles = tiles3.tiles(self.ihts[color_index], StateConstants.NUM_TILINGS,
+                                 [rgbpoints_raw[color_index] / StateConstants.DIFF_BW_RGB])
             index = 0 
             for t in tiles:
-                state_representation_raw[color_index * NUM_FEATURES_PER_COL_VAL
-                                         + index * NUM_INTERVALS + t + 3] = 1
+                state_representation_raw[color_index * StateConstants.NUM_FEATURES_PER_COL_VAL
+                                         + index * StateConstants.NUM_INTERVALS 
+                                         + t + StateConstants.NUM_BUMPERS 
+                                         * StateConstants.NUM_FEATURES_PER_BUMPER] = 1
                 index+=1
 
         return state_representation_raw
 
     def get_num_tilings(self):
-        return NUM_TILINGS
+        return StateConstants.NUM_TILINGS
 
     def get_observations(self, bumper_information):
         observations = dict()

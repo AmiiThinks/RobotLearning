@@ -1,4 +1,5 @@
 import numpy as np
+import rospy
 
 class GTD:
 
@@ -26,7 +27,7 @@ class GTD:
         self._w = np.zeros(np.shape(self.theta))
         self.delta = 0
 
-    def update(self, phi_prime, reward, rho, alpha=None, beta=None, lambda_=None, gamma=None):
+    def update(self, phi_prime, reward, rho, alpha=None, beta=None, lambda_=None, gamma=None, reset_mask=None):
         """
         Updates the parameter vector for a new observation. If any optional
         values are set then the new value of the optional is used for this and
@@ -57,6 +58,8 @@ class GTD:
         # update theta
         self.theta += (self.alpha*delta*self._e.T).T
         self.theta -= np.outer(self.alpha*self.gamma*(1-self.lambda_)*np.sum(self._e*self._w, axis = 1), phi_prime)
+        if (reset_mask is not None):
+            self.theta = np.inner(self.theta, reset_mask)
 
         #update w
         self._w -= np.outer(self.beta*np.dot(self._w, self._phi), self._phi)
@@ -66,6 +69,12 @@ class GTD:
         self._phi = np.array(np.copy(phi_prime))
         self.old_gamma = np.array(np.copy(self.gamma))
         self.old_lambda = np.array(np.copy(self.lambda_))
+
+    def weight(self):
+        """
+        Returns the weight vector
+        """
+        return self.theta[0]
 
     def predict(self, phi):
         """
@@ -99,7 +108,7 @@ class BinaryGTD:
         self._w = np.zeros(np.shape(self.theta))
         self.delta = 0
 
-    def update(self, phi_prime, reward, rho, alpha=None, beta=None, lambda_=None, gamma=None):
+    def update(self, phi_prime, reward, rho, alpha=None, beta=None, lambda_=None, gamma=None, reset_mask=None):
         """
         Updates the parameter vector for a new observation. If any optional
         values are set then the new value of the optional is used for this and
@@ -130,6 +139,8 @@ class BinaryGTD:
         # update theta
         self.theta += (self.alpha*delta*self._e.T).T
         self.theta[:, phi_prime] -=(self.alpha*self.gamma*(1-self.lambda_)*np.sum(self._e*self._w, axis = 1))[..., np.newaxis]
+        if (reset_mask is not None):
+            self.theta = np.inner(self.theta, reset_mask)
 
         #update w
         self._w[:, self._phi] -= (self.beta*np.sum(self._w[:, self._phi], axis = 1))[..., np.newaxis]

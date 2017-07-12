@@ -8,7 +8,7 @@ from turtlesim.msg import Pose
 import numpy as np
 
 from time import time
-
+#from state_representation import StateConstants
 
 topic_format = {
     "/camera/depth/image":sens_msg.Image,
@@ -56,6 +56,22 @@ def timing(f):
         return result
     return wrap
 
+"""
+Decorator that ensures overriden methods are valid.
+arguments:
+    interface_class: the respective super class
+
+    e.g.
+        class ConcreteImplementer(MySuperInterface):
+            @overrides(MySuperInterface)
+            def my_method(self):
+                print 'hello kitty!'
+"""
+def overrides(interface_class):
+    def overrider(method):
+        assert(method.__name__ in dir(interface_class))
+        return method
+    return overrider
 
 """
 Parsers for easy (but maybe heavy) state creation

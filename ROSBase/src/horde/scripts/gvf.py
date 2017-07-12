@@ -45,6 +45,7 @@ class GVF:
                            theta=theta,
                            phi=phi)
 
+        self.weight = self.learner.weight
         self.predict = self.learner.predict
 
     def update(self, 
@@ -52,7 +53,8 @@ class GVF:
                phi_prime, 
                new_observation, 
                last_observation, 
-               last_mu):
+               last_mu,
+               reset_mask = None):
         if self.off_policy:
             self.learner.update(phi_prime, 
                                 self.cumulant(new_observation),
@@ -61,12 +63,14 @@ class GVF:
                                          last_mu,
                                          phi_prime),
                                 lambda_=self.lambda_(new_observation),
-                                gamma=self.gamma(new_observation))
+                                gamma=self.gamma(new_observation),
+                                reset_mask=reset_mask)
         else:
             self.learner.update(phi_prime, 
                                 self.cumulant(new_observation),
                                 1,
                                 lambda_=self.lambda_(new_observation),
-                                gamma=self.gamma(new_observation))
+                                gamma=self.gamma(new_observation),
+                                reset_mask=reset_mask)
 
 
