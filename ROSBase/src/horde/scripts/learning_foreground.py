@@ -56,9 +56,9 @@ class LearningForeground:
 
         # currently costs about 0.0275s per timestep
         rospy.loginfo("Creating visualization.")
-        # self.visualization = Visualize(self.state_manager.chosen_points,
-        #                                imsizex=640,
-        #                                imsizey=480)
+        self.visualization = Visualize(self.state_manager.pixel_mask,
+                                       imsizex=640,
+                                       imsizey=480)
         rospy.loginfo("Done creatiing visualization.")
 
         # previous timestep information
@@ -86,7 +86,7 @@ class LearningForeground:
 
     def update_gvfs(self, phi_prime, observation):
         for gvf in self.gvfs:
-            g.update(self.last_observation,
+            gvf.update(self.last_observation,
                      self.last_phi,
                      self.last_action, 
                      observation,
@@ -143,7 +143,7 @@ class LearningForeground:
         phi = self.state_manager.get_state_representation(image_data, bumper_status, 0)
 
         # update the visualization of the image data
-        # self.visualization.update_colours(image_data)
+        self.visualization.update_colours(image_data)
 
         rospy.loginfo(phi)
 
@@ -159,6 +159,7 @@ class LearningForeground:
         tic = time.time()
 
         while not rospy.is_shutdown():
+
             # To avoid the drift of just calling time.sleep()
             while time.time() < tic:
                 time.sleep(0.0001)

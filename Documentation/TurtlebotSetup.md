@@ -29,7 +29,7 @@ sudo apt install ros-kinetic-vision-opencv
 In the top right, click the `power gear icon`. Then go to `System Settings` and click `User Accounts` in the bottom right. Click `unlock` in the top right of the window if the options are locked, then click `Automatic Login` so that the slider icon reads "on".
 
 #### Edit the login script
-In your favorite text editor, open `~/.profile` or your preffered login script. Paste into it the following:
+In your favorite text editor, open `~/.profile` or your preffered boot script. Paste into it the following:
 ```{bash}
 if ! ([ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]); then  
 

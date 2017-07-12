@@ -24,12 +24,12 @@ from tools import timing
 matplotlib.rcParams['toolbar'] = 'None'
 
 class Visualize():
-    def __init__(self, points, imsizex, imsizey, dpi=100):
+    def __init__(self, mask, imsizex, imsizey, dpi=100):
 
         # make subdivision
         rect = (0, 0, imsizex, imsizey)
         self.subdiv = cv2.Subdiv2D(rect)
-        self.subdiv.insert([[y,x] for (x, y) in points])
+        self.subdiv.insert(map(list,zip(*reversed(map(list,np.where(mask))))))
 
         # initialize figure
         self.fig = plt.figure("Image Stream",
