@@ -52,17 +52,18 @@ class LearningForeground:
         self.gvfs = gvfs
         self.behavior_policy = behavior_policy
         self.state_manager = StateManager()
+        self.avg_td_err = None
 
         # currently costs about 0.0275s per timestep
         rospy.loginfo("Creating visualization.")
-        self.visualization = Visualize(self.state_manager.chosen_points,
-                                       imsizex=640,
-                                       imsizey=480)
+        # self.visualization = Visualize(self.state_manager.chosen_points,
+        #                                imsizex=640,
+        #                                imsizey=480)
         rospy.loginfo("Done creatiing visualization.")
 
         # previous timestep information
         self.last_action = None
-        self.last_phi = self.gvfs[0].learner._phi if self.gvfs else None
+        self.last_phi = None
         self.last_preds = {g:None for g in self.gvfs}
         self.last_observation = None
         self.last_mu = 1
@@ -76,29 +77,27 @@ class LearningForeground:
                                            geom_msg.Twist,
                                            queue_size=1)
 
-        self.publishers = {'avg_rupee': pub('', 'avg_rupee'),
-                           'avg_ude': pub('', 'avg_ude'),
-                           'action': action_publisher}
-        labels = ['prediction', 'rupee', 'ude', 'td_error']
+        self.publishers = {'action': action_publisher}
+        labels = ['prediction', 'td_error', 'avg_td_error']
         label_pubs = {g:{l:pub(g.name, l) for l in labels} for g in self.gvfs}
         self.publishers.update(label_pubs)
 
         rospy.loginfo("Done LearningForeground init.")
 
     def update_gvfs(self, phi_prime, observation):
-        for gvf in self.gvfs:
-            gvf.update(self.last_action, 
-                       phi_prime,
-                       observation, 
-                       self.last_observation,
-                       self.last_mu)
+        for g in self.gvfs:
+            g.update(self.last_observation,
+                     self.last_phi,
+                     self.last_action, 
+                     observation,
+                     phi_prime, 
+                     self.last_mu)
 
-        # publish predictions
-        td_err = {g:g.learner.delta for g in self.gvfs}
-
-        for gvf in self.gvfs:
-            self.publishers[gvf]['prediction'].publish(self.last_preds[gvf])
-            self.publishers[gvf]['td_error'].publish(td_err[gvf])
+        # publishing
+        for g in self.gvfs:
+            self.publishers[g]['prediction'].publish(self.last_preds[g])
+            self.publishers[g]['td_error'].publish(g.td_error)
+            self.publishers[g]['avg_td_error'].publish(g.avg_td_error)
 
     def create_state(self):
         # TODO: consider moving the data processing elsewhere
@@ -144,7 +143,7 @@ class LearningForeground:
         phi = self.state_manager.get_state_representation(image_data, bumper_status, 0)
 
         # update the visualization of the image data
-        self.visualization.update_colours(image_data)
+        # self.visualization.update_colours(image_data)
 
         rospy.loginfo(phi)
 

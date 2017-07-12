@@ -5,7 +5,7 @@ import rospy
 from geometry_msgs.msg import Twist, Vector3
 
 from action_manager import start_action_manager
-from algorithms import GTD
+from gtd import GTD
 from gvf import GVF
 from learning_foreground import start_learning_foreground
 from policy import Policy
@@ -39,7 +39,6 @@ class ForwardIfClear(Policy):
         #     self.last_action = self.TURN
         # else:
             
-        print(observation)
         if sum(observation['bump']):
             action = Twist(Vector3(0, 0, 0), Vector3(0, 0, self.vel_angular))
             self.last_action = self.TURN
@@ -60,24 +59,25 @@ if __name__ == "__main__":
         forward_speed = 0.2
         turn_speed = 2
 
-        alpha = 0.0001
-        beta = alpha / 10
+        parameters = {'alpha': 0.1, 
+                      'beta': 0.01,
+                      'lambda': 0.9}
 
         one_if_bump = lambda observation: int(any(observation['bump'])) if observation is not None else 0
+        discount_if_bump = lambda observation: 0 if sum(observation["bump"]) else 0.9
         go_forward = GoForward(speed=forward_speed)
-        wall_demo = GVF(num_features=14400,
-                        alpha=alpha,
-                        beta=beta,
-                        gamma=one_if_bump,
-                        cumulant=one_if_bump,
-                        lambda_= lambda observation: 0.95,
-                        policy=go_forward,
-                        off_policy=True,
-                        alg=GTD,
-                        name='WallDemo',
-                        logger=rospy.loginfo)
 
-        behavior_policy = ForwardIfClear(wall_demo, 
+        distance_to_bump = GVF(cumulant = one_if_bump,
+                               gamma    = discount_if_bump,
+                               target_policy = go_forward,
+                               num_features = 14400,
+                               parameters = parameters,
+                               off_policy = True,
+                               alg = GTD,
+                               name = 'DistanceToBump',
+                               logger = rospy.loginfo)
+
+        behavior_policy = ForwardIfClear(distance_to_bump, 
                                          vel_linear=forward_speed,
                                          vel_angular=turn_speed)
 
@@ -95,7 +95,7 @@ if __name__ == "__main__":
         foreground_process = mp.Process(target=start_learning_foreground,
                                         name="foreground",
                                         args=(time_scale,
-                                              [wall_demo],
+                                              [distance_to_bump],
                                               topics,
                                               behavior_policy))
 
@@ -108,5 +108,8 @@ if __name__ == "__main__":
     except rospy.ROSInterruptException as detail:
         rospy.loginfo("Handling: {}".format(detail))
     finally:
-        foreground_process.join()
-        action_manager_process.join()        
+        try:
+            foreground_process.join()
+            action_manager_process.join()  
+        except NameError:
+            pass    
