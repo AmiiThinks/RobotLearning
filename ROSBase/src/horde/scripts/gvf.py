@@ -1,76 +1,48 @@
 """
-Author: David Quail, Niko Yasui, June, 2017.
-
-Description:
-The GVF base class allows users to instantiate a specific general value
-function. The GVF could answer any specific question by overwriting the 
-behavior policy, cumulant function, or gamma.
+Author: Banafsheh Rafiee
 
 """
-from __future__ import print_function
 import numpy as np
-
-from algorithms import GTD
-from policy import Policy
 
 class GVF:
     def __init__(self, 
-                 num_features, 
-                 alpha, 
-                 beta,
-                 lambda_=lambda observation: 0.9,
-                 gamma=lambda observation: 0,
-                 cumulant=lambda observation: 1,
-                 policy=Policy(),
-                 off_policy=True, 
-                 alg=GTD,
-                 name='GVFname', 
-                 logger=print):
+                 cumulant, 
+                 gamma, 
+                 target_policy, 
+                 num_features,
+                 parameters,
+                 off_policy, 
+                 alg,
+                 name, 
+                 logger):
 
-        self.lambda_ = lambda_
-        self.gamma = gamma
         self.cumulant = cumulant
-        self.policy = policy
-        self.rho = lambda action, observation, mu, phi: policy.prob(action, phi, observation) / mu
+        self.gamma = gamma
+        self.target_policy = target_policy
+
+        self.parameters = parameters
+        self.num_features = num_features
+        self.phi = np.zeros(num_features)
+        
         self.off_policy = off_policy
         self.name = name
 
-        theta = np.zeros(num_features)
-        phi = np.zeros(num_features)
-        observation = None
-        self.learner = alg(alpha, 
-                           beta,
-                           self.lambda_(observation), 
-                           self.gamma(observation),
-                           theta=theta,
-                           phi=phi)
+        self.learner = alg(parameters, self.num_features)
 
-        self.weight = self.learner.weight
         self.predict = self.learner.predict
 
     def update(self, 
-               last_action, 
-               phi_prime, 
-               new_observation, 
                last_observation, 
-               last_mu,
-               reset_mask = None):
-        if self.off_policy:
-            self.learner.update(phi_prime, 
-                                self.cumulant(new_observation),
-                                self.rho(last_action, 
-                                         last_observation,
-                                         last_mu,
-                                         phi_prime),
-                                lambda_=self.lambda_(new_observation),
-                                gamma=self.gamma(new_observation),
-                                reset_mask=reset_mask)
-        else:
-            self.learner.update(phi_prime, 
-                                self.cumulant(new_observation),
-                                1,
-                                lambda_=self.lambda_(new_observation),
-                                gamma=self.gamma(new_observation),
-                                reset_mask=reset_mask)
-
+               phi, 
+               last_action, 
+               observation, 
+               phi_prime, 
+               mu):
+        pi = self.target_policy(last_observation, last_action)[1]
+        self.learner.update(phi = phi,
+                            phi_prime = phi_prime,
+                            cumulant = self.cumulant(observation),
+                            gamma = self.gamma(observation),
+                            rho = pi / mu) 
+        self.phi = phi_prime
 
