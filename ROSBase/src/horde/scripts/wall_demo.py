@@ -39,7 +39,7 @@ class ForwardIfClear(Policy):
         #     self.last_action = self.TURN
         # else:
             
-
+        print(observation)
         if sum(observation['bump']):
             action = Twist(Vector3(0, 0, 0), Vector3(0, 0, self.vel_angular))
             self.last_action = self.TURN

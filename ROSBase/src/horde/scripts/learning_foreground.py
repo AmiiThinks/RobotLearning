@@ -55,7 +55,6 @@ class LearningForeground:
 
         # currently costs about 0.0275s per timestep
         rospy.loginfo("Creating visualization.")
-        rospy.loginfo(self.state_manager.chosen_points)
         self.visualization = Visualize(self.state_manager.chosen_points,
                                        imsizex=640,
                                        imsizey=480)
@@ -88,39 +87,18 @@ class LearningForeground:
 
     def update_gvfs(self, phi_prime, observation):
         for gvf in self.gvfs:
-            pred_before = gvf.predict(self.last_phi)
             gvf.update(self.last_action, 
                        phi_prime,
                        observation, 
                        self.last_observation,
                        self.last_mu)
 
-            # log predictions (optional)
-            pred_after = str(gvf.predict(self.last_phi))
-            rospy.loginfo("GVF prediction before: {}".format(pred_before))
-            rospy.loginfo("GVF prediction after: {}".format(pred_after))
+        # publish predictions
+        td_err = {g:g.learner.delta for g in self.gvfs}
 
-            self.last_preds[gvf] = gvf.predict(phi_prime)
-
-        self.publish_predictions_and_errors()
-
-    def publish_predictions_and_errors(self):
-
-        td = {g:g.learner.delta for g in self.gvfs}
-        # rupee = [g.rupee() for g in self.gvfs]
-        # ude = [g.ude() for g in self.gvfs]
-
-        # avg_rupee = sum(rupee)/len(rupee)
-        # avg_ude = sum(ude)/len(ude)
-
-        for g in self.gvfs:
-            self.publishers[g]['prediction'].publish(self.last_preds[g])
-            # self.publishers[self.gvfs[i]]['rupee'].publish(rupee[i])
-            # self.publishers[self.gvfs[i]]['ude'].publish(ude[i])
-            self.publishers[g]['td_error'].publish(td[g])
-
-        # self.publishers['avg_rupee'].publish(avg_rupee)
-        # self.publishers['avg_ude'].publish(avg_ude)
+        for gvf in self.gvfs:
+            self.publishers[gvf]['prediction'].publish(self.last_preds[gvf])
+            self.publishers[gvf]['td_error'].publish(td_err[gvf])
 
     def create_state(self):
         # TODO: consider moving the data processing elsewhere

@@ -1,6 +1,4 @@
-import geometry_msgs.msg as geom_msg
 from geometry_msgs.msg import Twist, Vector3
-
 import rospy
 
 class ActionManager():
@@ -13,10 +11,10 @@ class ActionManager():
 
     def run(self):
         rospy.init_node('action_manager', anonymous=True)
-        rospy.Subscriber('action_cmd', geom_msg.Twist, self.update_action)
+        rospy.Subscriber('action_cmd', Twist, self.update_action)
 
         action_publisher = rospy.Publisher('cmd_vel_mux/input/teleop', 
-                                            geom_msg.Twist,
+                                            Twist,
                                             queue_size=1)
 
         action_pub_rate = rospy.Rate(10)
@@ -25,7 +23,7 @@ class ActionManager():
             # log action
             print_action = "linear: {}, angular: {}".format(self.action.linear.x,
                                                             self.action.angular.z)
-            rospy.loginfo("Sending action to Turtlebot: {}".format(print_action))
+            rospy.logdebug("Sending action to Turtlebot: {}".format(print_action))
 
             # send new actions
             action_publisher.publish(self.action)
