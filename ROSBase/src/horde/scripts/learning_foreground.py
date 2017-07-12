@@ -20,6 +20,7 @@ import time
 from gvf import GVF
 from policy import Policy
 from state_representation import StateManager
+from gentest_state_representation import GenTestStateManager
 from tools import timing, topic_format
 from visualize_pixels import Visualize
 
@@ -51,8 +52,9 @@ class LearningForeground:
         # agent info
         self.gvfs = gvfs
         self.behavior_policy = behavior_policy
-        self.state_manager = StateManager()
         self.avg_td_err = None
+
+        self.state_manager = GenTestStateManager()
 
         # currently costs about 0.0275s per timestep
         rospy.loginfo("Creating visualization.")
@@ -140,7 +142,10 @@ class LearningForeground:
             image_data = np.asarray(br.imgmsg_to_cv2(self.recent['/camera/rgb/image_rect_color'].get(),
                 desired_encoding="passthrough")) 
 
-        phi = self.state_manager.get_state_representation(image_data, bumper_status, 0)
+        primary_gvf_weight = None
+        if (len(self.gvfs) > 0):
+            primary_gvf_weight = self.gvfs[0].weight();
+        phi = self.state_manager.get_state_representation(image_data, bumper_status, 0, primary_gvf_weight)
 
         # update the visualization of the image data
         self.visualization.update_colours(image_data)

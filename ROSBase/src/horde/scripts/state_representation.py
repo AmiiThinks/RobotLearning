@@ -40,11 +40,11 @@ class StateManager(object):
         # set up mask to chose pixels
         num_pixels = StateConstants.IMAGE_LI*StateConstants.IMAGE_CO
         num_chosen = StateConstants.NUM_RANDOM_POINTS
-        chosen_indices = np.random.choice(a=num_pixels, 
+        self.chosen_indices = np.random.choice(a=num_pixels, 
                                           size=num_chosen, 
                                           replace=False)
         self.pixel_mask = np.zeros(num_pixels, dtype=np.bool)
-        self.pixel_mask[chosen_indices] = True
+        self.pixel_mask[self.chosen_indices] = True
         self.pixel_mask = self.pixel_mask.reshape(StateConstants.IMAGE_LI, 
                                                   StateConstants.IMAGE_CO)
 
@@ -63,7 +63,9 @@ class StateManager(object):
             if self.last_image_raw is None:
                 return phi
             else:
-                return self.last_image_raw
+                return self.get_state_representation(self.last_image_raw,
+                                                     bumper_information,
+                                                     action)
 
         self.last_image_raw = image
 
@@ -77,6 +79,9 @@ class StateManager(object):
 
             for i in xrange(len(tiles)):
                 phi[color_index * StateConstants.NUM_FEATURES_PER_COL_VAL + i * StateConstants.NUM_TILINGS + tiles[i]] = True
+
+        rospy.loginfo("PHI SENT")
+        rospy.loginfo(phi)
 
         return phi
 
