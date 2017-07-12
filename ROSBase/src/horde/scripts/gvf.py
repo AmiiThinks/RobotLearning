@@ -54,3 +54,4 @@ class GVF:
                 self.avg_td_error = self.td_error
             self.avg_td_error += 0.2 * (self.td_error - self.avg_td_error)
 
+

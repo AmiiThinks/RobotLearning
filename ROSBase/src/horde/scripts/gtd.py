@@ -17,6 +17,7 @@ class GTD:
 	def update(self, phi, phi_prime, cumulant, gamma, rho):
 		self.delta = cumulant + gamma * np.dot(phi_prime, self.theta) - np.dot(phi, self.theta)
 		self.e = rho * (self.lmbda * self.old_gamma * self.e + phi)
+
 		self.theta += self.alpha * (self.delta * self.e - gamma * (1 - self.lmbda) * np.dot(self.e, self.w) * phi_prime)
 		self.w += self.beta * (self.delta * self.e - np.dot(phi, self.w) * phi)
 

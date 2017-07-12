@@ -85,7 +85,7 @@ class LearningForeground:
         rospy.loginfo("Done LearningForeground init.")
 
     def update_gvfs(self, phi_prime, observation):
-        for g in self.gvfs:
+        for gvf in self.gvfs:
             g.update(self.last_observation,
                      self.last_phi,
                      self.last_action, 
@@ -94,10 +94,10 @@ class LearningForeground:
                      self.last_mu)
 
         # publishing
-        for g in self.gvfs:
-            self.publishers[g]['prediction'].publish(self.last_preds[g])
-            self.publishers[g]['td_error'].publish(g.td_error)
-            self.publishers[g]['avg_td_error'].publish(g.avg_td_error)
+        for gvf in self.gvfs:
+            self.publishers[gvf]['prediction'].publish(self.last_preds[gvf])
+            self.publishers[gvf]['td_error'].publish(gvf.td_error)
+            self.publishers[gvf]['avg_td_error'].publish(gvf.avg_td_error)
 
     def create_state(self):
         # TODO: consider moving the data processing elsewhere
