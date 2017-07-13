@@ -55,9 +55,9 @@ class LearningForeground:
 
         # currently costs about 0.0275s per timestep
         rospy.loginfo("Creating visualization.")
-        self.visualization = Visualize(self.state_manager.chosen_points,
-                                       imsizex=640,
-                                       imsizey=480)
+        # self.visualization = Visualize(self.state_manager.chosen_points,
+                                       # imsizex=640,
+                                       # imsizey=480)
         rospy.loginfo("Done creatiing visualization.")
 
         # previous timestep information
@@ -127,6 +127,7 @@ class LearningForeground:
         rospy.loginfo("Creating state...")
         # get queue size from ALL sensors before reading any of them
         bumper_num_obs = self.recent['/mobile_base/sensors/core'].qsize()
+        ir_num_obs = self.recent['/mobile_base/sensors/dock_ir'].qsize()
         image_num_obs = self.recent['/camera/rgb/image_rect_color'].qsize()
 
         # bumper constants from http://docs.ros.org/hydro/api/kobuki_msgs/html/msg/SensorState.html
@@ -150,19 +151,15 @@ class LearningForeground:
                              1 if BUMPER_CENTRE & last_bump_raw else 0)
 
         # get the last ir information
-        if (bumper_num_obs > 0):
+        for _ in range(ir_num_obs - 1):
+            self.recent['/mobile_base/sensors/dock_ir'].get()
+        if (ir_num_obs > 0):
             # 
-            last_ir_raw_near_left = self.recent['/mobile_base/sensors/dock_ir'].get().NEAR_LEFT
-            last_ir_raw_near_center = self.recent['/mobile_base/sensors/dock_ir'].get().NEAR_CENTER
-            last_ir_raw_near_right = self.recent['/mobile_base/sensors/dock_ir'].get().NEAR_RIGHT
-            last_ir_raw_far_left = self.recent['/mobile_base/sensors/dock_ir'].get().FAR_LEFT
-            last_ir_raw_far_center = self.recent['/mobile_base/sensors/dock_ir'].get().FAR_CENTER
-            last_ir_raw_far_right = self.recent['/mobile_base/sensors/dock_ir'].get().FAR_RIGHT
+            last_ir_raw_left = ord(self.recent['/mobile_base/sensors/dock_ir'].get().data[0])
+            last_ir_raw_center = ord(self.recent['/mobile_base/sensors/dock_ir'].get().data[1])
+            last_ir_raw_right = ord(self.recent['/mobile_base/sensors/dock_ir'].get().data[2])
 
-            ir_status = (1 if last_ir_raw_far_left or last_ir_raw_near_left else 0, 
-                             1 if last_ir_raw_far_center or last_ir_raw_near_center else 0, 
-                             1 if last_ir_raw_near_right or last_ir_raw_far_right else 0)
-
+            ir_status = (last_ir_raw_left, last_ir_raw_center, last_ir_raw_right)
         # get the image processed for the state representation
         image_data = None
         
@@ -180,7 +177,7 @@ class LearningForeground:
         phi = self.state_manager.get_state_representation(image_data, bumper_status, 0)
 
         # update the visualization of the image data
-        self.visualization.update_colours(image_data)
+        # self.visualization.update_colours(image_data)
 
         rospy.loginfo(phi)
 

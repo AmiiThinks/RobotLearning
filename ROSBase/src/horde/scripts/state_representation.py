@@ -44,6 +44,7 @@ class StateManager:
         self.chosen_points = self.random_points()
         self.last_image_raw = None
         self.last_bumper_raw = None
+        self.last_ir_raw = None
 
     # Generates the list of pixels to be sampled
     def random_points(self):
@@ -111,8 +112,6 @@ class StateManager:
         if ir_information is None:
             if self.last_ir_raw is None:
                 ir_information = (0,0,0)
-            else:
-                ir_information = self.last_ir_raw
         observations["ir"] = ir_information
 
         return observations
