@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 class GTD:
 
@@ -25,6 +26,7 @@ class GTD:
         self._e = np.zeros(np.shape(self.theta))
         self._w = np.zeros(np.shape(self.theta))
         self.delta = 0
+        self.action_space = []
 
     def update(self, phi_prime, reward, rho, alpha=None, beta=None, lambda_=None, gamma=None):
         """
@@ -145,3 +147,100 @@ class BinaryGTD:
         Returns the current prediction for a given set of features phi.
         """
         return np.sum(self.theta[:,phi], axis = 1)
+
+class GreedyGQ:
+    """ From Maei/Sutton 2010, with additional info from Adam White. """
+    def __init__(self,_theta,rewardDiscount,_lambda,cumulant,learningRate,epsilon):
+        """
+        Constructs a new agent with the given parameters. Note that a copy of
+        phi is created during the construction process.
+        """
+        self._greedyPolicy = Learned_Policy()
+        self.epsilon = epsilon
+        self._behaviorPolicy = eGreedy(epsilon = self.epsilon)
+        self._theta = _theta
+        self._rewardDiscount = None
+        self._lambda = None
+        self._learningRate = None
+        self._sec_weights = None
+        self._td_error = None
+        self._etraces = None
+        self.cumulant = cumulant
+        action_space = []
+        
+    def update(self, state, action, observation, next_state):
+        reward = self.cumulant(observation)
+        learned_policy = self._greedyPolicy
+        behavior_policy = self._behaviorPolicy
+
+        # A_t+1 update
+        # I'm assuming self.get_representation(next_state,action) gives the state-action representation of that pair
+        next_greedy_action = action
+        for action in action_space:
+            if dot(self._theta, self.get_representation(next_state,action)) >= dot(self._theta, self.get_representation(next_state,next_greedy_action)):
+                next_greedy_action = action
+
+        # phi_bar update
+        phi_bar = self.get_representation(next_state,next_greedy_action)
+
+        # delta_t update
+        self._td_error = reward + self._rewardDiscount * rv_dot(self._theta, phi_bar) - dot(self._theta,self.get_representation(state,action))
+        
+        previous_greedy_action = action
+        for action in action_space:
+            if dot(self._theta, self.get_representation(state,action)) >= dot(self._theta, self.get_representation(state,previous_greedy_action)):
+                previous_greedy_action = action
+
+        # rho_t (responsibility) update
+        if action = greedy action:
+            responsibility = 1/(1-self.epsilon+self.epsilon/len(action_space))
+        else:
+            responsibility = 0
+
+        # e_t update
+        self._etraces *= self._rewardDiscount * self._lambda * responsibility
+        self._etraces += state #(phi_t) 
+                
+        # theta_t update
+        self._theta += self._learningRate * (self._td_error * self._etraces - 
+                        self._rewardDiscount * (1 - self._lambda) * rv_dot(self._sec_weights, self.get_representation(state,action)) * phi_bar)
+        
+        # w_t update
+        self._sec_weights += self._learningRate * (td_error * self._etraces - rv_dot(self._sec_weights, phi) * phi)
+
+    def get_representation(state, action):
+        representation = []
+        for current_action in self.action_space:
+            if current_action == action:
+                representation.append(state)
+            else:
+                representation.append(np.zeros(len(state)))
+        return np.asarray(representation)
+
+    class eGreedy(Policy):
+        def __init__(self, epsilon = 0, ):
+            Policy.__init__(self)
+            self.epsilon = epsilon
+
+        def take_action(self, phi, learned_policy):
+            # select a random number between 0 and 1
+            random_number = random.uniform(0, 1)
+            if random_number < epsilon:
+                random_action = action_space[randint(0,len(action_space)-1)]
+                return random_action, self.epsilon/len(action_space)
+
+            greedy_action,_ = learned_policy.take_action()
+            # take the action here
+            return greedy_action, 1-self.epsilon+self.epsilon/len(action_space)
+
+    class Learned_Policy(Policy):
+        def __init__(self):
+            Policy.__init__(self)
+
+        def take_action(self, phi, learned_policy):
+            greedy_action = action_space[0]
+            for action in action_space:
+                if dot(self._theta, self.get_representation(state,action)) >= dot(self._theta, self.get_representation(state,greedy_action)):
+                    greedy_action = action
+
+            return greedy_action, _

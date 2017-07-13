@@ -38,14 +38,18 @@ class GVF:
         theta = np.zeros(num_features)
         phi = np.zeros(num_features)
         observation = None
-        self.learner = alg(alpha, 
-                           beta,
-                           self.lambda_(observation), 
-                           self.gamma(observation),
-                           theta=theta,
-                           phi=phi)
+        learningRate = 0
+        epsilon = 0.25
 
-        self.predict = self.learner.predict
+        self.learner = alg(_theta=theta,
+                        _rewardDiscount = gamma,
+                        _lambda = lambda_,
+                        cumulant = cumulant,
+                        learningRate=learningRate,
+                        epsilon=epsilon)
+
+        if False:
+            self.predict = self.learner.predict
 
     def update(self, 
                last_action, 

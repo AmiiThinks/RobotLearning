@@ -136,6 +136,7 @@ class LearningForeground:
 
         # variables that will be passed to the state manager to create the state
         bumper_status = None
+        ir_status = None
 
         # clear the bumper queue of unused/old observations
         for _ in range(bumper_num_obs - 1):
@@ -145,8 +146,22 @@ class LearningForeground:
         if (bumper_num_obs > 0):
             last_bump_raw = self.recent['/mobile_base/sensors/core'].get().bumper
             bumper_status = (1 if BUMPER_RIGHT & last_bump_raw else 0, 
-                             1 if BUMPER_LEFT & last_bump_raw else 0, 
+                             1 if BUMPER_LEFT & last_bump_raw else 0,
                              1 if BUMPER_CENTRE & last_bump_raw else 0)
+
+        # get the last ir information
+        if (bumper_num_obs > 0):
+            # 
+            last_ir_raw_near_left = self.recent['/mobile_base/sensors/dock_ir'].get().NEAR_LEFT
+            last_ir_raw_near_center = self.recent['/mobile_base/sensors/dock_ir'].get().NEAR_CENTER
+            last_ir_raw_near_right = self.recent['/mobile_base/sensors/dock_ir'].get().NEAR_RIGHT
+            last_ir_raw_far_left = self.recent['/mobile_base/sensors/dock_ir'].get().FAR_LEFT
+            last_ir_raw_far_center = self.recent['/mobile_base/sensors/dock_ir'].get().FAR_CENTER
+            last_ir_raw_far_right = self.recent['/mobile_base/sensors/dock_ir'].get().FAR_RIGHT
+
+            ir_status = (1 if last_ir_raw_far_left or last_ir_raw_near_left else 0, 
+                             1 if last_ir_raw_far_center or last_ir_raw_near_center else 0, 
+                             1 if last_ir_raw_near_right or last_ir_raw_far_right else 0)
 
         # get the image processed for the state representation
         image_data = None
@@ -169,7 +184,7 @@ class LearningForeground:
 
         rospy.loginfo(phi)
 
-        observation = self.state_manager.get_observations(bumper_status)
+        observation = self.state_manager.get_observations(bumper_status, ir_status)
         return phi, observation
 
     def take_action(self, action):
@@ -187,14 +202,15 @@ class LearningForeground:
 
             # get new state
             phi_prime, observation = self.create_state()
+            self.learner.update(state=last_phi,action=action,observation=observation,next_state=phi_prime)
 
             # take action
-            action, mu = self.behavior_policy(phi_prime, observation)
+            action, mu = self.gvfs[0].learner.behavior_policy(phi_prime, observation)
             self.take_action(action)
 
             # learn
-            if self.last_observation is not None:
-                self.update_gvfs(phi_prime, observation)
+            # if self.last_observation is not None:
+            #     self.update_gvfs(phi_prime, observation)
 
             self.last_phi = phi_prime if len(phi_prime) else None
             self.last_action = action
