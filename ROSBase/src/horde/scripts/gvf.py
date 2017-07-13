@@ -42,7 +42,7 @@ class GVF:
         epsilon = 0.25
 
         self.learner = alg(_theta=theta,
-                        _rewardDiscount = gamma,
+                        rewardDiscount = gamma,
                         _lambda = lambda_,
                         cumulant = cumulant,
                         learningRate=learningRate,

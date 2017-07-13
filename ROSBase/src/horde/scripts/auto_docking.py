@@ -75,7 +75,7 @@ if __name__ == "__main__":
         one_if_ir = lambda observation: int(any(observation['ir'])) if observation is not None else 0
 
         go_forward = GoForward(speed=forward_speed)
-        action_space = 0
+        action_space = [None]*5
         num_features = len(action_space)
         num_features = 5
         wall_demo = GVF(num_features=14403*num_features,
@@ -118,6 +118,6 @@ if __name__ == "__main__":
 
     except rospy.ROSInterruptException as detail:
         rospy.loginfo("Handling: {}".format(detail))
-    finally:
-        foreground_process.join()
-        action_manager_process.join()        
+    # finally:
+        # foreground_process.join()
+        # action_manager_process.join()        
