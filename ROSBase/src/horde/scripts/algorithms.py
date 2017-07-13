@@ -213,11 +213,11 @@ class GreedyGQ:
         self._etraces = np.zeros(14403*5)
         self._phi = np.zeros(14403) # use a copy of phi
 
-        self.action_space = [Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)),
-                        Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)),
-                        Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)),
-                        Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)),
-                        Twist(Vector3(0, 0, 0), Vector3(0, 0, 0))
+        self.action_space = [Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
+                        Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0)), # forward
+                        Twist(Vector3(-0.2, 0, 0), Vector3(0, 0, 0)), # backward
+                        Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.35)), # turn acw/cw
+                        Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.35)) # turn cw/acw
                         ]
 
     def take_action(self, phi_prime):
