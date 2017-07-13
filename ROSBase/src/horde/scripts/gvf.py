@@ -40,9 +40,10 @@ class GVF:
         observation = None
         learningRate = 0
         epsilon = 0.25
+        lambda_ = 0.9
 
         self.learner = alg(_theta=theta,
-                        rewardDiscount = gamma,
+                        gamma = gamma,
                         _lambda = lambda_,
                         cumulant = cumulant,
                         learningRate=learningRate,

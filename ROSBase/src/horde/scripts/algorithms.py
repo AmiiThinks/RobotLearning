@@ -156,14 +156,14 @@ class eGreedy(Policy):
         Policy.__init__(self)
         self.epsilon = epsilon
 
-    def take_action(self, phi, learned_policy):
+    def take_action(self, phi, learned_policy, action_space, _theta):
         # select a random number between 0 and 1
         random_number = random.uniform(0, 1)
-        if random_number < epsilon:
-            random_action = action_space[randint(0,len(action_space)-1)]
+        if random_number < self.epsilon:
+            random_action = action_space[random.randint(0,len(action_space)-1)]
             return random_action, self.epsilon/len(action_space)
 
-        greedy_action,_ = learned_policy.take_action()
+        greedy_action,_ = learned_policy.take_action(phi, learned_policy, action_space, _theta)
         # take the action here
         return greedy_action, 1-self.epsilon+self.epsilon/len(action_space)
 
@@ -171,86 +171,107 @@ class Learned_Policy(Policy):
     def __init__(self):
         Policy.__init__(self)
 
-    def take_action(self, phi, learned_policy):
+    def take_action(self, phi, learned_policy, action_space, _theta):
+        self.action_space = action_space
         greedy_action = action_space[0]
-        for action in action_space:
-            if dot(self._theta, self.get_representation(state,action)) >= dot(self._theta, self.get_representation(state,greedy_action)):
-                greedy_action = action
+        if phi != None:
+            return action_space[0], -1
 
-        return greedy_action, _
+        for action in action_space:
+            print len(phi), observation
+            if np.dot(_theta, self.get_representation(phi,action)) >= np.dot(self._theta, self.get_representation(phi,action)):
+                greedy_action = action
+        return greedy_action, -1
+
+    def get_representation(self, state, action):
+        representation = []
+        for current_action in self.action_space:
+            if current_action == action:
+                representation = representation + state
+            else:
+                representation = representation + np.zeros(len(state))
+        return np.asarray(representation)
 
 class GreedyGQ:
     """ From Maei/Sutton 2010, with additional info from Adam White. """
 
-    def __init__(self,_theta,rewardDiscount,_lambda,cumulant,learningRate,epsilon):
+    def __init__(self,_theta,gamma,_lambda,cumulant,learningRate,epsilon):
         """
         Constructs a new agent with the given parameters. Note that a copy of
         phi is created during the construction process.
         """
         self.epsilon = epsilon
-        self._behaviorPolicy = eGreedy(epsilon = self.epsilon)
-        self._greedyPolicy = Learned_Policy()
+        self.behavior_policy = eGreedy(epsilon = self.epsilon)
+        self.learned_policy = Learned_Policy()
         self._theta = _theta
-        self._rewardDiscount = rewardDiscount
-        self._lambda = None
-        self._learningRate = None
-        self._sec_weights = None
-        self._td_error = None
-        self._etraces = None
+        self.gamma = gamma
+        self._lambda = _lambda
+        self._learningRate = learningRate
         self.cumulant = cumulant
-        action_space = [Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)),
+        self._td_error = 0
+        self._sec_weights = np.zeros(14403*5)
+        self._etraces = np.zeros(14403*5)
+        self._phi = np.zeros(14403) # use a copy of phi
+
+        self.action_space = [Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)),
                         Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)),
                         Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)),
                         Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)),
                         Twist(Vector3(0, 0, 0), Vector3(0, 0, 0))
-                        ]   
-        
+                        ]
+
+    def take_action(self, phi_prime):
+        action, mu = self.behavior_policy.take_action(phi_prime, self.learned_policy,self.action_space, self._theta)
+        return action, mu
+
     def update(self, state, action, observation, next_state):
         reward = self.cumulant(observation)
-        learned_policy = self._greedyPolicy
-        behavior_policy = self._behaviorPolicy
+        _rewardDiscount = self.gamma(observation)
+        learned_policy = self.learned_policy
+        behavior_policy = self.behavior_policy
 
         # A_t+1 update
         # I'm assuming self.get_representation(next_state,action) gives the state-action representation of that pair
         next_greedy_action = action
-        for action in action_space:
-            if dot(self._theta, self.get_representation(next_state,action)) >= dot(self._theta, self.get_representation(next_state,next_greedy_action)):
+        for action in self.action_space:
+            if np.dot(self._theta, self.get_representation(next_state,action)) >= np.dot(self._theta, self.get_representation(next_state,next_greedy_action)):
                 next_greedy_action = action
 
         # phi_bar update
         phi_bar = self.get_representation(next_state,next_greedy_action)
 
         # delta_t update
-        self._td_error = reward + self._rewardDiscount * rv_dot(self._theta, phi_bar) - dot(self._theta,self.get_representation(state,action))
+        self._td_error = reward + _rewardDiscount * np.dot(self._theta, phi_bar) - np.dot(self._theta,self.get_representation(state,action))
         
         previous_greedy_action = action
-        for action in action_space:
-            if dot(self._theta, self.get_representation(state,action)) >= dot(self._theta, self.get_representation(state,previous_greedy_action)):
+        for action in self.action_space:
+            if np.dot(self._theta, self.get_representation(state,action)) >= np.dot(self._theta, self.get_representation(state,previous_greedy_action)):
                 previous_greedy_action = action
 
         # rho_t (responsibility) update
-        if action == greedy_action:
-            responsibility = 1/(1-self.epsilon+self.epsilon/len(action_space))
+        if action == previous_greedy_action:
+            responsibility = 1/(1-self.epsilon+self.epsilon/len(self.action_space))
         else:
             responsibility = 0
 
         # e_t update
-        self._etraces *= self._rewardDiscount * self._lambda * responsibility
-        self._etraces += state #(phi_t) 
+        self._etraces *= _rewardDiscount * self._lambda * responsibility
+        self._etraces += self.get_representation(state,action) #(phi_t) 
                 
         # theta_t update
         self._theta += self._learningRate * (self._td_error * self._etraces - 
-                        self._rewardDiscount * (1 - self._lambda) * rv_dot(self._sec_weights, self.get_representation(state,action)) * phi_bar)
+                        _rewardDiscount * (1 - self._lambda) * np.dot(self._sec_weights, self.get_representation(state,action)) * phi_bar)
         
         # w_t update
-        self._sec_weights += self._learningRate * (td_error * self._etraces - rv_dot(self._sec_weights, phi) * phi)
+        self._sec_weights += self._learningRate * (self._td_error * self._etraces - np.dot(self._sec_weights, self.get_representation(state,action)) * self.get_representation(state,action))
 
-    def get_representation(state, action):
+    def get_representation(self, state, action):
         representation = []
+        state = np.ndarray.tolist(state)
         for current_action in self.action_space:
             if current_action == action:
-                representation.append(state)
+                representation = representation + state
             else:
-                representation.append(np.zeros(len(state)))
+                representation = representation + np.zeros(len(state))
         return np.asarray(representation)
 

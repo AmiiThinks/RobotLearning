@@ -202,12 +202,12 @@ class LearningForeground:
 
             # get new state
             phi_prime, observation = self.create_state()
-            self.learner.update(state=last_phi,action=action,observation=observation,next_state=phi_prime)
 
             # take action
-            action, mu = self.gvfs[0].learner.behavior_policy(phi_prime, observation)
+            action, mu = self.gvfs[0].learner.take_action(phi_prime)
             self.take_action(action)
 
+            self.gvfs[0].learner.update(state=self.last_phi,action=action,observation=observation,next_state=phi_prime)
             # learn
             # if self.last_observation is not None:
             #     self.update_gvfs(phi_prime, observation)
