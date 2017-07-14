@@ -12,6 +12,7 @@ import numpy as np
 
 from algorithms import GTD
 from policy import Policy
+import random
 
 class GVF:
     def __init__(self, 
@@ -35,18 +36,20 @@ class GVF:
         self.off_policy = off_policy
         self.name = name
 
-        theta = np.zeros(num_features)
+        theta = np.random.rand(num_features)
         phi = np.zeros(num_features)
         observation = None
-        learningRate = 0
-        epsilon = 0.25
-        lambda_ = 0.9
+        learningRate = 0.1
+        secondaryLearningRate = 0.1
+        epsilon = 1.0
+        lambda_ = 0.5
 
-        self.learner = alg(_theta=theta,
+        self.learner = alg(theta = theta,
                         gamma = gamma,
                         _lambda = lambda_,
                         cumulant = cumulant,
-                        learningRate=learningRate,
+                        alpha=learningRate,
+                        beta=secondaryLearningRate,
                         epsilon=epsilon)
 
         if False:

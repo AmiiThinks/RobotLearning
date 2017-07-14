@@ -14,8 +14,11 @@ import geometry_msgs.msg as geom_msg
 from Queue import Queue
 import rospy
 import std_msgs.msg as std_msg
+import geometry_msgs.msg as geom_msg
+from geometry_msgs.msg import Twist, Vector3
 import threading
 import time
+import sys
 
 from gvf import GVF
 from policy import Policy
@@ -204,7 +207,10 @@ class LearningForeground:
             action, mu = self.gvfs[0].learner.take_action(phi_prime)
             self.take_action(action)
 
-            self.gvfs[0].learner.update(state=self.last_phi,action=action,observation=observation,next_state=phi_prime)
+            to_exit = self.gvfs[0].learner.update(state=self.last_phi,action=action,observation=observation,next_state=phi_prime)
+            if to_exit:
+                self.take_action(Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)))
+                sys.exit()
             # learn
             # if self.last_observation is not None:
             #     self.update_gvfs(phi_prime, observation)
