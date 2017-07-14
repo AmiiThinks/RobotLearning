@@ -25,7 +25,7 @@ class ActionManager():
             # log action
             print_action = "linear: {}, angular: {}".format(self.action.linear.x,
                                                             self.action.angular.z)
-            rospy.loginfo("Sending action to Turtlebot: {}".format(print_action))
+            rospy.logdebug("Sending action to Turtlebot: {}".format(print_action))
 
             # send new actions
             action_publisher.publish(self.action)

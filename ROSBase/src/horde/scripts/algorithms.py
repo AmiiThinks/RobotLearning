@@ -220,13 +220,17 @@ class GreedyGQ:
         self.action_space = [Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
                         Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0)), # forward
                         Twist(Vector3(-0.2, 0, 0), Vector3(0, 0, 0)), # backward
-                        Twist(Vector3(0, 0, 0), Vector3(0, 0, 3.5)), # turn acw/cw
-                        Twist(Vector3(0, 0, 0), Vector3(0, 0, -3.5)) # turn cw/acw
+                        Twist(Vector3(0, 0, 0), Vector3(0, 0, 1.5)), # turn acw/cw
+                        Twist(Vector3(0, 0, 0), Vector3(0, 0, -1.5)) # turn cw/acw
                         ]
 
     def take_action(self, phi_prime):
         action, mu = self.behavior_policy.take_action(phi_prime, self.learned_policy,self.action_space, self.theta)
         return action, mu
+
+    def take_random_action(self):
+        random_action = self.action_space[random.randint(0,len(self.action_space)-1)]
+        return random_action, 1/len(self.action_space)
 
     def update(self, state, action, observation, next_state):
         reward = self.cumulant(observation)
@@ -236,7 +240,8 @@ class GreedyGQ:
         self.phi = self.get_representation(state,action)
 
         if reward == 1:
-            print 'exiting ...'
+            print 'Episode finished'
+            self.etrace = np.zeros(14403*5)
             # give the signal to stop
             return True
 

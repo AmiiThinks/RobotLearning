@@ -41,7 +41,7 @@ class GVF:
         observation = None
         learningRate = 0.1
         secondaryLearningRate = 0.1
-        epsilon = 1.0
+        epsilon = 0.5
         lambda_ = 0.5
 
         self.learner = alg(theta = theta,

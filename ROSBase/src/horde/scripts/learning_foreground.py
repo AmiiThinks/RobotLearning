@@ -59,8 +59,8 @@ class LearningForeground:
         # currently costs about 0.0275s per timestep
         rospy.loginfo("Creating visualization.")
         # self.visualization = Visualize(self.state_manager.chosen_points,
-                                       # imsizex=640,
-                                       # imsizey=480)
+        #                                imsizex=640,
+        #                                imsizey=480)
         rospy.loginfo("Done creatiing visualization.")
 
         # previous timestep information
@@ -194,6 +194,9 @@ class LearningForeground:
         # Keep track of time for when to avoid sleeping
         sleep_time = self.time_scale - 0.0001
         tic = time.time()
+        random_actions_taken = 0 
+        random_actions_to_take = 10
+        finished_episode = False
 
         while not rospy.is_shutdown():
             # To avoid the drift of just calling time.sleep()
@@ -207,10 +210,18 @@ class LearningForeground:
             action, mu = self.gvfs[0].learner.take_action(phi_prime)
             self.take_action(action)
 
-            to_exit = self.gvfs[0].learner.update(state=self.last_phi,action=action,observation=observation,next_state=phi_prime)
-            if to_exit:
-                self.take_action(Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)))
-                sys.exit()
+            if finished_episode == False:
+                finished_episode = self.gvfs[0].learner.update(state=self.last_phi,action=action,observation=observation,next_state=phi_prime)
+            if finished_episode:
+                # take random action here
+                random_actions_taken = random_actions_taken + 1
+                action, mu = self.gvfs[0].learner.take_random_action()
+                self.take_action(action)
+                print 'taking random action number: ', random_actions_taken
+                if random_actions_taken == random_actions_to_take:
+                    random_actions_taken = 0
+                    finished_episode = False
+                continue
             # learn
             # if self.last_observation is not None:
             #     self.update_gvfs(phi_prime, observation)
