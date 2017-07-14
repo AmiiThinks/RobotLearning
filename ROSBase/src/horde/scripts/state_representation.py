@@ -22,7 +22,13 @@ class StateConstants:
     NUM_TILINGS = 4
     NUM_INTERVALS = 4 
     NUM_FEATURES_PER_COL_VAL = NUM_TILINGS * NUM_INTERVALS
-    TOTAL_FEATURE_LENGTH = NUM_RANDOM_POINTS * 3 * NUM_FEATURES_PER_COL_VAL 
+
+    TOTAL_PIXEL_FEATURE_LENGTH = NUM_RANDOM_POINTS * 3 * NUM_FEATURES_PER_COL_VAL
+    BIAS_FEATURE_INDEX = TOTAL_PIXEL_FEATURE_LENGTH
+
+    # the 3 represents the number quantity of values in rgb
+    # the 1 represents the bias unit
+    TOTAL_FEATURE_LENGTH = TOTAL_PIXEL_FEATURE_LENGTH + 1
 
     # regards the generalization between tile dimensions
     DIFF_BW_RGB = 256/NUM_TILINGS
@@ -54,8 +60,10 @@ class StateManager(object):
 
     @timing
     def get_state_representation(self, image, bumper_information, action):
-
         phi = np.zeros(StateConstants.TOTAL_FEATURE_LENGTH, dtype=np.bool)
+
+        # setting the bias unit
+        phi[StateConstants.BIAS_FEATURE_INDEX] = True 
 
         # adding image data to state
         if image is None or len(image) == 0 or len(image[0]) == 0:

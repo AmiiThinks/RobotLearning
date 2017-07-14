@@ -70,7 +70,7 @@ if __name__ == "__main__":
         distance_to_bump = GVF(cumulant = one_if_bump,
                                gamma    = discount_if_bump,
                                target_policy = go_forward,
-                               num_features = 14400,
+                               num_features = 14401,
                                parameters = parameters,
                                off_policy = True,
                                alg = GTD,
