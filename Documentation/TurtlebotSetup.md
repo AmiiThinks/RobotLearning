@@ -37,7 +37,7 @@ if ! ([ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]); then
   source /opt/ros/indigo/setup.bash
 
   # get the IP of this machine
-  export ROS_IP=$(hostname -I | awk '{print $1;}')
+  export ROS_IP=127.0.0.1 # We are assuming here that the turtlebot itself is ROS_MASTER
   export ROS_HOSTNAME=$ROS_IP
   export ROS_MASTER_URI=http://$ROS_HOSTNAME:11311
 
