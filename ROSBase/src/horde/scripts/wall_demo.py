@@ -59,9 +59,11 @@ if __name__ == "__main__":
         forward_speed = 0.2
         turn_speed = 2
 
-        parameters = {'alpha': 0.1, 
-                      'beta': 0.01,
-                      'lambda': 0.9}
+        alpha = 0.01
+        lambda_ = 0.9
+        parameters = {'alpha': alpha,
+                      'beta': 0.001 * alpha,
+                      'lambda': lambda_}
 
         one_if_bump = lambda observation: int(any(observation['bump'])) if observation is not None else 0
         discount_if_bump = lambda observation: 0 if sum(observation["bump"]) else 0.9

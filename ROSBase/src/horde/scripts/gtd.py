@@ -14,13 +14,16 @@ class GTD:
 		self.lmbda = parameters["lambda"]
 		self.old_gamma = 0
 		self.delta = 0
+		self.tderr_elig = 0
 
 	def update(self, phi, phi_prime, cumulant, gamma, rho):
+		self.tderr_elig = self.delta * self.e
+
 		self.delta = cumulant + gamma * np.dot(phi_prime, self.theta) - np.dot(phi, self.theta)
 		self.e = rho * (self.lmbda * self.old_gamma * self.e + phi)
 
-		self.theta += self.alpha * (self.delta * self.e - gamma * (1 - self.lmbda) * np.dot(self.e, self.w) * phi_prime)
-		self.w += self.beta * (self.delta * self.e - np.dot(phi, self.w) * phi)
+		self.theta += self.alpha * (self.tderr_elig - gamma * (1 - self.lmbda) * np.dot(self.e, self.w) * phi_prime)
+		self.w += self.beta * (self.tderr_elig - np.dot(phi, self.w) * phi)
 
 		self.old_gamma = gamma
 		return self.delta, self.e

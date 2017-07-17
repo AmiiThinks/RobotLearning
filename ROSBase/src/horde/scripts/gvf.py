@@ -34,6 +34,14 @@ class GVF:
 
         self.td_error = self.learner.delta
         self.avg_td_error = 0
+        self.n = 0
+
+        self.alpha_rupee = 0.001
+        self.beta0_rupee = 0.0001
+        self.tau_rupee = 0
+        self.hhat = np.zeros(num_features)
+        self.td_elig_avg = np.zeros(num_features)
+
 
 
     def update(self, 
@@ -49,11 +57,18 @@ class GVF:
                             cumulant = self.cumulant(observation),
                             gamma = self.gamma(observation),
                             rho = pi / mu) 
+        
+        # update RUPEE
+        self.hhat += self.alpha_rupee * (self.learner.tderr_elig - np.inner(self.hhat, phi) * phi)
+        self.tau_rupee *= 1 - self.beta0_rupee
+        self.tau_rupee += self.beta0_rupee
+        beta_rupee = self.beta0_rupee / self.tau_rupee
+        self.td_elig_avg *= 1 - beta_rupee
+        self.td_elig_avg += beta_rupee * self.learner.tderr_elig
+
         self.phi = phi_prime
         self.td_error = self.learner.delta
-        if self.td_error > 0.001:
-            if self.avg_td_error == 0:
-                self.avg_td_error = self.td_error
-            self.avg_td_error += 0.2 * (self.td_error - self.avg_td_error)
-
-
+        self.avg_td_error += (self.td_error - self.avg_td_error)/(self.n + 1)
+ 
+    def rupee(self):
+        np.sqrt(np.absolute(np.inner(self.hhat, self.td_elig_avg)))

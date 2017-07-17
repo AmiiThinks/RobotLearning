@@ -88,9 +88,6 @@ class StateManager(object):
             for i in xrange(len(tiles)):
                 phi[color_index * StateConstants.NUM_FEATURES_PER_COL_VAL + i * StateConstants.NUM_TILINGS + tiles[i]] = True
 
-        rospy.loginfo("PHI SENT")
-        rospy.loginfo(phi)
-
         return phi
 
     def get_num_tilings(self):

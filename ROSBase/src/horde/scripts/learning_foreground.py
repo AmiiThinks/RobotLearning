@@ -58,9 +58,9 @@ class LearningForeground:
 
         # currently costs about 0.0275s per timestep
         rospy.loginfo("Creating visualization.")
-        self.visualization = Visualize(self.state_manager.pixel_mask,
-                                       imsizex=640,
-                                       imsizey=480)
+        # self.visualization = Visualize(self.state_manager.pixel_mask,
+        #                                imsizex=640,
+        #                                imsizey=480)
         rospy.loginfo("Done creatiing visualization.")
 
         # previous timestep information
@@ -75,17 +75,18 @@ class LearningForeground:
         pub = lambda g, lab: rospy.Publisher(pub_name(g, lab), 
                                              std_msg.Float64, 
                                              queue_size=10)
-        action_publisher = rospy.Publisher('action_cmd', 
+        action_publisher = rospy.Publisher('test', 
                                            geom_msg.Twist,
                                            queue_size=1)
 
         self.publishers = {'action': action_publisher}
-        labels = ['prediction', 'td_error', 'avg_td_error']
+        labels = ['prediction', 'td_error', 'avg_td_error', 'rupee']
         label_pubs = {g:{l:pub(g.name, l) for l in labels} for g in self.gvfs}
         self.publishers.update(label_pubs)
 
         rospy.loginfo("Done LearningForeground init.")
 
+    @timing
     def update_gvfs(self, phi_prime, observation):
         for gvf in self.gvfs:
             gvf.update(self.last_observation,
@@ -100,6 +101,7 @@ class LearningForeground:
             self.publishers[gvf]['prediction'].publish(self.last_preds[gvf])
             self.publishers[gvf]['td_error'].publish(gvf.td_error)
             self.publishers[gvf]['avg_td_error'].publish(gvf.avg_td_error)
+            self.publishers[gvf]['rupee'].publish(gvf.rupee())
 
     def create_state(self):
         # TODO: consider moving the data processing elsewhere
@@ -148,7 +150,7 @@ class LearningForeground:
         phi = self.state_manager.get_state_representation(image_data, bumper_status, 0, primary_gvf_weight)
 
         # update the visualization of the image data
-        self.visualization.update_colours(image_data)
+        # self.visualization.update_colours(image_data)
 
         rospy.loginfo(phi)
 
