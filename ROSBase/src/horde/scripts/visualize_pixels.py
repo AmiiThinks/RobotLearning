@@ -26,10 +26,13 @@ matplotlib.rcParams['toolbar'] = 'None'
 class Visualize():
     def __init__(self, mask, imsizex, imsizey, dpi=100):
 
+        # convert mask to x,y points
+        points = map(list, zip(*reversed(map(list, np.where(mask)))))
+
         # make subdivision
         rect = (0, 0, imsizex, imsizey)
         self.subdiv = cv2.Subdiv2D(rect)
-        self.subdiv.insert(map(list,zip(*reversed(map(list,np.where(mask))))))
+        self.subdiv.insert(points)
 
         # initialize figure
         self.fig = plt.figure("Image Stream",
