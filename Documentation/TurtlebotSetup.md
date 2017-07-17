@@ -42,7 +42,7 @@ if ! ([ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]); then
   export ROS_MASTER_URI=http://$ROS_HOSTNAME:11311
 
   # as per your install
-  source /home/turtlebot/catkin_ws/devel/setup.bash
+  source $HOME/catkin_ws/devel/setup.bash
 
   roscore &
   # wait for roscore to start so we can start
