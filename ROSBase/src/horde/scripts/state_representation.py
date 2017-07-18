@@ -38,7 +38,11 @@ class StateConstants:
 
 class StateManager(object):
     def __init__(self):
+
         self.ihts = [tiles3.IHT(StateConstants.NUM_INTERVALS) for _ in xrange(StateConstants.NUM_RANDOM_POINTS * 3)]
+        self.last_image_raw = None
+        self.last_bumper_raw = None
+        self.last_ir_raw = None
 
         self.iht = tiles3.IHT(StateConstants.NUM_INTERVALS)
 
@@ -104,7 +108,7 @@ class StateManager(object):
         
         return phi
 
-    def get_observations(self, bumper_information):
+    def get_observations(self, bumper_information,ir_information):
         observations = dict()
         if bumper_information is None:
             if self.last_bumper_raw is None:
@@ -112,6 +116,12 @@ class StateManager(object):
             else:
                 bumper_information = self.last_bumper_raw
         observations["bump"] = bumper_information
+
+        if ir_information is None:
+            if self.last_ir_raw is None:
+                ir_information = (0,0,0)
+        observations["ir"] = ir_information
+
         return observations
 
 # This is a debugging function. It just generates a random image.

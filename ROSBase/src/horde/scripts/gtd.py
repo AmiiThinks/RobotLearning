@@ -16,7 +16,7 @@ class GTD:
 		self.delta = 0
 		self.tderr_elig = 0
 
-	def update(self, phi, phi_prime, cumulant, gamma, rho):
+	def update(self, phi, phi_prime, cumulant, gamma, rho, **kwargs):
 		self.tderr_elig = self.delta * self.e
 
 		self.delta = cumulant + gamma * np.dot(phi_prime, self.theta) - np.dot(phi, self.theta)

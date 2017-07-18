@@ -14,11 +14,14 @@ import geometry_msgs.msg as geom_msg
 from Queue import Queue
 import rospy
 import std_msgs.msg as std_msg
+import geometry_msgs.msg as geom_msg
+from geometry_msgs.msg import Twist, Vector3
 import threading
 import time
+import sys
+import pickle
 
 from gvf import GVF
-from policy import Policy
 from state_representation import StateManager
 from gentest_state_representation import GenTestStateManager
 from tools import timing, topic_format
@@ -31,11 +34,12 @@ class LearningForeground:
                  time_scale, 
                  gvfs, 
                  topics, 
-                 behavior_policy):
+                 behavior_policy,
+                 control_gvf=None):
         
         # set up dictionary to receive sensor info
         self.recent = {topic:Queue(0) for topic in topics}
-
+        self.control_gvf = control_gvf
         # set up ros
         rospy.init_node('agent', anonymous=True)
         # setup sensor parsers
@@ -48,6 +52,7 @@ class LearningForeground:
 
         # smooth out the actions
         self.time_scale = time_scale
+        self.r = rospy.Rate(1.0/self.time_scale)
 
         # agent info
         self.gvfs = gvfs
@@ -111,6 +116,7 @@ class LearningForeground:
         rospy.loginfo("Creating state...")
         # get queue size from ALL sensors before reading any of them
         bumper_num_obs = self.recent['/mobile_base/sensors/core'].qsize()
+        ir_num_obs = self.recent['/mobile_base/sensors/dock_ir'].qsize()
         image_num_obs = self.recent['/camera/rgb/image_rect_color'].qsize()
 
         # bumper constants from http://docs.ros.org/hydro/api/kobuki_msgs/html/msg/SensorState.html
@@ -120,6 +126,7 @@ class LearningForeground:
 
         # variables that will be passed to the state manager to create the state
         bumper_status = None
+        ir_status = None
 
         # clear the bumper queue of unused/old observations
         for _ in range(bumper_num_obs - 1):
@@ -129,9 +136,19 @@ class LearningForeground:
         if (bumper_num_obs > 0):
             last_bump_raw = self.recent['/mobile_base/sensors/core'].get().bumper
             bumper_status = (1 if BUMPER_RIGHT & last_bump_raw else 0, 
-                             1 if BUMPER_LEFT & last_bump_raw else 0, 
+                             1 if BUMPER_LEFT & last_bump_raw else 0,
                              1 if BUMPER_CENTRE & last_bump_raw else 0)
 
+        # get the last ir information
+        for _ in range(ir_num_obs - 1):
+            self.recent['/mobile_base/sensors/dock_ir'].get()
+        if (ir_num_obs > 0):
+            # 
+            last_ir_raw_left = ord(self.recent['/mobile_base/sensors/dock_ir'].get().data[0])
+            last_ir_raw_center = ord(self.recent['/mobile_base/sensors/dock_ir'].get().data[1])
+            last_ir_raw_right = ord(self.recent['/mobile_base/sensors/dock_ir'].get().data[2])
+
+            ir_status = (last_ir_raw_left, last_ir_raw_center, last_ir_raw_right)
         # get the image processed for the state representation
         image_data = None
         
@@ -158,14 +175,25 @@ class LearningForeground:
         # takes a long time, only uncomment if necessary
         # rospy.loginfo(phi)
 
-        observation = self.state_manager.get_observations(bumper_status)
+        observation = self.state_manager.get_observations(bumper_status, ir_status)
         return phi, observation
 
     def take_action(self, action):
         self.publishers['action'].publish(action)
 
+    def reset_episode(self):
+        for i in range(10):
+            action, mu = self.gvfs[0].learner.take_random_action()
+            self.take_action(action)
+            rospy.loginfo('taking random action number: {}'.format(i))
+            # with open('/home/turtlebot/average_rewards','w') as f:
+            #     pickle.dump(average_rewards, f)
+            self.r.sleep()
+    
     def run(self):
-        r = rospy.Rate(1.0/self.time_scale)
+        # Keep track of time for when to avoid sleeping
+
+        finished_episode = False
 
         while not rospy.is_shutdown():
 
@@ -176,12 +204,18 @@ class LearningForeground:
             self.last_preds = {g:g.predict(phi_prime) for g in self.gvfs}
 
             # take action
-            action, mu = self.behavior_policy(phi_prime, observation)
+            action, mu = self.behavior_policy(phi_prime,observation)
             self.take_action(action)
 
             # learn
             if self.last_observation is not None:
                 self.update_gvfs(phi_prime, observation)
+
+            if self.control_gvf != None:
+                finished_episode = self.control_gvf.cumulant(observation) == 1
+
+            if finished_episode:
+                self.reset_episode()
 
             self.last_phi = phi_prime if len(phi_prime) else None
             self.last_action = action
@@ -189,17 +223,19 @@ class LearningForeground:
             self.last_observation = observation
 
             # sleep until next time step
-            r.sleep()
+            self.r.sleep()
 
 def start_learning_foreground(time_scale,
                               GVFs,
                               topics,
-                              Policy):
+                              policy,
+                              control_gvf=None):
     try:
         foreground = LearningForeground(time_scale,
                                         GVFs,
                                         topics,
-                                        Policy)
+                                        policy,
+                                        control_gvf)
         foreground.run()
     except rospy.ROSInterruptException as detail:
         rospy.loginfo("Handling: {}".format(detail))

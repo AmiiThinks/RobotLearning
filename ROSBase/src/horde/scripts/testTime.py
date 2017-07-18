@@ -7,7 +7,6 @@ import time
 from algorithms import BinaryGTD
 from algorithms import GTD
 from gvf import GVF
-from policy import Policy
 
 num_predictions = 1000
 num_features = 1638

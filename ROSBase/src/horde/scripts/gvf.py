@@ -11,10 +11,10 @@ class GVF:
                  target_policy, 
                  num_features,
                  parameters,
-                 off_policy, 
-                 alg,
                  name, 
+                 learner,
                  logger):
+
 
         self.cumulant = cumulant
         self.gamma = gamma
@@ -24,10 +24,9 @@ class GVF:
         self.num_features = num_features
         self.phi = np.zeros(num_features)
         
-        self.off_policy = off_policy
         self.name = name
 
-        self.learner = alg(parameters, self.num_features)
+        self.learner = learner
         self.predict = self.learner.predict
 
         self.td_error = self.learner.delta
@@ -52,11 +51,16 @@ class GVF:
                mu):
         pi = self.target_policy(last_observation, last_action)[1]
         self.gamma_t = self.cumulant(observation)
-        self.learner.update(phi = phi,
-                            phi_prime = phi_prime,
-                            cumulant = self.gamma_t,
-                            gamma = self.gamma(observation),
-                            rho = pi / mu) 
+        kwargs = {"last_observation": last_observation,
+                 "phi": phi,
+                 "last_action": last_action,
+                 "observation": observation,
+                 "phi_prime": phi_prime,
+                 "rho": pi / mu,
+                 "gamma": self.gamma(observation),
+                 "cumulant": self.cumulant(observation)
+                }        
+        self.learner.update(**kwargs)
         
         # update RUPEE
         self.hhat += self.alpha_rupee * (self.learner.tderr_elig - np.inner(self.hhat, phi) * phi)

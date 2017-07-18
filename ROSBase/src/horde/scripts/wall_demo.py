@@ -74,8 +74,7 @@ if __name__ == "__main__":
                                target_policy = go_forward,
                                num_features = num_features,
                                parameters = parameters,
-                               off_policy = True,
-                               alg = GTD,
+                               learner = GTD(parameters,num_features),
                                name = 'DistanceToBump',
                                logger = rospy.loginfo)
 
@@ -90,7 +89,7 @@ if __name__ == "__main__":
             # "/camera/rgb/image_raw",
             "/camera/rgb/image_rect_color",
             "/mobile_base/sensors/core",
-            # "/mobile_base/sensors/dock_ir",
+            "/mobile_base/sensors/dock_ir",
             # "/mobile_base/sensors/imu_data",
             ]
 
