@@ -33,7 +33,7 @@ class LearningForeground:
                  topics, 
                  behavior_policy):
         
-        # set up dictionary to share sensor info
+        # set up dictionary to receive sensor info
         self.recent = {topic:Queue(0) for topic in topics}
 
         # set up ros
@@ -75,7 +75,7 @@ class LearningForeground:
         pub = lambda g, lab: rospy.Publisher(pub_name(g, lab), 
                                              std_msg.Float64, 
                                              queue_size=10)
-        action_publisher = rospy.Publisher('test', 
+        action_publisher = rospy.Publisher('action_cmd', 
                                            geom_msg.Twist,
                                            queue_size=1)
 
