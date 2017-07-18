@@ -36,6 +36,9 @@ if ! ([ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]); then
   # as per your install
   source /opt/ros/indigo/setup.bash
 
+  # sleep to allow network manager to start up
+  sleep 5
+
   # get the IP of this machine
   export ROS_IP=$(hostname -I | awk '{print $1;}')
   export ROS_HOSTNAME=$ROS_IP
