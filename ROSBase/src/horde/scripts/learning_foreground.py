@@ -145,14 +145,15 @@ class LearningForeground:
                 desired_encoding="passthrough")) 
 
         primary_gvf_weight = None
-        if (len(self.gvfs) > 0):
-            primary_gvf_weight = self.gvfs[0].weight();
-        phi = self.state_manager.get_state_representation(image_data, bumper_status, 0, primary_gvf_weight)
+        if len(self.gvfs) > 0:
+            primary_gvf_weight = self.gvfs[0].learner.theta
+        phi = self.state_manager.get_phi(image_data, primary_gvf_weight)
 
         # update the visualization of the image data
         # self.visualization.update_colours(image_data)
 
-        rospy.loginfo(phi)
+        # takes a long time, only uncomment if necessary
+        # rospy.loginfo(phi)
 
         observation = self.state_manager.get_observations(bumper_status)
         return phi, observation
@@ -161,15 +162,9 @@ class LearningForeground:
         self.publishers['action'].publish(action)
 
     def run(self):
-        # Keep track of time for when to avoid sleeping
-        sleep_time = self.time_scale - 0.0001
-        tic = time.time()
+        r = rospy.Rate(1.0/self.time_scale)
 
         while not rospy.is_shutdown():
-
-            # To avoid the drift of just calling time.sleep()
-            while time.time() < tic:
-                time.sleep(0.0001)
 
             # get new state
             phi_prime, observation = self.create_state()
@@ -187,8 +182,8 @@ class LearningForeground:
             self.last_mu = mu
             self.last_observation = observation
 
-            # reset tic
-            tic += sleep_time
+            # sleep until next time step
+            r.sleep()
 
 def start_learning_foreground(time_scale,
                               GVFs,
