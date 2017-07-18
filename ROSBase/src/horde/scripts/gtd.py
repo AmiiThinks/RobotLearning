@@ -9,8 +9,8 @@ class GTD:
 		self.w			  = np.zeros(self.num_features)
 		self.e     		  = np.zeros(self.num_features)
 		
-		self.alpha = parameters["alpha"] / self.num_features
-		self.beta = parameters["beta"] / self.num_features
+		self.alpha = parameters["alpha"]
+		self.beta = parameters["beta"]
 		self.lmbda = parameters["lambda"]
 		self.old_gamma = 0
 		self.delta = 0

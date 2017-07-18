@@ -34,8 +34,9 @@ class GVF:
         self.avg_td_error = 0
         self.n = 0
 
-        self.alpha_rupee = 0.001
-        self.beta0_rupee = 0.0001
+        # See Adam White's PhD Thesis, section 8.4.2
+        self.alpha_rupee = 5 * parameters['alpha']
+        self.beta0_rupee = (1 - parameters['lambda'])*parameters['alpha0']/30
         self.tau_rupee = 0
         self.hhat = np.zeros(num_features)
         self.td_elig_avg = np.zeros(num_features)
@@ -50,9 +51,10 @@ class GVF:
                phi_prime, 
                mu):
         pi = self.target_policy(last_observation, last_action)[1]
+        self.gamma_t = self.cumulant(observation)
         self.learner.update(phi = phi,
                             phi_prime = phi_prime,
-                            cumulant = self.cumulant(observation),
+                            cumulant = self.gamma_t,
                             gamma = self.gamma(observation),
                             rho = pi / mu) 
         
@@ -69,4 +71,4 @@ class GVF:
         self.avg_td_error += (self.td_error - self.avg_td_error)/(self.n + 1)
  
     def rupee(self):
-        np.sqrt(np.absolute(np.inner(self.hhat, self.td_elig_avg)))
+        return np.sqrt(np.absolute(np.inner(self.hhat, self.td_elig_avg)))

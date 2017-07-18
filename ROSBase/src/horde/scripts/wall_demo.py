@@ -8,19 +8,16 @@ from action_manager import start_action_manager
 from gtd import GTD
 from gvf import GVF
 from learning_foreground import start_learning_foreground
-from policy import Policy
 
-class GoForward(Policy):
+class GoForward():
     def __init__(self, speed=0.35):
-        Policy.__init__(self)
         self.speed = speed
 
     def __call__(self, phi, observation):
         return Twist(Vector3(self.speed, 0, 0), Vector3(0, 0, 0)), 1
 
-class ForwardIfClear(Policy):
+class ForwardIfClear():
     def __init__(self, gvf, vel_linear=0.35, vel_angular=2):
-        Policy.__init__(self)
         self.gvf = gvf
         self.vel_linear = vel_linear
         self.vel_angular = vel_angular
@@ -55,15 +52,18 @@ if __name__ == "__main__":
     try:
         # random.seed(20170612)
         
-        time_scale = 0.5
+        time_scale = 0.1
         forward_speed = 0.2
         turn_speed = 2
 
-        alpha = 0.01
-        lambda_ = 0.9
+        alpha0 = 0.5
+        lambda_ = 0.01
+        num_features = 14404
+        alpha = (1 - lambda_) * alpha0 / num_features
         parameters = {'alpha': alpha,
-                      'beta': 0.001 * alpha,
-                      'lambda': lambda_}
+                      'beta': 0.01 * alpha,
+                      'lambda': lambda_,
+                      'alpha0': alpha0}
 
         one_if_bump = lambda observation: int(any(observation['bump'])) if observation is not None else 0
         discount_if_bump = lambda observation: 0 if sum(observation["bump"]) else 0.9
@@ -72,7 +72,7 @@ if __name__ == "__main__":
         distance_to_bump = GVF(cumulant = one_if_bump,
                                gamma    = discount_if_bump,
                                target_policy = go_forward,
-                               num_features = 14401,
+                               num_features = num_features,
                                parameters = parameters,
                                off_policy = True,
                                alg = GTD,

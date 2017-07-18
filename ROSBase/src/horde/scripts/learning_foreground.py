@@ -54,7 +54,7 @@ class LearningForeground:
         self.behavior_policy = behavior_policy
         self.avg_td_err = None
 
-        self.state_manager = GenTestStateManager()
+        self.state_manager = StateManager()
 
         # currently costs about 0.0275s per timestep
         rospy.loginfo("Creating visualization.")
@@ -80,7 +80,8 @@ class LearningForeground:
                                            queue_size=1)
 
         self.publishers = {'action': action_publisher}
-        labels = ['prediction', 'td_error', 'avg_td_error', 'rupee']
+        labels = ['prediction', 'td_error', 'avg_td_error', 'rupee', 
+                  'cumulant']
         label_pubs = {g:{l:pub(g.name, l) for l in labels} for g in self.gvfs}
         self.publishers.update(label_pubs)
 
@@ -99,6 +100,7 @@ class LearningForeground:
         # publishing
         for gvf in self.gvfs:
             self.publishers[gvf]['prediction'].publish(self.last_preds[gvf])
+            self.publishers[gvf]['cumulant'].publish(gvf.gamma_t)
             self.publishers[gvf]['td_error'].publish(gvf.td_error)
             self.publishers[gvf]['avg_td_error'].publish(gvf.avg_td_error)
             self.publishers[gvf]['rupee'].publish(gvf.rupee())
@@ -141,13 +143,14 @@ class LearningForeground:
         if (image_num_obs > 0):
 
             br = CvBridge()
-            image_data = np.asarray(br.imgmsg_to_cv2(self.recent['/camera/rgb/image_rect_color'].get(),
-                desired_encoding="passthrough")) 
+            image_raw = self.recent['/camera/rgb/image_rect_color'].get()
+            image_cv2 = br.imgmsg_to_cv2(image_raw)
+            image_data = np.asarray(image_cv2, dtype=float) 
 
         primary_gvf_weight = None
         if len(self.gvfs) > 0:
             primary_gvf_weight = self.gvfs[0].learner.theta
-        phi = self.state_manager.get_phi(image_data, primary_gvf_weight)
+        phi = self.state_manager.get_phi(image_data, bumper_status, primary_gvf_weight)
 
         # update the visualization of the image data
         # self.visualization.update_colours(image_data)
@@ -168,6 +171,9 @@ class LearningForeground:
 
             # get new state
             phi_prime, observation = self.create_state()
+
+            # make prediction
+            self.last_preds = {g:g.predict(phi_prime) for g in self.gvfs}
 
             # take action
             action, mu = self.behavior_policy(phi_prime, observation)

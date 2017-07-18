@@ -1,8 +1,9 @@
-import random
-import tiles3
+import math
 import numpy as np
+import random
 import rospy 
 
+import tiles3
 from tools import timing
 
 # np.set_printoptions(threshold=np.nan)
@@ -25,7 +26,7 @@ class StateConstants:
 
     # the 3 represents the number quantity of values in rgb
     # the 1 represents the bias unit
-    TOTAL_FEATURE_LENGTH = TOTAL_PIXEL_FEATURE_LENGTH + 1
+    TOTAL_FEATURE_LENGTH = TOTAL_PIXEL_FEATURE_LENGTH + 1 + 3
 
     # regards the generalization between tile dimensions
     DIFF_BW_RGB = NUM_TILINGS/256.0
@@ -57,11 +58,12 @@ class StateManager(object):
 
 
     @timing
-    def get_phi(self, image, weights = None):
+    def get_phi(self, image, bump, weights = None):
         phi = np.zeros(StateConstants.TOTAL_FEATURE_LENGTH, dtype=np.bool)
 
         # setting the bias unit
         phi[StateConstants.BIAS_FEATURE_INDEX] = True 
+        phi[-3:] = bump
 
         # check if there is an image
         no_image = image is None or len(image) == 0 or len(image[0]) == 0
@@ -71,6 +73,8 @@ class StateManager(object):
             rospy.loginfo("empty image has no representation")
             if self.last_image_raw is None:
                 return phi
+            else:
+                image = self.last_image_raw
         else:
             self.last_image_raw = image 
 
@@ -78,24 +82,26 @@ class StateManager(object):
         rgb_points *= StateConstants.DIFF_BW_RGB
         rgb_inds = np.arange(StateConstants.NUM_RANDOM_POINTS * 3)
 
-        # tiles = lambda k: tiles3.tiles(self.iht, 
-        #                                StateConstants.NUM_TILINGS, 
-        #                                [k])
-        # tile_inds = map(tiles, rgb_points)
         tile_inds = [tiles3.tiles(self.iht, 
-                                       StateConstants.NUM_TILINGS, 
-                                       [k]) for k in rgb_points]
+                                  StateConstants.NUM_TILINGS, 
+                                  [k]) for k in rgb_points]
+        # tile_inds = [tiles3.tiles(self.iht[i], 
+        #                           StateConstants.NUM_TILINGS, 
+        #                           [rgb_points[i]]) for i in rgb_inds]
 
         # tile_inds = np.ones((900,4), dtype=int)
 
         rgb_inds *= StateConstants.NUM_FEATURES_PER_COL_VAL
-        tiling_inds = np.arange(0, StateConstants.NUM_TILINGS ** 2, step = StateConstants.NUM_TILINGS).reshape(1, -1)
+        tiling_inds = np.arange(start=0, 
+                                stop=math.pow(StateConstants.NUM_TILINGS, 2), 
+                                step=StateConstants.NUM_TILINGS,
+                                dtype=int).reshape(1,-1)
         # tiling_inds *= StateConstants.NUM_TILINGS
 
         indices = tile_inds + rgb_inds[:, np.newaxis] + tiling_inds
 
         phi[indices.flatten()] = True
-
+        
         return phi
 
     def get_observations(self, bumper_information):
