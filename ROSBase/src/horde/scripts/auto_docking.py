@@ -81,7 +81,7 @@ if __name__ == "__main__":
         wall_demo = GVF(num_features=14403*num_features,
                         alpha=alpha,
                         beta=beta,
-                        gamma=one_if_ir,
+                        gamma=0.9,
                         cumulant=one_if_ir,
                         lambda_= lambda observation: 0.95,
                         alg=GreedyGQ,

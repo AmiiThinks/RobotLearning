@@ -19,6 +19,7 @@ from geometry_msgs.msg import Twist, Vector3
 import threading
 import time
 import sys
+import pickle
 
 from gvf import GVF
 from policy import Policy
@@ -207,11 +208,11 @@ class LearningForeground:
             phi_prime, observation = self.create_state()
 
             # take action
-            action, mu = self.gvfs[0].learner.take_action(phi_prime)
-            self.take_action(action)
 
             if finished_episode == False:
-                finished_episode = self.gvfs[0].learner.update(state=self.last_phi,action=action,observation=observation,next_state=phi_prime)
+                action, mu = self.gvfs[0].learner.take_action(phi_prime)
+                self.take_action(action)
+                finished_episode,average_rewards = self.gvfs[0].learner.update(state=self.last_phi,action=action,observation=observation,next_state=phi_prime)
             if finished_episode:
                 # take random action here
                 random_actions_taken = random_actions_taken + 1
@@ -221,6 +222,9 @@ class LearningForeground:
                 if random_actions_taken == random_actions_to_take:
                     random_actions_taken = 0
                     finished_episode = False
+                    with open('/home/turtlebot/average_rewards','w') as f:
+                        pickle.dump(average_rewards, f)
+                tic += sleep_time
                 continue
             # learn
             # if self.last_observation is not None:

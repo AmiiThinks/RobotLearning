@@ -1,0 +1,46 @@
+facilities that we should have - 
+1. easily using multiple sensors in state representation.
+2. changing control gvf for different tasks
+
+Goal - turn on autodocking when we're in the region where it can auto dock
+state - camera (for now)
+reward - binary for now (1 if it gents non-zero reading from on the IR sensors 0 otherwise)
+using Q-learning for now- target - greedy, behavior - e-greedy
+
+todo - test the new full code
+1. what to do in case of equal action values, seems like it's not learning well for other states
+2. check weather the values of 'rho' makes sense or not
+3. check with the full random case will give an idea of how much we're able to improve
+4. visualise image from different positions in the image
+5. add in action manager - when it's pushing into the wall, it should set the reward to 0.
+should we change the reward so that it becomes one only when center IR sensor gets some values
+
+
+experiment 1 - and try to make it learn in our simplest case, where we want that it can just try turn
+experiment 2 - change the environment and try to learn there
+experiment 3 - try to learn in one environment and then in another environment, i.e. try to learn in changing environment
+
+Experiment results - 
+1. secondary learning rate was set bad at - 360, epsilon = 0.5, got decreasing reward after running for around 2 hours, average reward fell from around 0.15 to 0.10
+2. average reward increases when we use the the correct code up from 0.10 to around 0.20, also, we're preferring the action number 4 in case of equal probablities
+
+after this things starts to work properly - 
+1. merge with the original code
+2. remove redundant class policy, and fix behaviour, and learned policies
+3. what's the issue with join in the end
+
+doubts - 
+1. how to turn a proper angle, or is it even necesarry ? 
+2. it fails mostly when it's not getting any reading from the IR sensor, and if it has to face boundaries
+
+observations -
+1. if we look at the charger form the front - readings order is [a,b,c] where a is at right  and c is at left
+2. rostopic echo /mobile_base/sensors/dock_ir - this gives information about the region in which the robot is, and it can simultaneously be in multiple regions upto 5 or something
+3. doesn't take long time (should be usable) to tell that it's charging or not - /mobile_base/events/power_system event:2, but takes long when we've disconnected it
+4. The middle region is very thin and it gets thinner as we move closer to the docking station. This is probably the key to solve the problem prefectly.
+5. can break the problem in four parts - similar to their algorithm
+	reach in the ir region using visual sensors and other stuff - almost done, if the environment is fix then it is probably the easiest among all the tasks.
+	reach the center ir region using mainly the ir data
+	algin with the docking station (use odom around orientation - the auto algorithm uses this information to turn)
+	move forward while staying in the center region till we hit the docking station
+

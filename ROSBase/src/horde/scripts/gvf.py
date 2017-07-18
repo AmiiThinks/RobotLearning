@@ -19,8 +19,8 @@ class GVF:
                  num_features, 
                  alpha, 
                  beta,
-                 lambda_=lambda observation: 0.9,
                  gamma=lambda observation: 0,
+                 lambda_=lambda observation: 0.9,
                  cumulant=lambda observation: 1,
                  policy=Policy(),
                  off_policy=True, 
@@ -36,13 +36,13 @@ class GVF:
         self.off_policy = off_policy
         self.name = name
 
-        theta = np.random.rand(num_features)
+        theta = np.zeros(num_features)
         phi = np.zeros(num_features)
         observation = None
-        learningRate = 0.1
-        secondaryLearningRate = 0.1
-        epsilon = 0.5
-        lambda_ = 0.5
+        learningRate = 0.1/(4*900)
+        secondaryLearningRate = learningRate/10
+        epsilon = 0.1
+        lambda_ = 0.9
 
         self.learner = alg(theta = theta,
                         gamma = gamma,

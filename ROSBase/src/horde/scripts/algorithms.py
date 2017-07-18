@@ -1,8 +1,10 @@
+from __future__ import division
 import numpy as np
 import random
 from policy import Policy
 import geometry_msgs.msg as geom_msg
 from geometry_msgs.msg import Twist, Vector3
+from matplotlib.pyplot import plot, ion, show
 import sys
 
 class GTD:
@@ -161,10 +163,12 @@ class eGreedy(Policy):
         # select a random number between 0 and 1
         random_number = random.uniform(0, 1)
         if random_number < self.epsilon:
+            print 'taking random action in behaviour policy'
             random_action = action_space[random.randint(0,len(action_space)-1)]
             return random_action, self.epsilon/len(action_space)
 
         greedy_action,_ = learned_policy.take_action(phi, learned_policy, action_space, theta)
+        print 'taking greedy action in behaviour policy, action is : ', action_space.index(greedy_action)
         # take the action here
         return greedy_action, 1 - self.epsilon + self.epsilon/len(action_space)
 
@@ -174,13 +178,23 @@ class Learned_Policy(Policy):
 
     def take_action(self, phi, learned_policy, action_space, theta):
         self.action_space = action_space
-        greedy_action = action_space[0]
-        if phi != None:
+        greedy_action = action_space[1]
+        if phi == None:
+            print 'Warning: phi is None'
             return action_space[0], -1
 
+        equal_actions = []
+        if np.count_nonzero(theta) == 0:
+            print 'Theta is zero'
         for action in action_space:
-            if np.dot(theta, self.get_representation(phi,action)) >= np.dot(self.theta, self.get_representation(phi,action)):
+            print 'action_value: ', np.dot(theta, self.get_representation(phi,action)), 'greedy_action value: ' ,np.dot(theta, self.get_representation(phi,greedy_action))
+            if np.dot(theta, self.get_representation(phi,action)) == np.dot(theta, self.get_representation(phi,greedy_action)):
+                equal_actions.append(action)
+                print 'equal'
+            if np.dot(theta, self.get_representation(phi,action)) > np.dot(theta, self.get_representation(phi,greedy_action)):
                 greedy_action = action
+                equal_actions = [action]
+        greedy_action = self.action_space[random.randint(0,len(equal_actions)-1)]
         return greedy_action, -1
 
     def get_representation(self, state, action):
@@ -216,6 +230,8 @@ class GreedyGQ:
         # remove multiple phi's, we're using phi, rest of the code needs, self.phi
         self._phi = np.zeros(14403)
         self.phi = np.zeros(14403*5)
+        self.timeStep = 0
+        self.average_rewards = [0]
 
         self.action_space = [Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
                         Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0)), # forward
@@ -225,25 +241,29 @@ class GreedyGQ:
                         ]
 
     def take_action(self, phi_prime):
-        action, mu = self.behavior_policy.take_action(phi_prime, self.learned_policy,self.action_space, self.theta)
+        action, mu = self.behavior_policy.take_action(phi = phi_prime,
+                                                        learned_policy = self.learned_policy,
+                                                        action_space = self.action_space,
+                                                        theta = self.theta)
         return action, mu
 
     def take_random_action(self):
-        random_action = self.action_space[random.randint(0,len(self.action_space)-1)]
+        random_action = self.action_space[random.randint(0,len(self.action_space)-2)]
         return random_action, 1/len(self.action_space)
 
     def update(self, state, action, observation, next_state):
         reward = self.cumulant(observation)
-        gamma = self.gamma(observation)
+        gamma = self.gamma
         learned_policy = self.learned_policy
         behavior_policy = self.behavior_policy
         self.phi = self.get_representation(state,action)
+        self.timeStep = self.timeStep + 1
+        average_reward = self.average_rewards[-1]
+        average_reward = average_reward + (reward - average_reward)/self.timeStep
 
-        if reward == 1:
-            print 'Episode finished'
-            self.etrace = np.zeros(14403*5)
-            # give the signal to stop
-            return True
+        self.average_rewards.append(average_reward)
+
+        print 'average_reward: ', average_reward
 
         # A_{t+1} update
         next_greedy_action = action
@@ -268,17 +288,33 @@ class GreedyGQ:
         else:
             responsibility = 0
 
+        if np.count_nonzero(self.phi) == 0:
+            print 'self.phi is zero'
+
         # e_t update
         self.etrace *= gamma * self._lambda * responsibility
         self.etrace += self.phi #(phi_t) 
+
+        if np.count_nonzero(self.etrace) == 0:
+            print 'self.eTrace is zero'
                 
         # theta_t update
         self.theta += self.learning_rate * (self.td_error * self.etrace - 
                         gamma * (1 - self._lambda) * np.dot(self.sec_weights, self.phi) * phi_bar)
+
+        if np.count_nonzero(self.theta) == 0:
+            print 'self.theta is zero'
         
         # w_t update
         self.sec_weights += self.secondary_learning_rate * (self.td_error * self.etrace - np.dot(self.sec_weights, self.phi) * self.phi)
-        return False
+
+        if reward == 1:
+            print 'Episode finished'
+            self.etrace = np.zeros(14403*5)
+            # give the signal to stop
+            return True, self.average_rewards
+
+        return False,self.average_rewards
 
     def get_representation(self, state, action):
         representation = []
@@ -289,4 +325,3 @@ class GreedyGQ:
             else:
                 representation = representation + [0]*len(state)
         return np.asarray(representation)
-
