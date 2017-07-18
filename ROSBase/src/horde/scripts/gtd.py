@@ -30,6 +30,3 @@ class GTD:
 
 	def predict(self, phi):
 		return np.dot(phi, self.theta)
-
-	def weight(self):
-		return self.theta

@@ -28,9 +28,7 @@ class GVF:
         self.name = name
 
         self.learner = alg(parameters, self.num_features)
-
         self.predict = self.learner.predict
-        self.weight =  self.learner.weight
 
         self.td_error = self.learner.delta
         self.avg_td_error = 0

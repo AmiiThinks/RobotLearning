@@ -3,7 +3,7 @@ import rospy
 import timeit
 
 from state_representation import StateConstants, StateManager
-from tools import overrides
+from tools import overrides, timing
 
 class GenTestStateConstants:
 	MIN_ALIVE_TIME = 100
@@ -15,7 +15,8 @@ class GenTestStateManager(StateManager):
 		self.pixel_time_alive = np.zeros(StateConstants.NUM_RANDOM_POINTS)
 
 	@overrides(StateManager)
-	def get_state_representation(self, image, bumper_information, action, weights = None):
+	@timing
+	def get_phi(self, image, weights = None):
 		# update weights to reflect removal of features
 
 		if (weights is not None):
@@ -43,8 +44,7 @@ class GenTestStateManager(StateManager):
 						weights[3 * pixel * StateConstants.NUM_FEATURES_PER_COL_VAL + index] = 0
 			
 		# get the new state
-		feature_state = super(GenTestStateManager, self).get_state_representation(
-			image, bumper_information, action)
+		feature_state = super(GenTestStateManager, self).get_phi(image)
 		
 		self.pixel_time_alive += np.ones(StateConstants.NUM_RANDOM_POINTS) # increment time alive
 		
