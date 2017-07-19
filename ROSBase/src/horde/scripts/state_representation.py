@@ -26,7 +26,7 @@ class StateConstants:
 
     # the 3 represents the number quantity of values in rgb
     # the 1 represents the bias unit
-    TOTAL_FEATURE_LENGTH = TOTAL_PIXEL_FEATURE_LENGTH + 1 + 3
+    TOTAL_FEATURE_LENGTH = TOTAL_PIXEL_FEATURE_LENGTH + 1
 
     # regards the generalization between tile dimensions
     DIFF_BW_RGB = NUM_TILINGS/256.0
@@ -50,8 +50,8 @@ class StateManager(object):
         num_pixels = StateConstants.IMAGE_LI*StateConstants.IMAGE_CO
         num_chosen = StateConstants.NUM_RANDOM_POINTS
         self.chosen_indices = np.random.choice(a=num_pixels, 
-                                          size=num_chosen, 
-                                          replace=False)
+                                               size=num_chosen, 
+                                               replace=False)
         self.pixel_mask = np.zeros(num_pixels, dtype=np.bool)
         self.pixel_mask[self.chosen_indices] = True
         self.pixel_mask = self.pixel_mask.reshape(StateConstants.IMAGE_LI, 
@@ -67,7 +67,7 @@ class StateManager(object):
 
         # setting the bias unit
         phi[StateConstants.BIAS_FEATURE_INDEX] = True 
-        phi[-3:] = bump
+        # phi[-3:] = bump
 
         # check if there is an image
         no_image = image is None or len(image) == 0 or len(image[0]) == 0
@@ -82,16 +82,16 @@ class StateManager(object):
         else:
             self.last_image_raw = image 
 
-        rgb_points = image[self.pixel_mask].flatten()
+        rgb_points = image[self.pixel_mask].flatten().astype(float)
         rgb_points *= StateConstants.DIFF_BW_RGB
         rgb_inds = np.arange(StateConstants.NUM_RANDOM_POINTS * 3)
 
-        tile_inds = [tiles3.tiles(self.iht, 
-                                  StateConstants.NUM_TILINGS, 
-                                  [k]) for k in rgb_points]
-        # tile_inds = [tiles3.tiles(self.iht[i], 
+        # tile_inds = [tiles3.tiles(self.iht, 
         #                           StateConstants.NUM_TILINGS, 
-        #                           [rgb_points[i]]) for i in rgb_inds]
+        #                           [k]) for k in rgb_points]
+        tile_inds = [tiles3.tiles(self.ihts[i], 
+                                  StateConstants.NUM_TILINGS, 
+                                  [rgb_points[i]]) for i in rgb_inds]
 
         # tile_inds = np.ones((900,4), dtype=int)
 

@@ -29,7 +29,7 @@ class Visualize():
         # convert mask to x,y points
         points = map(list, zip(*reversed(map(list, np.where(mask)))))
 
-        # make subdivision
+        # make subdivision 
         rect = (0, 0, imsizex, imsizey)
         self.subdiv = cv2.Subdiv2D(rect)
         self.subdiv.insert(points)
@@ -63,16 +63,12 @@ class Visualize():
 
         # color image
         for i in range(len(facets)):
-            ifacet_arr = []
-            for f in facets[i]:
-                ifacet_arr.append(f)
-             
-            ifacet = np.array(ifacet_arr, np.int)
-            color = image[int(centers[i][0])][int(centers[i][1])].tolist()
+            ifacet = np.array([f for f in facets[i]], np.int)
+            color = image[int(centers[i][1])][int(centers[i][0])].tolist()
             cv2.fillConvexPoly(img, ifacet, color)
 
         # update image data
-        self.im.set_data(img)
+        self.im.set_data(np.flipud(np.fliplr(img)))
 
         # draw image
         self.ax.draw_artist(self.im)
