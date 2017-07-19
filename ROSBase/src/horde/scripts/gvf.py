@@ -21,7 +21,6 @@ class GVF:
         self.target_policy = target_policy
 
         self.parameters = parameters
-        self.num_features = num_features
         self.phi = np.zeros(num_features)
         
         self.name = name
@@ -50,18 +49,20 @@ class GVF:
                phi_prime, 
                mu):
         pi = self.target_policy(last_observation, last_action)[1]
-        self.gamma_t = self.cumulant(observation)
-        kwargs = {"last_observation": last_observation,
-                 "phi": phi,
-                 "last_action": last_action,
-                 "observation": observation,
-                 "phi_prime": phi_prime,
-                 "rho": pi / mu,
-                 "gamma": self.gamma(observation),
-                 "cumulant": self.cumulant(observation)
-                }        
-        self.learner.update(**kwargs)
-        
+        self.cumulant_t = self.cumulant(observation)
+
+        kwargs = {"last_observation": last_observation, 
+                  "phi": phi, 
+                  "last_action": last_action, 
+                  "observation": observation, 
+                  "phi_prime": phi_prime, 
+                  "rho": pi / mu,
+                  "gamma": self.gamma(observation),
+                  "cumulant": self.cumulant_t
+                 }
+
+        self.learner.update(**kwargs) 
+
         # update RUPEE
         self.hhat += self.alpha_rupee * (self.learner.tderr_elig - np.inner(self.hhat, phi) * phi)
         self.tau_rupee *= 1 - self.beta0_rupee

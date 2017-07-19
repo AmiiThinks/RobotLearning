@@ -31,12 +31,7 @@ class ForwardIfClear():
 
     def __call__(self, phi, observation):
         
-        # if self.gvf.predict(phi) > random.random() or sum(observation['bump']):
-        #     action = Twist(Vector3(0, 0, 0), Vector3(0, 0, self.vel_angular))
-        #     self.last_action = self.TURN
-        # else:
-            
-        if sum(observation['bump']):
+        if self.gvf.predict(phi) > 0.75 or sum(observation['bump']):
             action = Twist(Vector3(0, 0, 0), Vector3(0, 0, self.vel_angular))
             self.last_action = self.TURN
         else:
@@ -56,17 +51,17 @@ if __name__ == "__main__":
         forward_speed = 0.2
         turn_speed = 2
 
-        alpha0 = 0.5
-        lambda_ = 0.01
-        num_features = 14404
+        alpha0 = 1
+        lambda_ = 0.05
+        num_features = 14401
         alpha = (1 - lambda_) * alpha0 / num_features
         parameters = {'alpha': alpha,
-                      'beta': 0.01 * alpha,
+                      'beta': 0.002 * alpha,
                       'lambda': lambda_,
                       'alpha0': alpha0}
 
         one_if_bump = lambda observation: int(any(observation['bump'])) if observation is not None else 0
-        discount_if_bump = lambda observation: 0 if sum(observation["bump"]) else 0.9
+        discount_if_bump = lambda observation: 0 if sum(observation["bump"]) else 0.98
         go_forward = GoForward(speed=forward_speed)
 
         distance_to_bump = GVF(cumulant = one_if_bump,
@@ -74,7 +69,7 @@ if __name__ == "__main__":
                                target_policy = go_forward,
                                num_features = num_features,
                                parameters = parameters,
-                               learner = GTD(parameters,num_features),
+                               learner = GTD(parameters, num_features),
                                name = 'DistanceToBump',
                                logger = rospy.loginfo)
 

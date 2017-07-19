@@ -63,9 +63,9 @@ class LearningForeground:
 
         # currently costs about 0.0275s per timestep
         rospy.loginfo("Creating visualization.")
-        # self.visualization = Visualize(self.state_manager.pixel_mask,
-        #                                imsizex=640,
-        #                                imsizey=480)
+        self.visualization = Visualize(self.state_manager.pixel_mask,
+                                       imsizex=640,
+                                       imsizey=480)
         rospy.loginfo("Done creatiing visualization.")
 
         # previous timestep information
@@ -96,16 +96,16 @@ class LearningForeground:
     def update_gvfs(self, phi_prime, observation):
         for gvf in self.gvfs:
             gvf.update(self.last_observation,
-                     self.last_phi,
-                     self.last_action, 
-                     observation,
-                     phi_prime, 
-                     self.last_mu)
+                       self.last_phi,
+                       self.last_action, 
+                       observation,
+                       phi_prime, 
+                       self.last_mu)
 
         # publishing
         for gvf in self.gvfs:
             self.publishers[gvf]['prediction'].publish(self.last_preds[gvf])
-            self.publishers[gvf]['cumulant'].publish(gvf.gamma_t)
+            self.publishers[gvf]['cumulant'].publish(gvf.cumulant_t)
             self.publishers[gvf]['td_error'].publish(gvf.td_error)
             self.publishers[gvf]['avg_td_error'].publish(gvf.avg_td_error)
             self.publishers[gvf]['rupee'].publish(gvf.rupee())
@@ -160,9 +160,9 @@ class LearningForeground:
         if (image_num_obs > 0):
 
             br = CvBridge()
-            image_raw = self.recent['/camera/rgb/image_rect_color'].get()
-            image_cv2 = br.imgmsg_to_cv2(image_raw)
-            image_data = np.asarray(image_cv2, dtype=float) 
+            image_data = self.recent['/camera/rgb/image_rect_color'].get()
+            image_data = br.imgmsg_to_cv2(image_data)
+            image_data = np.asarray(image_data)
 
         primary_gvf_weight = None
         if len(self.gvfs) > 0:
@@ -170,7 +170,7 @@ class LearningForeground:
         phi = self.state_manager.get_phi(image_data, bumper_status, primary_gvf_weight)
 
         # update the visualization of the image data
-        # self.visualization.update_colours(image_data)
+        self.visualization.update_colours(image_data)
 
         # takes a long time, only uncomment if necessary
         # rospy.loginfo(phi)
@@ -230,12 +230,14 @@ def start_learning_foreground(time_scale,
                               topics,
                               policy,
                               control_gvf=None):
+
     try:
         foreground = LearningForeground(time_scale,
                                         GVFs,
                                         topics,
                                         policy,
                                         control_gvf)
+
         foreground.run()
     except rospy.ROSInterruptException as detail:
         rospy.loginfo("Handling: {}".format(detail))
@@ -258,7 +260,7 @@ if __name__ == '__main__':
                                         time_scale,
                                         [],
                                         topics,
-                                        Policy())
+                                        policy)
         foreground.run()
 
     except rospy.ROSInterruptException as detail:

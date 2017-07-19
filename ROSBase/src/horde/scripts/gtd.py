@@ -14,7 +14,7 @@ class GTD:
 		self.lmbda = parameters["lambda"]
 		self.old_gamma = 0
 		self.delta = 0
-		self.tderr_elig = 0
+		self.tderr_elig = np.zeros(self.num_features)
 
 	def update(self, phi, phi_prime, cumulant, gamma, rho, **kwargs):
 		self.tderr_elig = self.delta * self.e

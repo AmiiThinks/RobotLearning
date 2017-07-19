@@ -46,8 +46,8 @@ class Visualize():
 
         # initialize image
         self.im = self.ax.imshow(np.zeros((imsizey,imsizex)),
-                                  interpolation='none',
-                                  animated=True)
+                                 interpolation='none',
+                                 animated=True)
 
         # start figure
         self.fig.show()
@@ -68,7 +68,7 @@ class Visualize():
                 ifacet_arr.append(f)
              
             ifacet = np.array(ifacet_arr, np.int)
-            color = image[int(centers[i][1])][int(centers[i][0])].tolist()
+            color = image[int(centers[i][0])][int(centers[i][1])].tolist()
             cv2.fillConvexPoly(img, ifacet, color)
 
         # update image data
