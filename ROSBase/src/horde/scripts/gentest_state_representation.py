@@ -14,9 +14,9 @@ class GenTestStateManager(StateManager):
 		super(GenTestStateManager, self).__init__()
 		self.pixel_time_alive = np.zeros(StateConstants.NUM_RANDOM_POINTS)
 
-        @timing
 	@overrides(StateManager)
-	def get_phi(self, image, bumper_status, weights = None):
+	@timing
+	def get_phi(self, image, bump, weights = None, **kwargs):
 		# update weights to reflect removal of features
 
 		if (weights is not None):

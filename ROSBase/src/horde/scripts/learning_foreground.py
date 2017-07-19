@@ -63,14 +63,14 @@ class LearningForeground:
         self.avg_td_err = None
 
         self.state_manager = StateManager()
-        self.br = CvBridge()
+        self.img_to_cv2 = CvBridge().compressed_imgmsg_to_cv2
 
         # currently costs about 0.0275s per timestep
         rospy.loginfo("Creating visualization.")
 
-        self.visualization = Visualize(self.state_manager.pixel_mask,
-                                       imsizex=640,
-                                       imsizey=480)
+        # self.visualization = Visualize(self.state_manager.pixel_mask,
+        #                                imsizex=640,
+        #                                imsizey=480)
 
         rospy.loginfo("Done creatiing visualization.")
 
@@ -121,7 +121,7 @@ class LearningForeground:
         # TODO: consider moving the data processing elsewhere
 
         rospy.loginfo("Creating state...")
-        
+
         # bumper constants from http://docs.ros.org/hydro/api/kobuki_msgs/html/msg/SensorState.html
         bump_codes = [1, 4, 2]
         # BUMPER_RIGHT  = 1
@@ -129,64 +129,53 @@ class LearningForeground:
         # BUMPER_LEFT   = 4
 
         # variables that will be passed to the state manager to create the state
-        bumper_status = None
-        ir_status = None
-        image_data = None
+        sources = {'core': None,
+                   'dock_ir': None,
+                   'image_rec': None,
+                   'imu': None,
+                   'odom': None}
 
-        # dictionaries
+        # get the topic for each element of the data dictionary
         match_stream = lambda x: filter(lambda t: x in t, self.topics)[0]
-        bump_stream = match_stream('core')
-        ir_stream = match_stream('dock_ir')
-        compressed = match_stream("compressed")
+        for source in sources.keys():
+            temp = None
+            try:
+                while True:
+                    temp = self.recent[match_stream(source)].get_nowait()
+            except:
+                pass
+            sources[source] = temp
 
-        # get the last bumper information
-        bump = None
-        try:
-            while True:
-                bump = self.recent[bump_stream].get_nowait().bumper
-        except:
-            pass
+        # build dictionary to send to get_phi
+        keys = ['bump', 'ir', 'image', 'odom', 'imu']
+        data = {k: None for k in keys}
+        if sources['core'] is not None:
+            bump = sources['core'].bumper
+            data['bump'] = map(lambda x: bool(x & bump), bump_codes)
+        if sources['dock_ir'] is not None:
+            data['ir'] = [ord(obs) for obs in sources['dock_ir'].data]
+        if sources['image_rec'] is not None:
+            data['image'] = np.asarray(self.img_to_cv2(sources['image_rec']))
+        if sources['odom'] is not None:
+            pos = sources['odom'].pose.pose.position
+            data['odom'] = np.array([pos.x, pos.y])
+        if sources['imu'] is not None:
+            data['imu'] = sources['imu'].orientation.z
 
-        # get last IR informatirospy image stream faston
-        ir = None
-        try:
-            while True:
-                ir = self.recent[ir_stream].get_nowait().data
-        except:
-            pass
+        data['weights'] = self.gvfs[0].learner.theta if self.gvfs else None
 
-        # get last image 
-        img = None
-        try:
-            while True:
-                img = self.recent[compressed].get_nowait()
-        except:
-            pass
-
-        # parse bump information
-        if bump is not None:
-            bumper_status = map(lambda x: bool(x & bump), bump_codes)
-
-        # parse IR information
-        if ir is not None:
-            ir_status = [ord(obs) for obs in ir]
-
-        # convert image to array
-        if img is not None:
-            image_data = np.asarray(self.br.compressed_imgmsg_to_cv2(img))
-
-        primary_gvf_weight = None
-        if len(self.gvfs) > 0:
-            primary_gvf_weight = self.gvfs[0].learner.theta
-        phi = self.state_manager.get_phi(image_data, bumper_status, primary_gvf_weight)
+        # def f(**kwargs):
+        #     print(kwargs.keys)
+        # f(**data)
+        phi = self.state_manager.get_phi(**data)
 
         # update the visualization of the image data
-        self.visualization.update_colours(image_data)
+        # self.visualization.update_colours(image_data)
 
         # takes a long time, only uncomment if necessary
         # rospy.loginfo(phi)
 
-        observation = self.state_manager.get_observations(bumper_status, ir_status)
+        observation = self.state_manager.get_observations(**data)
         return phi, observation
 
     def take_action(self, action):

@@ -8,6 +8,7 @@ from action_manager import start_action_manager
 from gtd import GTD
 from gvf import GVF
 from learning_foreground import start_learning_foreground
+from state_representation import StateConstants
 
 class GoForward():
     def __init__(self, speed=0.35):
@@ -47,13 +48,13 @@ if __name__ == "__main__":
     try:
         # random.seed(20170612)
         
-        time_scale = 0.1
+        time_scale = 0.2
         forward_speed = 0.15
         turn_speed = 1
 
         alpha0 = 1
-        lambda_ = 0.05
-        num_features = 14401
+        lambda_ = 0.1
+        num_features = StateConstants.TOTAL_FEATURE_LENGTH
         alpha = (1 - lambda_) * alpha0 / num_features
         parameters = {'alpha': alpha,
                       'beta': 0.005 * alpha,
@@ -61,7 +62,7 @@ if __name__ == "__main__":
                       'alpha0': alpha0}
 
         one_if_bump = lambda observation: int(any(observation['bump'])) if observation is not None else 0
-        discount_if_bump = lambda observation: 0 if sum(observation["bump"]) else 0.98
+        discount_if_bump = lambda observation: 0 if sum(observation["bump"]) else 0.97
         go_forward = GoForward(speed=forward_speed)
 
         distance_to_bump = GVF(cumulant = one_if_bump,
@@ -85,8 +86,9 @@ if __name__ == "__main__":
             # "/camera/rgb/image_rect_color",
             "/mobile_base/sensors/core",
             "/mobile_base/sensors/dock_ir",
-            "/camera/rgb/image_rect_color/compressed"
-            # "/mobile_base/sensors/imu_data",
+            "/camera/rgb/image_rect_color/compressed",
+            "/mobile_base/sensors/imu_data",
+            "/odom",
             ]
 
         foreground_process = mp.Process(target=start_learning_foreground,

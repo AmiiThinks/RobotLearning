@@ -1,5 +1,6 @@
 from functools import wraps
 import kobuki_msgs.msg as kob_msg
+import nav_msgs.msg as nav_msg
 import rospy
 import sensor_msgs.msg as sens_msg
 import sensor_msgs.point_cloud2 as pc2
@@ -21,6 +22,7 @@ topic_format = {
     "/mobile_base/sensors/imu_data":sens_msg.Imu,
     "/turtle1/pose":Pose,
     "/camera/rgb/image_rect_color/compressed":sens_msg.CompressedImage,
+    "/odom":nav_msg.Odometry,
     }
 
 def equal_twists(t1, t2):
