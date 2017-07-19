@@ -67,9 +67,11 @@ class LearningForeground:
 
         # currently costs about 0.0275s per timestep
         rospy.loginfo("Creating visualization.")
+
         self.visualization = Visualize(self.state_manager.pixel_mask,
                                        imsizex=640,
                                        imsizey=480)
+
         rospy.loginfo("Done creatiing visualization.")
 
         # previous timestep information
