@@ -1,13 +1,26 @@
 from geometry_msgs.msg import Twist, Vector3
 import rospy
+from tools import topic_format
 
 class ActionManager():
 
     def __init__(self):
-        self.action = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0))
+        self.STOP_ACTION = Twist(Vector3(0,0,0), Vector3(0,0,0))
+
+	self.action = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0))
+        self.base_state = None
+        rospy.Subscriber("/mobile_base/sensors/core",
+                         topic_format["/mobile_base/sensors/core"],
+                         self.update_base_state)
+
+    def update_base_state(self, val):
+        self.base_state = val
 
     def update_action(self, action_cmd):
-        self.action = action_cmd
+        if (action_cmd.linear.x > 0.0001 or action_cmd.linear.y > 0.0001) and self.base_state.bumper:
+            self.action = self.STOP_ACTION
+        else:
+            self.action = action_cmd
 
     def run(self):
         rospy.init_node('action_manager', anonymous=True)
