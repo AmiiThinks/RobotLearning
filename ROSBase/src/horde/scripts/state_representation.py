@@ -60,6 +60,7 @@ class StateManager(object):
         self.last_image_raw = None
         self.last_bumper_raw = None
 
+    @timing
     def get_phi(self, image, bump, weights = None):
         phi = np.zeros(StateConstants.TOTAL_FEATURE_LENGTH, dtype=np.bool)
 

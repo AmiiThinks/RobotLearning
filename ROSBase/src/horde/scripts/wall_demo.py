@@ -49,7 +49,7 @@ if __name__ == "__main__":
         
         time_scale = 0.1
         forward_speed = 0.15
-        turn_speed = 1.5
+        turn_speed = 1
 
         alpha0 = 1
         lambda_ = 0.05

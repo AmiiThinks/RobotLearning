@@ -121,11 +121,7 @@ class LearningForeground:
         # TODO: consider moving the data processing elsewhere
 
         rospy.loginfo("Creating state...")
-        # get queue size from ALL sensors before reading any of them
-        # num_bumper_obs = self.recent['/mobile_base/sensors/core'].qsize()
-        # num_ir_obs = self.recent['/mobile_base/sensors/dock_ir'].qsize()
-        # num_image_obs = self.recent['/camera/rgb/image_rect_color'].qsize()
-
+        
         # bumper constants from http://docs.ros.org/hydro/api/kobuki_msgs/html/msg/SensorState.html
         bump_codes = [1, 4, 2]
         # BUMPER_RIGHT  = 1
