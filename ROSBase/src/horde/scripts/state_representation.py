@@ -74,7 +74,7 @@ class StateManager(object):
 
         # adding image data to state
         if no_image:
-            rospy.loginfo("empty image has no representation")
+            rospy.logwarn("empty image has no representation")
             if self.last_image_raw is None:
                 return phi
             else:
@@ -86,9 +86,6 @@ class StateManager(object):
         rgb_points *= StateConstants.DIFF_BW_RGB
         rgb_inds = np.arange(StateConstants.NUM_RANDOM_POINTS * 3)
 
-        # tile_inds = [tiles3.tiles(self.iht, 
-        #                           StateConstants.NUM_TILINGS, 
-        #                           [k]) for k in rgb_points]
         tile_inds = [tiles3.tiles(self.ihts[i], 
                                   StateConstants.NUM_TILINGS, 
                                   [rgb_points[i]]) for i in rgb_inds]

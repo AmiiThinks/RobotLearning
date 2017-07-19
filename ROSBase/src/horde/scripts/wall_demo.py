@@ -48,15 +48,15 @@ if __name__ == "__main__":
         # random.seed(20170612)
         
         time_scale = 0.1
-        forward_speed = 0.2
-        turn_speed = 2
+        forward_speed = 0.15
+        turn_speed = 1.5
 
         alpha0 = 1
         lambda_ = 0.05
         num_features = 14401
         alpha = (1 - lambda_) * alpha0 / num_features
         parameters = {'alpha': alpha,
-                      'beta': 0.002 * alpha,
+                      'beta': 0.005 * alpha,
                       'lambda': lambda_,
                       'alpha0': alpha0}
 
@@ -82,9 +82,10 @@ if __name__ == "__main__":
             # "/camera/depth/points",
             # "/camera/ir/image",
             # "/camera/rgb/image_raw",
-            "/camera/rgb/image_rect_color",
+            # "/camera/rgb/image_rect_color",
             "/mobile_base/sensors/core",
             "/mobile_base/sensors/dock_ir",
+            "/camera/rgb/image_rect_color/compressed"
             # "/mobile_base/sensors/imu_data",
             ]
 

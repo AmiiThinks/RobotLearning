@@ -20,6 +20,7 @@ topic_format = {
     "/mobile_base/sensors/dock_ir":kob_msg.DockInfraRed,
     "/mobile_base/sensors/imu_data":sens_msg.Imu,
     "/turtle1/pose":Pose,
+    "/camera/rgb/image_rect_color/compressed":sens_msg.CompressedImage,
     }
 
 def equal_twists(t1, t2):

@@ -39,14 +39,16 @@ class LearningForeground:
         
         # set up dictionary to receive sensor info
         self.recent = {topic:Queue(0) for topic in topics}
-        self.control_gvf = control_gvf
+
         # set up ros
         rospy.init_node('agent', anonymous=True)
+
         # setup sensor parsers
         for topic in topics:
             rospy.Subscriber(topic, 
                              topic_format[topic],
                              self.recent[topic].put)
+        self.topics = topics
 
         rospy.loginfo("Started sensor threads.")
 
@@ -56,10 +58,12 @@ class LearningForeground:
 
         # agent info
         self.gvfs = gvfs
+        self.control_gvf = control_gvf
         self.behavior_policy = behavior_policy
         self.avg_td_err = None
 
         self.state_manager = StateManager()
+        self.br = CvBridge()
 
         # currently costs about 0.0275s per timestep
         rospy.loginfo("Creating visualization.")
@@ -110,59 +114,68 @@ class LearningForeground:
             self.publishers[gvf]['avg_td_error'].publish(gvf.avg_td_error)
             self.publishers[gvf]['rupee'].publish(gvf.rupee())
 
+    @timing
     def create_state(self):
         # TODO: consider moving the data processing elsewhere
 
         rospy.loginfo("Creating state...")
         # get queue size from ALL sensors before reading any of them
-        bumper_num_obs = self.recent['/mobile_base/sensors/core'].qsize()
-        ir_num_obs = self.recent['/mobile_base/sensors/dock_ir'].qsize()
-        image_num_obs = self.recent['/camera/rgb/image_rect_color'].qsize()
+        # num_bumper_obs = self.recent['/mobile_base/sensors/core'].qsize()
+        # num_ir_obs = self.recent['/mobile_base/sensors/dock_ir'].qsize()
+        # num_image_obs = self.recent['/camera/rgb/image_rect_color'].qsize()
 
         # bumper constants from http://docs.ros.org/hydro/api/kobuki_msgs/html/msg/SensorState.html
-        BUMPER_RIGHT  = 1
-        BUMPER_CENTRE = 2
-        BUMPER_LEFT   = 4
+        bump_codes = [1, 4, 2]
+        # BUMPER_RIGHT  = 1
+        # BUMPER_CENTRE = 2
+        # BUMPER_LEFT   = 4
 
         # variables that will be passed to the state manager to create the state
         bumper_status = None
         ir_status = None
+        image_data = None
 
-        # clear the bumper queue of unused/old observations
-        for _ in range(bumper_num_obs - 1):
-            self.recent['/mobile_base/sensors/core'].get()
+        # dictionaries
+        match_stream = lambda x: filter(lambda t: x in t, self.topics)[0]
+        bump_stream = match_stream('core')
+        ir_stream = match_stream('dock_ir')
+        compressed = match_stream("compressed")
 
         # get the last bumper information
-        if (bumper_num_obs > 0):
-            last_bump_raw = self.recent['/mobile_base/sensors/core'].get().bumper
-            bumper_status = (1 if BUMPER_RIGHT & last_bump_raw else 0, 
-                             1 if BUMPER_LEFT & last_bump_raw else 0,
-                             1 if BUMPER_CENTRE & last_bump_raw else 0)
+        bump = None
+        try:
+            while True:
+                bump = self.recent[bump_stream].get_nowait().bumper
+        except:
+            pass
 
-        # get the last ir information
-        for _ in range(ir_num_obs - 1):
-            self.recent['/mobile_base/sensors/dock_ir'].get()
-        if (ir_num_obs > 0):
-            # 
-            last_ir_raw_left = ord(self.recent['/mobile_base/sensors/dock_ir'].get().data[0])
-            last_ir_raw_center = ord(self.recent['/mobile_base/sensors/dock_ir'].get().data[1])
-            last_ir_raw_right = ord(self.recent['/mobile_base/sensors/dock_ir'].get().data[2])
+        # get last IR informatirospy image stream faston
+        ir = None
+        try:
+            while True:
+                ir = self.recent[ir_stream].get_nowait().data
+        except:
+            pass
 
-            ir_status = (last_ir_raw_left, last_ir_raw_center, last_ir_raw_right)
-        # get the image processed for the state representation
-        image_data = None
-        
-        # clear the image queue of unused/old observations
-        for _ in range(image_num_obs - 1):
-            self.recent['/camera/rgb/image_rect_color'].get()
+        # get last image 
+        img = None
+        try:
+            while True:
+                img = self.recent[compressed].get_nowait()
+        except:
+            pass
 
-        # get the last image information
-        if (image_num_obs > 0):
+        # parse bump information
+        if bump is not None:
+            bumper_status = map(lambda x: bool(x & bump), bump_codes)
 
-            br = CvBridge()
-            image_data = self.recent['/camera/rgb/image_rect_color'].get()
-            image_data = br.imgmsg_to_cv2(image_data)
-            image_data = np.asarray(image_data)
+        # parse IR information
+        if ir is not None:
+            ir_status = [ord(obs) for obs in ir]
+
+        # convert image to array
+        if img is not None:
+            image_data = np.asarray(self.br.compressed_imgmsg_to_cv2(img))
 
         primary_gvf_weight = None
         if len(self.gvfs) > 0:
