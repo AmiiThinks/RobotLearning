@@ -70,7 +70,6 @@ class StateManager(object):
         self.imu_iht = tiles3.IHT(StateConstants.IMU_IHT_SIZE)
         self.odom_iht = tiles3.IHT(StateConstants.ODOM_IHT_SIZE)
 
-
         # set up mask to chose pixels
         num_pixels = StateConstants.IMAGE_LI*StateConstants.IMAGE_CO
         num_chosen = StateConstants.NUM_RANDOM_POINTS
@@ -88,7 +87,7 @@ class StateManager(object):
         self.last_ir_raw = None
 
     @timing
-    def get_phi(self, image, bump, ir, imu, odom,bias, weights = None):
+    def get_phi(self, image, bump, ir, imu, odom, bias, weights = None):
 
         phi = np.zeros(StateConstants.TOTAL_FEATURE_LENGTH)
 
@@ -115,13 +114,9 @@ class StateManager(object):
             # tile_inds = np.ones((900,4), dtype=int)
 
             rgb_inds *= StateConstants.IMAGE_IHT_SIZE
-            # tiling_inds = np.arange(start=0, 
-            #                         stop=math.pow(StateConstants.NUM_IMAGE_TILINGS, 2), 
-            #                         step=StateConstants.NUM_IMAGE_TILINGS,
-            #                         dtype=int).reshape(1,-1)
 
-            indices = tile_inds + rgb_inds[:, np.newaxis] # + tiling_inds
-            phi[indices.flatten()] = True
+            indices = tile_inds + rgb_inds[:, np.newaxis]
+            phi[(tile_inds + rgb_inds[:, np.newaxis]).flatten()] = True
 
 
         # IMU STUFF
@@ -172,7 +167,7 @@ class StateManager(object):
         # bias unit
         if bias is not None:
             phi[StateConstants.indices_in_phi['bias']] = True
-        
+
         return phi
 
     def get_observations(self, bump, ir, **kwargs):
