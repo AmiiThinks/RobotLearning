@@ -45,8 +45,12 @@ class StateConstants:
     ODOM_IHT_SIZE = (NUM_ODOM_TILES + 1) * (NUM_ODOM_TILES + 1) * NUM_ODOM_TILINGS
     ODOM_START_INDEX = IMU_START_INDEX + IMU_IHT_SIZE
 
+    # IR tiles
+    IR_START_INDEX = ODOM_START_INDEX + ODOM_IHT_SIZE
+    IR_ITH_SIZE = 64*3
+
     # the 1 represents the bias unit, 3 for bump
-    TOTAL_FEATURE_LENGTH = TOTAL_PIXEL_FEATURE_LENGTH + IMU_IHT_SIZE + ODOM_IHT_SIZE + 3 + 1
+    TOTAL_FEATURE_LENGTH = TOTAL_PIXEL_FEATURE_LENGTH + IMU_IHT_SIZE + ODOM_IHT_SIZE + IR_ITH_SIZE + 3 + 1
 
 
 class StateManager(object):
@@ -74,6 +78,7 @@ class StateManager(object):
         self.last_image_raw = None
         self.last_imu_raw = None
         self.last_odom_raw = None
+        self.last_ir_raw = None
 
     @timing
     def get_phi(self, image, bump, ir, imu, odom, weights = None):
@@ -139,6 +144,17 @@ class StateManager(object):
                                             odom * StateConstants.SCALE_ODOM))
 
             phi[indices + StateConstants.ODOM_START_INDEX] = True
+
+        # IR STUFF  
+        if ir is None:
+            rospy.logwarn("No ir value.")
+            if self.last_ir_raw is not None:
+                ir = self.last_ir_raw                
+
+        if ir is not None:
+            self.last_ir_raw = ir
+            indices = np.asarray(ir)
+            phi[indices + StateConstants.IR_START_INDEX] = True
 
         # bump
         if bump is not None:
