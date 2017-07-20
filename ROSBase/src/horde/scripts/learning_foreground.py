@@ -25,11 +25,10 @@ from gvf import GVF
 from state_representation import StateManager
 from gentest_state_representation import GenTestStateManager
 import tools
-from tools import timing, topic_format
+from tools import timing
 from visualize_pixels import Visualize
 
 class LearningForeground:
- 
     def __init__(self,
                  time_scale,
                  gvfs,
@@ -41,6 +40,10 @@ class LearningForeground:
         topics = filter(lambda x:x, topics)
         self.feature_sources = feature_sources
         
+        topics = [tools.features[f] for f in feature_sources]
+        topics = filter(lambda x: x, topics)
+        self.feature_sources = feature_sources
+
         # set up dictionary to receive sensor info
         self.recent = {topic:Queue(0) for topic in topics}
 
@@ -50,7 +53,7 @@ class LearningForeground:
         # setup sensor parsers
         for topic in topics:
             rospy.Subscriber(topic, 
-                             topic_format[topic],
+                             tools.topic_format[topic],
                              self.recent[topic].put)
         self.topics = topics
 
@@ -130,8 +133,9 @@ class LearningForeground:
         bump_codes = [1, 4, 2]
         # BUMPER_RIGHT  = 1
         # BUMPER_CENTRE = 2
-        # BUMPER_LEFT   = 4        # get the topic for each element of the data dictionary
-        # match_stream = lambda x: filter(lambda t: x in t, self.topics)[0]
+        # BUMPER_LEFT   = 4
+
+        # build data to make phi
         data = {k: None for k in tools.features.keys()}
         for source in self.feature_sources:
             temp = None
@@ -140,7 +144,8 @@ class LearningForeground:
                     temp = self.recent[tools.features[source]].get_nowait()
             except:
                 pass
-            data[source] = temp        # build dictionary to send to get_phi
+            data[source] = temp
+
         if data['bump'] is not None:
             bump = data['bump'].bumper
             data['bump'] = map(lambda x: bool(x & bump), bump_codes)
@@ -238,26 +243,4 @@ def start_learning_foreground(time_scale,
     except rospy.ROSInterruptException as detail:
         rospy.loginfo("Handling: {}".format(detail))
 
-if __name__ == '__main__':
-    try:
-        time_scale = 0.5
 
-        topics = [
-            # "/camera/depth/image",
-            # "/camera/depth/points",
-            # "/camera/ir/image",
-            # "/camera/rgb/image_raw",
-            "/camera/rgb/image_rect_color",
-            "/mobile_base/sensors/core",
-            # "/mobile_base/sensors/dock_ir",
-            # "/mobile_base/sensors/imu_data",
-            ]
-        foreground = LearningForeground(learning_rate, 
-                                        time_scale,
-                                        [],
-                                        topics,
-                                        policy)
-        foreground.run()
-
-    except rospy.ROSInterruptException as detail:
-        rospy.loginfo("Handling: {}".format(detail))

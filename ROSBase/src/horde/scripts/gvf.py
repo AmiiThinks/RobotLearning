@@ -23,7 +23,7 @@ class GVF:
         self.gamma = gamma
         self.target_policy = target_policy
 
-        self.parameters = parameters
+        self.phi = np.zeros(num_features)
         
         self.name = name
         self.feature_indices = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use])
@@ -52,23 +52,23 @@ class GVF:
                phi_prime, 
                mu):
 
-        pi = self.target_policy(phi,last_observation)[1]
+        pi = self.target_policy(phi, last_observation)[1]
         self.last_cumulant = self.cumulant(observation)
 
         phi_prime = phi_prime[self.feature_indices]
         phi = phi[self.feature_indices]
 
         kwargs = {"last_observation": last_observation,
-                 "phi": phi,
-                 "last_action": last_action,
-                 "observation": observation,
-                 "phi_prime": phi_prime,
-                 "rho": pi / mu,
-                 "gamma": self.gamma(observation),
-                 "cumulant": self.cumulant(observation)
-                }        
-        phi = self.learner.update(**kwargs)
+                  "phi": phi,
+                  "last_action": last_action,
+                  "observation": observation,
+                  "phi_prime": phi_prime,
+                  "rho": pi / mu,
+                  "gamma": self.gamma(observation),
+                  "cumulant": self.last_cumulant,
+                 }
 
+        phi = self.learner.update(**kwargs)
         
         # update RUPEE
         # add condition to change for control gvf
