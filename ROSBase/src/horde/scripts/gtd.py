@@ -26,7 +26,9 @@ class GTD:
 		self.w += self.beta * (self.tderr_elig - np.dot(phi, self.w) * phi)
 
 		self.old_gamma = gamma
-		return self.delta, self.e
+		return phi
 
 	def predict(self, phi):
+		from state_representation import StateConstants
+		print len(phi), len(self.theta), StateConstants.TOTAL_FEATURE_LENGTH
 		return np.dot(phi, self.theta)

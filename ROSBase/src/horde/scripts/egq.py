@@ -6,11 +6,14 @@ import geometry_msgs.msg as geom_msg
 from geometry_msgs.msg import Twist, Vector3
 from matplotlib.pyplot import plot, ion, show
 from auto_docking_policies import eGreedy, Learned_Policy
+from state_representation import StateConstants
+from tools import equal_twists
 
 class GreedyGQ:
     """ From Maei/Sutton 2010, with additional info from Adam White. """
 
-    def __init__(self,theta,gamma,_lambda,cumulant,alpha,beta,epsilon,learned_policy):
+    def __init__(self,theta,gamma,_lambda,cumulant,alpha,beta,epsilon,
+                learned_policy,num_features_state_action,features_to_use,action_space):
         """
         Constructs a new agent with the given parameters. Note that a copy of
         phi is created during the construction process.
@@ -24,21 +27,17 @@ class GreedyGQ:
         self.secondary_learning_rate = beta
         self.cumulant = cumulant
         self.td_error = 0
-        self.sec_weights = np.zeros(14404*5)
-        self.etrace = np.zeros(14404*5)
-        # remove multiple phi's, we're using phi, rest of the code needs, self.phi
-        self._phi = np.zeros(14404)
-        self.phi = np.zeros(14404*5)
+        self.num_features_state_action = num_features_state_action
+        self.sec_weights = np.zeros(num_features_state_action)
+        self.etrace = np.zeros(num_features_state_action)
+        # remove multiple phi's, we're using phi, rest of the code needs, self.action_phi
+        self.action_phi = np.zeros(num_features_state_action)
         self.timeStep = 0
         self.average_rewards = [0]
         self.delta = 0
-        self.tderr_elig = np.zeros(14404*5)
-        self.action_space = [Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
-                        Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0)), # forward
-                        Twist(Vector3(-0.2, 0, 0), Vector3(0, 0, 0)), # backward
-                        Twist(Vector3(0, 0, 0), Vector3(0, 0, 1.5)), # turn acw/cw
-                        Twist(Vector3(0, 0, 0), Vector3(0, 0, -1.5)) # turn cw/acw
-                        ]
+        self.tderr_elig = np.zeros(num_features_state_action)
+        # self.feature_indices = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use])
+        self.action_space = action_space
 
         self.behavior_policy = eGreedy(epsilon = self.epsilon,
                                         theta=self.theta, 
@@ -58,12 +57,17 @@ class GreedyGQ:
         random_action = self.action_space[random.randint(0,len(self.action_space)-2)]
         return random_action, 1/len(self.action_space)
 
-    def update(self, state, action, observation, next_state, **kwargs):
+    def update(self, phi, last_action, observation, phi_prime, **kwargs):
         reward = self.cumulant(observation)
         gamma = self.gamma
-        learned_policy = self.learned_policy
+        action = last_action
         behavior_policy = self.behavior_policy
-        self.phi = self.get_representation(state,action)
+
+        action_phi_primes = {action: self.get_representation(phi_prime, action) for action in self.action_space}
+
+        action_phis = {action: self.get_representation(phi, action) for action in self.action_space}
+        self.action_phi = self.get_representation(phi,action)
+
         self.timeStep = self.timeStep + 1
         average_reward = self.average_rewards[-1]
         average_reward = average_reward + (reward - average_reward)/self.timeStep
@@ -75,18 +79,18 @@ class GreedyGQ:
         # A_{t+1} update
         next_greedy_action = action
         for temp_action in self.action_space:
-            if np.dot(self.theta, self.get_representation(next_state,temp_action)) >= np.dot(self.theta, self.get_representation(next_state,next_greedy_action)):
+            if np.dot(self.theta, action_phi_primes[temp_action]) >= np.dot(self.theta, action_phi_primes[next_greedy_action]):
                 next_greedy_action = temp_action
 
-        # phi_bar update
-        phi_bar = self.get_representation(next_state,next_greedy_action)
+        # action_phi_bar update
+        action_phi_bar = action_phi_primes[next_greedy_action]
 
         # delta_t update
-        self.td_error = reward + gamma * np.dot(self.theta, phi_bar) - np.dot(self.theta,self.phi)
+        self.td_error = reward + gamma * np.dot(self.theta, action_phi_bar) - np.dot(self.theta,self.action_phi)
         
         previous_greedy_action = action
         for temp_action in self.action_space:
-            if np.dot(self.theta, self.get_representation(state,temp_action)) >= np.dot(self.theta, self.get_representation(state,previous_greedy_action)):
+            if np.dot(self.theta, action_phis[temp_action]) >= np.dot(self.theta, action_phis[previous_greedy_action]):
                 previous_greedy_action = temp_action
 
         # rho_t (responsibility) update
@@ -95,32 +99,34 @@ class GreedyGQ:
         else:
             responsibility = 0
 
-        if np.count_nonzero(self.phi) == 0:
-            print 'self.phi is zero'
+        if np.count_nonzero(self.action_phi) == 0:
+            print 'self.action_phi is zero'
 
         # e_t update
         self.etrace *= gamma * self._lambda * responsibility
-        self.etrace += self.phi #(phi_t) 
+        self.etrace += self.action_phi #(phi_t) 
 
         if np.count_nonzero(self.etrace) == 0:
             print 'self.eTrace is zero'
                 
         # theta_t update
         self.theta += self.learning_rate * (self.td_error * self.etrace - 
-                        gamma * (1 - self._lambda) * np.dot(self.sec_weights, self.phi) * phi_bar)
+                        gamma * (1 - self._lambda) * np.dot(self.sec_weights, self.action_phi) * action_phi_bar)
 
         if np.count_nonzero(self.theta) == 0:
             print 'self.theta is zero'
         
         # w_t update
-        self.sec_weights += self.secondary_learning_rate * (self.td_error * self.etrace - np.dot(self.sec_weights, self.phi) * self.phi)
+        self.sec_weights += self.secondary_learning_rate * (self.td_error * self.etrace - np.dot(self.sec_weights, self.action_phi) * self.action_phi)
         self.delta = self.td_error
-        self.tderr_elig = self.td_error* self.eTrace
+        self.tderr_elig = self.td_error* self.etrace
 
         if reward == 1:
             print 'Episode finished'
-            self.etrace = np.zeros(14404*5)
+            self.etrace = np.zeros(self.num_features_state_action)
 
+        # returing to make sure action_phi is used in RUPEE calculation
+        return self.action_phi
 
     def get_representation(self, state, action):
         representation = []

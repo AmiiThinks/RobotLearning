@@ -52,6 +52,13 @@ class StateConstants:
     # the 1 represents the bias unit, 3 for bump
     TOTAL_FEATURE_LENGTH = TOTAL_PIXEL_FEATURE_LENGTH + IMU_IHT_SIZE + ODOM_IHT_SIZE + IR_ITH_SIZE + 3 + 1
 
+    indices_in_phi = {'image':np.arange(0,TOTAL_PIXEL_FEATURE_LENGTH),
+                        'imu':np.arange(IMU_START_INDEX,IMU_START_INDEX + IMU_IHT_SIZE),
+                        'odom':np.arange(ODOM_START_INDEX,ODOM_START_INDEX + ODOM_IHT_SIZE),
+                        'ir':np.arange(IR_START_INDEX,IR_START_INDEX+IR_ITH_SIZE),
+                        'bump':np.arange(IR_START_INDEX+IR_ITH_SIZE, IR_START_INDEX+IR_ITH_SIZE+3),
+                        'bias':np.array([TOTAL_FEATURE_LENGTH-1])}
+
 
 class StateManager(object):
     def __init__(self):
@@ -81,7 +88,7 @@ class StateManager(object):
         self.last_ir_raw = None
 
     @timing
-    def get_phi(self, image, bump, ir, imu, odom, weights = None):
+    def get_phi(self, image, bump, ir, imu, odom,bias, weights = None):
 
         phi = np.zeros(StateConstants.TOTAL_FEATURE_LENGTH)
 
@@ -95,7 +102,7 @@ class StateManager(object):
             if self.last_image_raw is not None:
                 image = self.last_image_raw
 
-        if image is not None:
+        if image != None:
             self.last_image_raw = image 
             rgb_points = image[self.pixel_mask].flatten().astype(float)
             rgb_points *= StateConstants.SCALE_RGB
@@ -154,14 +161,17 @@ class StateManager(object):
         if ir is not None:
             self.last_ir_raw = ir
             indices = np.asarray(ir)
+            indices += np.array([0,64,128])
+            print indices
             phi[indices + StateConstants.IR_START_INDEX] = True
 
         # bump
         if bump is not None:
-            phi[-4:-1] = bump
+            phi[StateConstants.indices_in_phi['bump']] = bump
 
         # bias unit
-        phi[-1] = True
+        if bias is not None:
+            phi[StateConstants.indices_in_phi['bias']] = True
         
         return phi
 

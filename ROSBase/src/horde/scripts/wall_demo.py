@@ -54,7 +54,8 @@ if __name__ == "__main__":
 
         alpha0 = 1
         lambda_ = 0.1
-        num_features = StateConstants.TOTAL_FEATURE_LENGTH
+        features_to_use = ['image','bump','bias']
+        num_features = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use]).size
         alpha = (1 - lambda_) * alpha0 / num_features
         parameters = {'alpha': alpha,
                       'beta': 0.005 * alpha,
@@ -72,30 +73,18 @@ if __name__ == "__main__":
                                parameters = parameters,
                                learner = GTD(parameters, num_features),
                                name = 'DistanceToBump',
-                               logger = rospy.loginfo)
+                               logger = rospy.loginfo,
+                               features_to_use = features_to_use)
 
         behavior_policy = ForwardIfClear(distance_to_bump, 
                                          vel_linear=forward_speed,
                                          vel_angular=turn_speed)
 
-        topics = [
-            # "/camera/depth/image",
-            # "/camera/depth/points",
-            # "/camera/ir/image",
-            # "/camera/rgb/image_raw",
-            # "/camera/rgb/image_rect_color",
-            "/mobile_base/sensors/core",
-            "/mobile_base/sensors/dock_ir",
-            "/camera/rgb/image_rect_color/compressed",
-            "/mobile_base/sensors/imu_data",
-            "/odom",
-            ]
-
         foreground_process = mp.Process(target=start_learning_foreground,
                                         name="foreground",
                                         args=(time_scale,
                                               [distance_to_bump],
-                                              topics,
+                                              features_to_use,
                                               behavior_policy))
 
         action_manager_process = mp.Process(target=start_action_manager,
