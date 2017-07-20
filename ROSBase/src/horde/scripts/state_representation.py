@@ -61,7 +61,7 @@ class StateConstants:
 
 
 class StateManager(object):
-    def __init__(self):
+    def __init__(self, features_to_use):
 
         num_img_ihts = StateConstants.NUM_RANDOM_POINTS * StateConstants.CHANNELS
         img_iht_size = StateConstants.IMAGE_IHT_SIZE
@@ -86,79 +86,84 @@ class StateManager(object):
         self.last_odom_raw = None
         self.last_ir_raw = None
 
+        self.features_to_use = features_to_use
+
     @timing
     def get_phi(self, image, bump, ir, imu, odom, bias, weights = None):
 
         phi = np.zeros(StateConstants.TOTAL_FEATURE_LENGTH)
 
         # IMAGE STUFF
-        # check if there is an image
-        no_image = image is None or len(image) == 0 or len(image[0]) == 0
+        if 'image' in self.features_to_use:
+            # check if there is an image
+            no_image = image is None or len(image) == 0 or len(image[0]) == 0
 
-        # adding image data to state
-        if no_image:
-            rospy.logwarn("Image is empty.")
-            if self.last_image_raw is not None:
-                image = self.last_image_raw
+            # adding image data to state
+            if no_image:
+                rospy.logwarn("Image is empty.")
+                if self.last_image_raw is not None:
+                    image = self.last_image_raw
 
-        if image != None:
-            self.last_image_raw = image 
-            rgb_points = image[self.pixel_mask].flatten().astype(float)
-            rgb_points *= StateConstants.SCALE_RGB
-            rgb_inds = np.arange(StateConstants.NUM_RANDOM_POINTS * 3)
+            if image != None:
+                self.last_image_raw = image 
+                rgb_points = image[self.pixel_mask].flatten().astype(float)
+                rgb_points *= StateConstants.SCALE_RGB
+                rgb_inds = np.arange(StateConstants.NUM_RANDOM_POINTS * 3)
 
-            tile_inds = [tiles3.tiles(self.img_ihts[i], 
-                                      StateConstants.NUM_IMAGE_TILINGS, 
-                                      [rgb_points[i]]) for i in rgb_inds]
+                tile_inds = [tiles3.tiles(self.img_ihts[i], 
+                                          StateConstants.NUM_IMAGE_TILINGS, 
+                                          [rgb_points[i]]) for i in rgb_inds]
 
-            # tile_inds = np.ones((900,4), dtype=int)
+                # tile_inds = np.ones((900,4), dtype=int)
 
-            rgb_inds *= StateConstants.IMAGE_IHT_SIZE
+                rgb_inds *= StateConstants.IMAGE_IHT_SIZE
 
-            indices = tile_inds + rgb_inds[:, np.newaxis]
-            phi[(tile_inds + rgb_inds[:, np.newaxis]).flatten()] = True
+                indices = tile_inds + rgb_inds[:, np.newaxis]
+                phi[(tile_inds + rgb_inds[:, np.newaxis]).flatten()] = True
 
+        if 'imu' in self.features_to_use:
+            # IMU STUFF
+            if imu is None:
+                rospy.logwarn("No imu value.")
+                if self.last_imu_raw is not None:
+                    imu = self.last_imu_raw
 
-        # IMU STUFF
-        if imu is None:
-            rospy.logwarn("No imu value.")
-            if self.last_imu_raw is not None:
-                imu = self.last_imu_raw
+            if imu is not None:
+                self.last_imu_raw = imu
+                indices = np.array(tiles3.tiles(self.imu_iht, 
+                                                StateConstants.NUM_IMU_TILINGS, 
+                                                [imu*StateConstants.SCALE_IMU]))
 
-        if imu is not None:
-            self.last_imu_raw = imu
-            indices = np.array(tiles3.tiles(self.imu_iht, 
-                                            StateConstants.NUM_IMU_TILINGS, 
-                                            [imu*StateConstants.SCALE_IMU]))
+                phi[indices + StateConstants.IMU_START_INDEX] = True
 
-            phi[indices + StateConstants.IMU_START_INDEX] = True
+        if 'odom' in self.features_to_use:
+            # ODOM STUFF
+            if odom is None:
+                rospy.logwarn("No odom value.")
+                if self.last_odom_raw is not None:
+                    odom = self.last_odom_raw
 
-        # ODOM STUFF
-        if odom is None:
-            rospy.logwarn("No odom value.")
-            if self.last_odom_raw is not None:
-                odom = self.last_odom_raw
+            if odom is not None:
+                self.last_odom_raw = odom
+                indices = np.array(tiles3.tiles(self.odom_iht,
+                                                StateConstants.NUM_ODOM_TILINGS,
+                                                odom * StateConstants.SCALE_ODOM))
 
-        if odom is not None:
-            self.last_odom_raw = odom
-            indices = np.array(tiles3.tiles(self.odom_iht,
-                                            StateConstants.NUM_ODOM_TILINGS,
-                                            odom * StateConstants.SCALE_ODOM))
+                phi[indices + StateConstants.ODOM_START_INDEX] = True
 
-            phi[indices + StateConstants.ODOM_START_INDEX] = True
+        if 'ir' in self.features_to_use:
+            # IR STUFF  
+            if ir is None:
+                rospy.logwarn("No ir value.")
+                if self.last_ir_raw is not None:
+                    ir = self.last_ir_raw                
 
-        # IR STUFF  
-        if ir is None:
-            rospy.logwarn("No ir value.")
-            if self.last_ir_raw is not None:
-                ir = self.last_ir_raw                
-
-        if ir is not None:
-            self.last_ir_raw = ir
-            indices = np.asarray(ir)
-            indices += np.array([0,64,128])
-            print indices
-            phi[indices + StateConstants.IR_START_INDEX] = True
+            if ir is not None:
+                self.last_ir_raw = ir
+                indices = np.asarray(ir)
+                indices += np.array([0,64,128])
+                print indices
+                phi[indices + StateConstants.IR_START_INDEX] = True
 
         # bump
         if bump is not None:

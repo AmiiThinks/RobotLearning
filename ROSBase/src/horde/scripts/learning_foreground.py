@@ -32,17 +32,17 @@ class LearningForeground:
     def __init__(self,
                  time_scale,
                  gvfs,
-                 feature_sources,
+                 features_to_use,
                  behavior_policy,
                  control_gvf=None):
        
-        topics = [tools.features[f] for f in feature_sources]
+        topics = [tools.features[f] for f in features_to_use]
         topics = filter(lambda x:x, topics)
-        self.feature_sources = feature_sources
+        self.features_to_use = features_to_use
         
-        topics = [tools.features[f] for f in feature_sources]
+        topics = [tools.features[f] for f in features_to_use]
         topics = filter(lambda x: x, topics)
-        self.feature_sources = feature_sources
+        self.features_to_use = features_to_use
 
         # set up dictionary to receive sensor info
         self.recent = {topic:Queue(0) for topic in topics}
@@ -69,7 +69,7 @@ class LearningForeground:
         self.behavior_policy = behavior_policy
         self.avg_td_err = None
 
-        self.state_manager = StateManager()
+        self.state_manager = StateManager(features_to_use)
         self.img_to_cv2 = CvBridge().compressed_imgmsg_to_cv2
 
         # currently costs about 0.0275s per timestep
@@ -137,7 +137,7 @@ class LearningForeground:
 
         # build data to make phi
         data = {k: None for k in tools.features.keys()}
-        for source in self.feature_sources:
+        for source in self.features_to_use:
             temp = None
             try:
                 while True:
