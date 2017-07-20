@@ -24,6 +24,12 @@ topic_format = {
     "/camera/rgb/image_rect_color/compressed":sens_msg.CompressedImage,
     "/odom":nav_msg.Odometry,
     }
+features = {'bump': "/mobile_base/sensors/core",
+           'ir': "/mobile_base/sensors/dock_ir",
+           'imu': "/mobile_base/sensors/imu_data",
+           'image': "/camera/rgb/image_rect_color/compressed",
+           'odom': "/odom",
+           'bias':None}
 
 def equal_twists(t1, t2):
     return all([np.isclose(t1.linear.x, t2.linear.x),

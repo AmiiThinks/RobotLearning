@@ -24,18 +24,22 @@ import pickle
 from gvf import GVF
 from state_representation import StateManager
 from gentest_state_representation import GenTestStateManager
+import tools
 from tools import timing, topic_format
 from visualize_pixels import Visualize
 
-
 class LearningForeground:
-
-    def __init__(self, 
-                 time_scale, 
-                 gvfs, 
-                 topics, 
+ 
+    def __init__(self,
+                 time_scale,
+                 gvfs,
+                 feature_sources,
                  behavior_policy,
                  control_gvf=None):
+       
+        topics = [tools.features[f] for f in feature_sources]
+        topics = filter(lambda x:x, topics)
+        self.feature_sources = feature_sources
         
         # set up dictionary to receive sensor info
         self.recent = {topic:Queue(0) for topic in topics}
@@ -111,7 +115,7 @@ class LearningForeground:
         # publishing
         for gvf in self.gvfs:
             self.publishers[gvf]['prediction'].publish(self.last_preds[gvf])
-            self.publishers[gvf]['cumulant'].publish(gvf.cumulant_t)
+            self.publishers[gvf]['cumulant'].publish(gvf.last_cumulant)
             self.publishers[gvf]['td_error'].publish(gvf.td_error)
             self.publishers[gvf]['avg_td_error'].publish(gvf.avg_td_error)
             self.publishers[gvf]['rupee'].publish(gvf.rupee())
@@ -126,41 +130,33 @@ class LearningForeground:
         bump_codes = [1, 4, 2]
         # BUMPER_RIGHT  = 1
         # BUMPER_CENTRE = 2
-        # BUMPER_LEFT   = 4
-
-        # variables that will be passed to the state manager to create the state
-        sources = {'core': None,
-                   'dock_ir': None,
-                   'image_rec': None,
-                   'imu': None,
-                   'odom': None}
-
-        # get the topic for each element of the data dictionary
-        match_stream = lambda x: filter(lambda t: x in t, self.topics)[0]
-        for source in sources.keys():
+        # BUMPER_LEFT   = 4        # get the topic for each element of the data dictionary
+        # match_stream = lambda x: filter(lambda t: x in t, self.topics)[0]
+        data = {k: None for k in tools.features.keys()}
+        for source in self.feature_sources:
             temp = None
             try:
                 while True:
-                    temp = self.recent[match_stream(source)].get_nowait()
+                    temp = self.recent[tools.features[source]].get_nowait()
             except:
                 pass
-            sources[source] = temp
-
-        # build dictionary to send to get_phi
-        keys = ['bump', 'ir', 'image', 'odom', 'imu']
-        data = {k: None for k in keys}
-        if sources['core'] is not None:
-            bump = sources['core'].bumper
+            data[source] = temp        # build dictionary to send to get_phi
+        if data['bump'] is not None:
+            bump = data['bump'].bumper
             data['bump'] = map(lambda x: bool(x & bump), bump_codes)
-        if sources['dock_ir'] is not None:
-            data['ir'] = [ord(obs) for obs in sources['dock_ir'].data]
-        if sources['image_rec'] is not None:
-            data['image'] = np.asarray(self.img_to_cv2(sources['image_rec']))
-        if sources['odom'] is not None:
-            pos = sources['odom'].pose.pose.position
+        if data['ir'] is not None:
+            data['ir'] = [ord(obs) for obs in data['ir'].data]
+        if data['image'] is not None:
+            cv2_image = self.img_to_cv2(data['image'])
+            if cv2_image is None:
+                data['image'] = None
+            else:
+                data['image'] = np.asarray(cv2_image)
+        if data['odom'] is not None:
+            pos = data['odom'].pose.pose.position
             data['odom'] = np.array([pos.x, pos.y])
-        if sources['imu'] is not None:
-            data['imu'] = sources['imu'].orientation.z
+        if data['imu'] is not None:
+            data['imu'] = data['imu'].orientation.z
 
         data['weights'] = self.gvfs[0].learner.theta if self.gvfs else None
 
@@ -182,7 +178,7 @@ class LearningForeground:
         self.publishers['action'].publish(action)
 
     def reset_episode(self):
-        for i in range(10):
+        for i in range(1):
             action, mu = self.gvfs[0].learner.take_random_action()
             self.take_action(action)
             rospy.loginfo('taking random action number: {}'.format(i))
