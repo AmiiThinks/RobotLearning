@@ -74,9 +74,9 @@ class GreedyGQ:
 
         # A_{t+1} update
         next_greedy_action = action
-        for action in self.action_space:
-            if np.dot(self.theta, self.get_representation(next_state,action)) >= np.dot(self.theta, self.get_representation(next_state,next_greedy_action)):
-                next_greedy_action = action
+        for temp_action in self.action_space:
+            if np.dot(self.theta, self.get_representation(next_state,temp_action)) >= np.dot(self.theta, self.get_representation(next_state,next_greedy_action)):
+                next_greedy_action = temp_action
 
         # phi_bar update
         phi_bar = self.get_representation(next_state,next_greedy_action)

@@ -48,7 +48,7 @@ class Learned_Policy():
             if np.dot(theta, self.get_representation(phi,action)) > np.dot(theta, self.get_representation(phi,greedy_action)):
                 greedy_action = action
                 equal_actions = [action]
-        greedy_action = self.action_space[random.randint(0,len(equal_actions)-1)]
+        greedy_action = self.equal_actions[random.randint(0,len(equal_actions)-1)]
         return greedy_action, -1
 
     def get_representation(self, state, action):
