@@ -104,7 +104,7 @@ class StateManager(object):
                 if self.last_image_raw is not None:
                     image = self.last_image_raw
 
-            if image != None:
+            if image is not None:
                 self.last_image_raw = image 
                 rgb_points = image[self.pixel_mask].flatten().astype(float)
                 rgb_points *= StateConstants.SCALE_RGB

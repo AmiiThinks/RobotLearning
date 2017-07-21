@@ -42,6 +42,7 @@ class ForwardIfClear():
             else:
                 action = Twist(Vector3(self.vel_linear, 0, 0), Vector3(0, 0, 0))
                 self.last_action = self.FORWARD
+
         return action, 1
 
 if __name__ == "__main__":
@@ -54,11 +55,11 @@ if __name__ == "__main__":
 
         alpha0 = 1
         lambda_ = 0.1
-        features_to_use = ['image','bump','bias']
+        features_to_use = ['image', 'bump', 'bias']
         num_features = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use]).size
         alpha = (1 - lambda_) * alpha0 / num_features
-        parameters = {'alpha': alpha,
-                      'beta': 0.005 * alpha,
+        parameters = { 'alpha': alpha,
+                        'beta': 0.005 * alpha,
                       'lambda': lambda_,
                       'alpha0': alpha0}
 

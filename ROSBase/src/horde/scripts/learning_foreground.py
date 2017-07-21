@@ -36,13 +36,8 @@ class LearningForeground:
                  behavior_policy,
                  control_gvf=None):
        
-        topics = [tools.features[f] for f in features_to_use]
-        topics = filter(lambda x:x, topics)
-        self.features_to_use = features_to_use
-        
-        topics = [tools.features[f] for f in features_to_use]
-        topics = filter(lambda x: x, topics)
-        self.features_to_use = features_to_use
+        topics = filter(lambda x: x, 
+                        [tools.features[f] for f in features_to_use])
 
         # set up dictionary to receive sensor info
         self.recent = {topic:Queue(0) for topic in topics}
@@ -56,6 +51,7 @@ class LearningForeground:
                              tools.topic_format[topic],
                              self.recent[topic].put)
         self.topics = topics
+        self.features_to_use = features_to_use
 
         rospy.loginfo("Started sensor threads.")
 
@@ -162,12 +158,10 @@ class LearningForeground:
             data['odom'] = np.array([pos.x, pos.y])
         if data['imu'] is not None:
             data['imu'] = data['imu'].orientation.z
-
+        if 'bias' in self.features_to_use:
+            data['bias'] = True
         data['weights'] = self.gvfs[0].learner.theta if self.gvfs else None
 
-        # def f(**kwargs):
-        #     print(kwargs.keys)
-        # f(**data)
         phi = self.state_manager.get_phi(**data)
 
         # update the visualization of the image data
@@ -192,9 +186,6 @@ class LearningForeground:
             self.r.sleep()
     
     def run(self):
-        # Keep track of time for when to avoid sleeping
-
-        finished_episode = False
 
         while not rospy.is_shutdown():
 
@@ -205,19 +196,19 @@ class LearningForeground:
             self.last_preds = {g:g.predict(phi_prime) for g in self.gvfs}
 
             # take action
-            action, mu = self.behavior_policy(phi_prime,observation)
+            action, mu = self.behavior_policy(phi_prime, observation)
             self.take_action(action)
 
             # learn
             if self.last_observation is not None:
                 self.update_gvfs(phi_prime, observation)
 
-            if self.control_gvf != None:
-                finished_episode = self.control_gvf.learner.finished_episode
+            # check if episode is over
+            if self.control_gvf is not None:
+                if self.control_gvf.learner.finished_episode:
+                    self.reset_episode()
 
-            if finished_episode:
-                self.reset_episode()
-
+            # save values
             self.last_phi = phi_prime if len(phi_prime) else None
             self.last_action = action
             self.last_mu = mu
