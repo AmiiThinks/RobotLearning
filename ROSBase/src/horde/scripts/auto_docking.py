@@ -30,23 +30,48 @@ if __name__ == "__main__":
                      'lambda': lambda_,
                      'alpha0': alpha0}
 
-        one_if_bump = lambda observation: int(any(observation['bump'])) if observation is not None else 0
-        one_if_ir = lambda observation: int(any(observation['ir'])) if observation is not None else 0
+        taks_to_learn = 3
+        if taks_to_learn == 1: #reach the IR region
+            one_if_ir = lambda observation: int(any(observation['ir'])) if observation is not None else 0
 
-        theta = np.zeros(num_features*5)
-        phi = np.zeros(num_features)
-        observation = None
-        learningRate = 0.1/(4*900)
-        secondaryLearningRate = learningRate/10
-        epsilon = 0.1
-        # lambda_ = lambda observation: 0.95
-        lambda_ = 0.95
-        action_space = [Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
-                        Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0)), # forward
-                        Twist(Vector3(-0.2, 0, 0), Vector3(0, 0, 0)), # backward
-                        Twist(Vector3(0, 0, 0), Vector3(0, 0, 1.5)), # turn acw/cw
-                        Twist(Vector3(0, 0, 0), Vector3(0, 0, -1.5)) # turn cw/acw
-                        ]
+            action_space = [#Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
+                            Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0)), # forward
+                            Twist(Vector3(-0.2, 0, 0), Vector3(0, 0, 0)), # backward
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, 1.5)), # turn acw/cw
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, -1.5)) # turn cw/acw
+                            ]
+            theta = np.zeros(num_features*len(action_space))
+            phi = np.zeros(num_features)
+            observation = None
+            # learningRate = 0.1/(4*900)
+            learningRate = 0.1/(100)
+            secondaryLearningRate = learningRate/10
+            epsilon = 0.1
+            # lambda_ = lambda observation: 0.95
+            lambda_ = 0.95
+
+        if taks_to_learn == 2: #reach the center IR region
+            pass
+
+        if taks_to_learn == 3: #align center IR reciever and sender
+            one_if_ir = lambda observation: int((observation['ir']%4)/2 in [2,3]) if observation is not None else 0
+
+            action_space = [#Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
+                            # Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0)), # forward
+                            # Twist(Vector3(-0.2, 0, 0), Vector3(0, 0, 0)), # backward
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, 1.5)), # turn acw/cw
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, -1.5)) # turn cw/acw
+                            ]
+            theta = np.zeros(num_features*len(action_space))
+            phi = np.zeros(num_features)
+            observation = None
+            # learningRate = 0.1/(4*900)
+            learningRate = 0.1/(100)
+            secondaryLearningRate = learningRate/10
+            epsilon = 0.1
+            # lambda_ = lambda observation: 0.95
+            lambda_ = 0.95
+
         learned_policy = Learned_Policy(features_to_use=features_to_use,theta=theta,action_space=action_space)
 
         learner_parameters = {'theta' : theta,
@@ -73,7 +98,7 @@ if __name__ == "__main__":
                         features_to_use=features_to_use)
 
         behavior_policy = auto_docking.learner.behavior_policy
-        
+
         foreground_process = mp.Process(target=start_learning_foreground,
                                         name="foreground",
                                         args=(time_scale,

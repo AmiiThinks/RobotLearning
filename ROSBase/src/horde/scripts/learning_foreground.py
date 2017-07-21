@@ -183,7 +183,7 @@ class LearningForeground:
         self.publishers['action'].publish(action)
 
     def reset_episode(self):
-        for i in range(1):
+        for i in range(10):
             action, mu = self.gvfs[0].learner.take_random_action()
             self.take_action(action)
             rospy.loginfo('taking random action number: {}'.format(i))
@@ -213,7 +213,7 @@ class LearningForeground:
                 self.update_gvfs(phi_prime, observation)
 
             if self.control_gvf != None:
-                finished_episode = self.control_gvf.cumulant(observation) == 1
+                finished_episode = self.control_gvf.learner.finished_episode
 
             if finished_episode:
                 self.reset_episode()

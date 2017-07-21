@@ -8,6 +8,7 @@ from matplotlib.pyplot import plot, ion, show
 from auto_docking_policies import eGreedy, Learned_Policy
 from state_representation import StateConstants
 from tools import equal_twists
+import pickle
 
 class GreedyGQ:
     """ From Maei/Sutton 2010, with additional info from Adam White. """
@@ -38,6 +39,7 @@ class GreedyGQ:
         self.tderr_elig = np.zeros(num_features_state_action)
         # self.feature_indices = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use])
         self.action_space = action_space
+        self.finished_episode = False
 
         self.behavior_policy = eGreedy(epsilon = self.epsilon,
                                         theta=self.theta, 
@@ -60,6 +62,7 @@ class GreedyGQ:
     def update(self, phi, last_action, observation, phi_prime, **kwargs):
         reward = self.cumulant(observation)
         gamma = self.gamma
+        self.finished_episode = False
         action = last_action
         behavior_policy = self.behavior_policy
 
@@ -73,6 +76,10 @@ class GreedyGQ:
         average_reward = average_reward + (reward - average_reward)/self.timeStep
 
         self.average_rewards.append(average_reward)
+
+        if self.timeStep%100 == 0:
+            with open('average_rewards','w') as f:
+                pickle.dump(self.average_rewards,f)
 
         print 'average_reward: ', average_reward
 
@@ -118,11 +125,14 @@ class GreedyGQ:
         
         # w_t update
         self.sec_weights += self.secondary_learning_rate * (self.td_error * self.etrace - np.dot(self.sec_weights, self.action_phi) * self.action_phi)
+
+        # for calculating RUPEE
         self.delta = self.td_error
         self.tderr_elig = self.td_error* self.etrace
 
         if reward == 1:
             print 'Episode finished'
+            self.finished_episode = True
             self.etrace = np.zeros(self.num_features_state_action)
 
         # returing to make sure action_phi is used in RUPEE calculation
