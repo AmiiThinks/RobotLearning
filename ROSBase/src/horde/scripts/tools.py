@@ -26,12 +26,13 @@ topic_format = {
     "/odom":nav_msg.Odometry,
     }
 
-features = {'bump': "/mobile_base/sensors/core",
+features = {'core': "/mobile_base/sensors/core",
             'ir': "/mobile_base/sensors/dock_ir",
             'imu': "/mobile_base/sensors/imu_data",
             'image': "/camera/rgb/image_rect_color/compressed",
             'odom': "/odom",
-            'bias': None}
+            'bias': None,
+            'bump': None}
 
 
 def equal_twists(t1, t2):

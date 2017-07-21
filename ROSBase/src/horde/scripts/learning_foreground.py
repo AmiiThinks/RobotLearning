@@ -20,6 +20,7 @@ import threading
 import time
 import sys
 import pickle
+import random
 
 from gvf import GVF
 from state_representation import StateManager
@@ -36,8 +37,10 @@ class LearningForeground:
                  behavior_policy,
                  control_gvf=None):
        
+
+        self.features_to_use = features_to_use + ['core']
         topics = filter(lambda x: x, 
-                        [tools.features[f] for f in features_to_use])
+                        [tools.features[f] for f in self.features_to_use])
 
         # set up dictionary to receive sensor info
         self.recent = {topic:Queue(0) for topic in topics}
@@ -51,7 +54,6 @@ class LearningForeground:
                              tools.topic_format[topic],
                              self.recent[topic].put)
         self.topics = topics
-        self.features_to_use = features_to_use
 
         rospy.loginfo("Started sensor threads.")
 
@@ -142,9 +144,13 @@ class LearningForeground:
                 pass
             data[source] = temp
 
-        if data['bump'] is not None:
-            bump = data['bump'].bumper
+        if data['core'] is not None:
+            bump = data['core'].bumper
             data['bump'] = map(lambda x: bool(x & bump), bump_codes)
+            data['charging'] = bool(data['core'].charger & 2)
+        else:
+            data['bump'] = None
+            data['charging'] = None
         if data['ir'] is not None:
             data['ir'] = [ord(obs) for obs in data['ir'].data]
         if data['image'] is not None:
@@ -162,6 +168,7 @@ class LearningForeground:
             data['bias'] = True
         data['weights'] = self.gvfs[0].learner.theta if self.gvfs else None
 
+
         phi = self.state_manager.get_phi(**data)
 
         # update the visualization of the image data
@@ -171,13 +178,14 @@ class LearningForeground:
         # rospy.loginfo(phi)
 
         observation = self.state_manager.get_observations(**data)
+        observation['action'] =self.last_action
         return phi, observation
 
     def take_action(self, action):
         self.publishers['action'].publish(action)
 
     def reset_episode(self):
-        for i in range(10):
+        for i in range(random.randint(0,40)):
             action, mu = self.gvfs[0].learner.take_random_action()
             self.take_action(action)
             rospy.loginfo('taking random action number: {}'.format(i))

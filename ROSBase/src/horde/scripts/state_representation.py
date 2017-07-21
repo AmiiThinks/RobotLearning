@@ -89,7 +89,7 @@ class StateManager(object):
         self.features_to_use = features_to_use
 
     @timing
-    def get_phi(self, image, bump, ir, imu, odom, bias, weights = None):
+    def get_phi(self, image, bump, ir, imu, odom, bias, weights = None,*args, **kwargs):
 
         phi = np.zeros(StateConstants.TOTAL_FEATURE_LENGTH)
 
@@ -167,18 +167,19 @@ class StateManager(object):
                 phi[indices + StateConstants.IR_START_INDEX] = True
 
         # bump
-        if bump is not None:
+        if 'bump' in self.features_to_use:
             phi[StateConstants.indices_in_phi['bump']] = bump
 
         # bias unit
-        if bias is not None:
+        if 'bias' in self.features_to_use:
             phi[StateConstants.indices_in_phi['bias']] = True
 
         return phi
 
-    def get_observations(self, bump, ir, **kwargs):
+    def get_observations(self, bump, ir,charging, **kwargs):
         observations = {'bump': bump if bump else (0,0,0),
                           'ir': ir if ir else (0,0,0),
+                          'charging': charging if charging else False,
                        }
 
         return observations

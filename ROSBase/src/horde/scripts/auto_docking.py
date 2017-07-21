@@ -3,6 +3,7 @@ import numpy as np
 import random
 import rospy
 from geometry_msgs.msg import Twist, Vector3
+import tools
 
 from action_manager import start_action_manager
 from gtd import GTD
@@ -30,9 +31,12 @@ if __name__ == "__main__":
                      'lambda': lambda_,
                      'alpha0': alpha0}
 
-        taks_to_learn = 3
-        if taks_to_learn == 1: #reach the IR region
-            one_if_ir = lambda observation: int(any(observation['ir'])) if observation is not None else 0
+        task_to_learn = 3
+        if task_to_learn == 1: #reach the IR region
+            def reward_function(action_space):
+                def award(observation):
+                    return int(any(observation['ir'])) if observation is not None else 0
+                return award
 
             action_space = [#Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
                             Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0)), # forward
@@ -40,7 +44,8 @@ if __name__ == "__main__":
                             Twist(Vector3(0, 0, 0), Vector3(0, 0, 1.5)), # turn acw/cw
                             Twist(Vector3(0, 0, 0), Vector3(0, 0, -1.5)) # turn cw/acw
                             ]
-            theta = np.zeros(num_features*len(action_space))
+            # theta = np.zeros(num_features*len(action_space))
+            theta = np.random.rand(num_features*len(action_space))
             phi = np.zeros(num_features)
             observation = None
             # learningRate = 0.1/(4*900)
@@ -50,23 +55,95 @@ if __name__ == "__main__":
             # lambda_ = lambda observation: 0.95
             lambda_ = 0.95
 
-        if taks_to_learn == 2: #reach the center IR region
-            pass
+        if task_to_learn == 2: #reach the center IR region
+            def reward_function(action_space):
+                def award(observation):
+                    return int(any([(b%16)/8 or (b%4)/2 for b in observation['ir']])) if observation is not None else 0
+                return award
 
-        if taks_to_learn == 3: #align center IR reciever and sender
-            one_if_ir = lambda observation: int((observation['ir']%4)/2 in [2,3]) if observation is not None else 0
+            action_space = [#Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
+                            Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0)), # forward
+                            Twist(Vector3(-0.2, 0, 0), Vector3(0, 0, 0)), # backward
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.5)), # turn acw/cw
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.5)) # turn cw/acw
+                            ]
+            # theta = np.zeros(num_features*len(action_space))
+            theta = np.random.rand(num_features*len(action_space))
+
+            phi = np.zeros(num_features)
+            observation = None
+            # learningRate = 0.1/(4*900)
+            learningRate = 0.1/(1)
+            secondaryLearningRate = learningRate/10
+            epsilon = 0.1
+            # lambda_ = lambda observation: 0.95
+            lambda_ = 0.95
+
+        if task_to_learn == 3: #align center IR reciever and sender
+            def reward_function(action_space):
+                def award(observation):
+                    return int((observation['ir'][1]%16)/8) if observation is not None else 0
+                return award
 
             action_space = [#Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
                             # Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0)), # forward
                             # Twist(Vector3(-0.2, 0, 0), Vector3(0, 0, 0)), # backward
-                            Twist(Vector3(0, 0, 0), Vector3(0, 0, 1.5)), # turn acw/cw
-                            Twist(Vector3(0, 0, 0), Vector3(0, 0, -1.5)) # turn cw/acw
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.5)), # turn acw/cw
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.5)) # turn cw/acw
                             ]
-            theta = np.zeros(num_features*len(action_space))
+            # theta = np.zeros(num_features*len(action_space))
+            theta = np.random.rand(num_features*len(action_space))
+
             phi = np.zeros(num_features)
             observation = None
             # learningRate = 0.1/(4*900)
-            learningRate = 0.1/(100)
+            learningRate = 0.1/(10)
+            secondaryLearningRate = learningRate/10
+            epsilon = 0.1
+            # lambda_ = lambda observation: 0.95
+            lambda_ = 0.95
+
+
+        if task_to_learn == 4: #align center IR reciever and sender
+            def reward_function(action_space):
+                def award(observation):
+                    # print observation
+                    aligned_near = (observation['ir'][1]%4)/2
+                    aligned_far = (observation['ir'][1]%16)/8
+                    aligned = aligned_near or aligned_far
+                    field_award = 0
+                    action_award = 0
+                    success_award = 0
+                    if aligned:
+                        if aligned_far:
+                            field_award = 1
+                        if aligned_near:
+                            field_award = 2
+                        if tools.equal_twists(action_space[0] ,observation['action']):
+                            action_award = 5
+                    else:
+                        field_award = -1
+                    if observation['charging']:
+                        print '                     charging===================='
+                        success_award = 50
+                    return field_award + success_award + action_award
+                return award
+
+            action_space = [#Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
+                            Twist(Vector3(0.0, 0, 0), Vector3(0, 0, 0)), # forward
+                            Twist(Vector3(-0.0, 0, 0), Vector3(0, 0, 0)), # backward
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.0)), # turn acw/cw
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.0)) # turn cw/acw
+                            ]
+
+
+            # theta = np.zeros(num_features*len(action_space))
+            theta = np.random.rand(num_features*len(action_space))
+
+            phi = np.zeros(num_features)
+            observation = None
+            # learningRate = 0.1/(4*900)
+            learningRate = 0.1/(10)
             secondaryLearningRate = learningRate/10
             epsilon = 0.1
             # lambda_ = lambda observation: 0.95
@@ -77,7 +154,7 @@ if __name__ == "__main__":
         learner_parameters = {'theta' : theta,
                         'gamma' : 0.9,
                         '_lambda' : lambda_,
-                        'cumulant' : one_if_ir,
+                        'cumulant' : reward_function(action_space),
                         'alpha' : learningRate,
                         'beta' : secondaryLearningRate,
                         'epsilon' : epsilon,
@@ -90,7 +167,7 @@ if __name__ == "__main__":
         auto_docking = GVF(num_features=num_features*len(action_space),
                         parameters=parameters,
                         gamma= lambda observation: 0.9,
-                        cumulant=one_if_ir,
+                        cumulant=reward_function(action_space),
                         learner=learner,
                         target_policy=learner.learned_policy,
                         name='auto_docking',

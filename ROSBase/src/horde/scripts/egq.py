@@ -120,6 +120,10 @@ class GreedyGQ:
         self.theta += self.learning_rate * (self.td_error * self.etrace - 
                         gamma * (1 - self._lambda) * np.dot(self.sec_weights, self.action_phi) * action_phi_bar)
 
+        temp = self.theta
+        temp = temp/2
+        print np.argsort(temp)
+
         if np.count_nonzero(self.theta) == 0:
             print 'self.theta is zero'
         
