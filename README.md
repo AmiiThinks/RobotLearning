@@ -17,5 +17,15 @@ To create an experimental environment that makes it easy for researchers to cond
 2. *Experiments:*
 To perform some learning task using the experimental environment. In addition to contributing to knowledge in reinforcement learning and robotics, performing such a task will help achieve the prior goal of creating an experimental setup for conducting experiments. 
 
+## Setup
+In order to run the python code, the C++ code that runs the tile coding must be compiled. To compile, cd to [repo]/ROSBase/src/horde/scripts/CTiles/. Then, execute the commands:
+
+```
+cmake .
+make
+```
+
+That's it! 
+
 ## Links
 [Turtlebot 2 setup](Documentation/TurtlebotSetup.md)
