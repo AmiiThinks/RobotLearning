@@ -213,7 +213,7 @@ class LearningForeground:
                 self.update_gvfs(phi_prime, observation)
 
             if self.control_gvf != None:
-                finished_episode = self.control_gvf.cumulant(observation) == 1
+                finished_episode = self.control_gvf.learner.finished_episode
 
             if finished_episode:
                 self.reset_episode()
