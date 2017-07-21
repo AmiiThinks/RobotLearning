@@ -8,6 +8,7 @@ from matplotlib.pyplot import plot, ion, show
 from auto_docking_policies import eGreedy, Learned_Policy
 from state_representation import StateConstants
 from tools import equal_twists
+import pickle
 
 class GreedyGQ:
     """ From Maei/Sutton 2010, with additional info from Adam White. """
@@ -73,6 +74,10 @@ class GreedyGQ:
         average_reward = average_reward + (reward - average_reward)/self.timeStep
 
         self.average_rewards.append(average_reward)
+
+        if self.timeStep%100 == 0:
+            with open('average_rewards','w') as f:
+                pickle.dump(self.average_rewards,f)
 
         print 'average_reward: ', average_reward
 

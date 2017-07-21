@@ -43,11 +43,10 @@ class Learned_Policy():
         if np.count_nonzero(self.theta) == 0:
             print 'Theta is zero'
 
-        print len(phi), max(self.feature_indices)
         self.phi = phi[self.feature_indices]
 
         for action in self.action_space:
-            print len(self.theta), len(self.get_representation(self.phi,action))
+            # print len(self.theta), len(self.get_representation(self.phi,action))
             print 'action_value: ', np.dot(self.theta, self.get_representation(self.phi,action)), 'greedy_action value: ' ,np.dot(self.theta, self.get_representation(self.phi,greedy_action))
             if np.dot(self.theta, self.get_representation(self.phi,action)) == np.dot(self.theta, self.get_representation(self.phi,greedy_action)):
                 equal_actions.append(action)
