@@ -89,3 +89,15 @@ Sometimes ROS will not be able to connect your hostname with your IP address. Yo
 ```{bash}
 ROS_IP=$(hostname -I | awk '{print $1;}')
 ```
+
+
+### 6. (Optional) Save SSH key on turtlebot netbook
+To avoid logging in every time you want to ssh or rsync the netbook, use the following commands:
+```{bash}
+# follow prompts to generate your ssh key
+ssh-keygen
+
+# might need to modify slightly to include your ssh file
+# and the netbook's user/hostname combo
+cat ~/.ssh/id_rsa.pub | ssh user@hostname 'cat >> .ssh/authorized_keys'
+```
