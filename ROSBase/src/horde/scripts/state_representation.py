@@ -96,7 +96,7 @@ class StateManager(object):
         # IMAGE STUFF
         if 'image' in self.features_to_use:
             # check if there is an image
-            valid_image = lambda image: image is None or len(image) == 0 or len(image[0]) == 0
+            valid_image = lambda image: image is not None and len(image) > 0 and len(image[0]) > 0
 
             # adding image data to state
             if not valid_image(image):
