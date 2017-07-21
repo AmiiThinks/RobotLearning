@@ -162,7 +162,6 @@ class StateManager(object):
                 self.last_ir_raw = ir
                 indices = np.asarray(ir)
                 indices += np.array([0,64,128])
-                print indices
                 phi[indices + StateConstants.IR_START_INDEX] = True
 
         # bump
