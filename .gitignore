@@ -5,6 +5,7 @@ __pycache__/
 *.pyc
 
 # C extensions
+Makefile
 *.so
 
 # Distribution / packaging

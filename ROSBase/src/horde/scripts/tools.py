@@ -7,6 +7,7 @@ import sensor_msgs.point_cloud2 as pc2
 import std_msgs.msg as std_msg
 from turtlesim.msg import Pose
 import numpy as np
+import math
 
 from time import time
 #from state_representation import StateConstants
@@ -154,3 +155,6 @@ def imu_parse(data):
     "lin_accel_z": data.linear_acceleration.z,
     "lin_accel_covar": covar[2],
     }
+
+def get_next_pow2(number):
+    return 2**int(math.ceil(math.log(number, 2)))

@@ -3,8 +3,8 @@ import numpy as np
 import random
 import rospy 
 
-import tiles3
-from tools import timing
+from CTiles import tiles
+from tools import timing, get_next_pow2
 
 # np.set_printoptions(threshold=np.nan)
 
@@ -65,10 +65,10 @@ class StateManager(object):
 
         num_img_ihts = StateConstants.NUM_RANDOM_POINTS * StateConstants.CHANNELS
         img_iht_size = StateConstants.IMAGE_IHT_SIZE
-        self.img_ihts = [tiles3.IHT(img_iht_size) for _ in xrange(num_img_ihts)]
+        self.img_ihts = [tiles.CollisionTable(get_next_pow2(img_iht_size), "unsafe") for _ in xrange(num_img_ihts)]
 
-        self.imu_iht = tiles3.IHT(StateConstants.IMU_IHT_SIZE)
-        self.odom_iht = tiles3.IHT(StateConstants.ODOM_IHT_SIZE)
+        self.imu_iht = tiles.CollisionTable(get_next_pow2(StateConstants.IMU_IHT_SIZE), "unsafe")
+        self.odom_iht = tiles.CollisionTable(get_next_pow2(StateConstants.ODOM_IHT_SIZE), "unsafe")
 
         # set up mask to chose pixels
         num_pixels = StateConstants.IMAGE_LI*StateConstants.IMAGE_CO
@@ -104,15 +104,16 @@ class StateManager(object):
                 if self.last_image_raw is not None:
                     image = self.last_image_raw
 
-            if image != None:
+            if not no_image:
                 self.last_image_raw = image 
                 rgb_points = image[self.pixel_mask].flatten().astype(float)
                 rgb_points *= StateConstants.SCALE_RGB
                 rgb_inds = np.arange(StateConstants.NUM_RANDOM_POINTS * 3)
 
-                tile_inds = [tiles3.tiles(self.img_ihts[i], 
-                                          StateConstants.NUM_IMAGE_TILINGS, 
-                                          [rgb_points[i]]) for i in rgb_inds]
+                tile_inds = [tiles.tiles(StateConstants.NUM_IMAGE_TILINGS,
+                                         self.img_ihts[i],
+                                         [rgb_points[i]],
+                                         []) for i in rgb_inds]
 
                 # tile_inds = np.ones((900,4), dtype=int)
 
@@ -130,9 +131,10 @@ class StateManager(object):
 
             if imu is not None:
                 self.last_imu_raw = imu
-                indices = np.array(tiles3.tiles(self.imu_iht, 
-                                                StateConstants.NUM_IMU_TILINGS, 
-                                                [imu*StateConstants.SCALE_IMU]))
+                indices = np.array(tiles.tiles(StateConstants.NUM_IMU_TILINGS,
+                                                self.imu_iht, 
+                                                [imu*StateConstants.SCALE_IMU],
+                                                []))
 
                 phi[indices + StateConstants.IMU_START_INDEX] = True
 
@@ -145,7 +147,7 @@ class StateManager(object):
 
             if odom is not None:
                 self.last_odom_raw = odom
-                indices = np.array(tiles3.tiles(self.odom_iht,
+                indices = np.array(tiles.tiles(self.odom_iht,
                                                 StateConstants.NUM_ODOM_TILINGS,
                                                 odom * StateConstants.SCALE_ODOM))
 
