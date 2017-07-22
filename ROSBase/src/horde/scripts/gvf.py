@@ -27,19 +27,19 @@ class GVF:
         
         self.name = name
         self.feature_indices = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use])
-
         self.learner = learner
 
-        self.td_error = self.learner.delta
-        self.avg_td_error = 0
-        self.n = 0
+        if self.learner is not None:
+            self.td_error = self.learner.delta
+            self.avg_td_error = 0
+            self.n = 0
 
-        # See Adam White's PhD Thesis, section 8.4.2
-        self.alpha_rupee = 5 * parameters['alpha']
-        self.beta0_rupee = (1 - parameters['lambda'])*parameters['alpha0']/30
-        self.tau_rupee = 0
-        self.hhat = np.zeros(num_features)
-        self.td_elig_avg = np.zeros(num_features)
+            # See Adam White's PhD Thesis, section 8.4.2
+            self.alpha_rupee = 5 * parameters['alpha']
+            self.beta0_rupee = (1 - parameters['lambda'])*parameters['alpha0']/30
+            self.tau_rupee = 0
+            self.hhat = np.zeros(num_features)
+            self.td_elig_avg = np.zeros(num_features)
 
     def predict(self, phi):
         return self.learner.predict(phi[self.feature_indices])
