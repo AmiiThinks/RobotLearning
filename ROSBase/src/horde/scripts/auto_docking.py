@@ -63,9 +63,9 @@ if __name__ == "__main__":
 
             action_space = [#Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
                             Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0)), # forward
-                            Twist(Vector3(-0.2, 0, 0), Vector3(0, 0, 0)), # backward
-                            Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.5)), # turn acw/cw
-                            Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.5)) # turn cw/acw
+                            # Twist(Vector3(-0.1, 0, 0), Vector3(0, 0, 0)), # backward
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, 1.0)), # turn acw/cw
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, -1.0)) # turn cw/acw
                             ]
             # theta = np.zeros(num_features*len(action_space))
             theta = np.random.rand(num_features*len(action_space))
@@ -73,16 +73,18 @@ if __name__ == "__main__":
             phi = np.zeros(num_features)
             observation = None
             # learningRate = 0.1/(4*900)
-            learningRate = 0.1/(1)
+            learningRate = 0.1/(10)
             secondaryLearningRate = learningRate/10
             epsilon = 0.1
             # lambda_ = lambda observation: 0.95
-            lambda_ = 0.95
+            lambda_ = 0.4
 
         if task_to_learn == 3: #align center IR reciever and sender
             def reward_function(action_space):
                 def award(observation):
-                    return int((observation['ir'][1]%16)/8) if observation is not None else 0
+                    ir_data_center = observation['ir'][1]
+                    reward = int((ir_data_center%16)/8 or (ir_data_center%4)/2) if observation is not None else 0
+                    return reward
                 return award
 
             action_space = [#Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
@@ -101,7 +103,7 @@ if __name__ == "__main__":
             secondaryLearningRate = learningRate/10
             epsilon = 0.1
             # lambda_ = lambda observation: 0.95
-            lambda_ = 0.95
+            lambda_ = 0.9999
 
 
         if task_to_learn == 4: #align center IR reciever and sender
