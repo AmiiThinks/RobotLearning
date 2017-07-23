@@ -62,14 +62,21 @@ class GreedyGQ:
     def update(self, phi, last_action, observation, phi_prime, **kwargs):
         reward = self.cumulant(observation)
         gamma = self.gamma
-        self.finished_episode = False
         action = last_action
+        self.action_phi = self.get_representation(phi,action)
+
+        # to make sure we don't update anything between the last termination step and the new start step
+        # i.e. skip one learning step
+        if self.finished_episode:
+            self.finished_episode = False
+            return self.action_phi
+
         behavior_policy = self.behavior_policy
 
-        action_phi_primes = {action: self.get_representation(phi_prime, action) for action in self.action_space}
+        print phi
+        action_phi_primes = {temp_action: self.get_representation(phi_prime, temp_action) for temp_action in self.action_space}
 
-        action_phis = {action: self.get_representation(phi, action) for action in self.action_space}
-        self.action_phi = self.get_representation(phi,action)
+        action_phis = {temp_action: self.get_representation(phi, temp_action) for temp_action in self.action_space}
 
         self.timeStep = self.timeStep + 1
         average_reward = self.average_rewards[-1]
@@ -106,6 +113,8 @@ class GreedyGQ:
         else:
             responsibility = 0
 
+        print responsibility
+
         if np.count_nonzero(self.action_phi) == 0:
             print 'self.action_phi is zero'
 
@@ -120,15 +129,16 @@ class GreedyGQ:
         self.theta += self.learning_rate * (self.td_error * self.etrace - 
                         gamma * (1 - self._lambda) * np.dot(self.sec_weights, self.action_phi) * action_phi_bar)
 
-        temp = self.theta
-        temp = temp/2
-        print np.argsort(temp)
+        # temp = self.theta
+        # temp = temp/2
+        # print np.argsort(temp)
 
         if np.count_nonzero(self.theta) == 0:
             print 'self.theta is zero'
         
         # w_t update
-        self.sec_weights += self.secondary_learning_rate * (self.td_error * self.etrace - np.dot(self.sec_weights, self.action_phi) * self.action_phi)
+        self.sec_weights += self.secondary_learning_rate * \
+            (self.td_error * self.etrace - np.dot(self.sec_weights, self.action_phi) * self.action_phi)
 
         # for calculating RUPEE
         self.delta = self.td_error

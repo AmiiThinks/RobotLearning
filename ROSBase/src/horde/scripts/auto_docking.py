@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
         alpha0 = 5
         lambda_ = 0.9
-        features_to_use = ['imu','ir','bias']
+        features_to_use = ['ir','bias']
         num_features = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use]).size
         alpha = (1 - lambda_) * alpha0 / num_features
         parameters = {'alpha': alpha,
