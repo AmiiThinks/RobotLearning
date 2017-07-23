@@ -47,7 +47,8 @@ class StateConstants:
 
     # IR tiles
     IR_START_INDEX = ODOM_START_INDEX + ODOM_IHT_SIZE
-    IR_ITH_SIZE = 64*3
+    # IR_ITH_SIZE = 64*3
+    IR_ITH_SIZE = 6*3
 
     # the 1 represents the bias unit, 3 for bump
     TOTAL_FEATURE_LENGTH = TOTAL_PIXEL_FEATURE_LENGTH + IMU_IHT_SIZE + ODOM_IHT_SIZE + IR_ITH_SIZE + 3 + 1
@@ -147,6 +148,7 @@ class StateManager(object):
 
             if odom is not None:
                 self.last_odom_raw = odom
+                print odom, StateConstants.SCALE_ODOM, odom * StateConstants.SCALE_ODOM
                 indices = np.array(tiles.tiles(self.odom_iht,
                                                 StateConstants.NUM_ODOM_TILINGS,
                                                 odom * StateConstants.SCALE_ODOM))
@@ -162,9 +164,14 @@ class StateManager(object):
 
             if ir is not None:
                 self.last_ir_raw = ir
-                indices = np.asarray(ir)
-                indices += np.array([0,64,128])
-                phi[indices + StateConstants.IR_START_INDEX] = True
+                # indices = np.asarray(ir)
+                # indices += np.array([0,64,128])
+                value = [int(x) for x in format(ir[0], '#08b')[2:]]
+                value += [int(x) for x in format(ir[1], '#08b')[2:]]
+                value += [int(x) for x in format(ir[2], '#08b')[2:]]
+                indices = np.nonzero(value)[0]
+
+                phi[np.asarray(indices) + StateConstants.IR_START_INDEX] = True
 
         # bump
         if 'bump' in self.features_to_use:

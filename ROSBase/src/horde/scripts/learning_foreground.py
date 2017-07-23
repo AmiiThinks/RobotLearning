@@ -37,8 +37,9 @@ class LearningForeground:
                  behavior_policy,
                  control_gvf=None):
        
-
         self.features_to_use = features_to_use + ['core']
+        if 'ir' not in features_to_use:
+            self.features_to_use = features_to_use + ['ir']
         topics = filter(lambda x: x, 
                         [tools.features[f] for f in self.features_to_use])
 
@@ -167,7 +168,6 @@ class LearningForeground:
         if 'bias' in self.features_to_use:
             data['bias'] = True
         data['weights'] = self.gvfs[0].learner.theta if self.gvfs else None
-
 
         phi = self.state_manager.get_phi(**data)
 
