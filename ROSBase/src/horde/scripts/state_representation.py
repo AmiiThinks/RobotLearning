@@ -149,9 +149,10 @@ class StateManager(object):
             if odom is not None:
                 self.last_odom_raw = odom
                 print odom, StateConstants.SCALE_ODOM, odom * StateConstants.SCALE_ODOM
-                indices = np.array(tiles.tiles(self.odom_iht,
-                                                StateConstants.NUM_ODOM_TILINGS,
-                                                odom * StateConstants.SCALE_ODOM))
+                indices = np.array(tiles.tiles(StateConstants.NUM_ODOM_TILINGS,
+                                                self.odom_iht,
+                                                (odom * StateConstants.SCALE_ODOM).tolist(),
+                                                []))
 
                 phi[indices + StateConstants.ODOM_START_INDEX] = True
 
