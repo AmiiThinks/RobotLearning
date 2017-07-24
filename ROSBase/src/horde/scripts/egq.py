@@ -113,8 +113,6 @@ class GreedyGQ:
         else:
             responsibility = 0
 
-        print responsibility
-
         if np.count_nonzero(self.action_phi) == 0:
             print 'self.action_phi is zero'
 
@@ -144,7 +142,7 @@ class GreedyGQ:
         self.delta = self.td_error
         self.tderr_elig = self.td_error* self.etrace
 
-        if reward == 1:
+        if reward > 0:
             print 'Episode finished'
             self.finished_episode = True
             self.etrace = np.zeros(self.num_features_state_action)
