@@ -31,7 +31,6 @@ class ForwardIfClear():
         self.STOP = 2
 
     def __call__(self, phi, observation):
-        
         if self.gvf.predict(phi) > 0.75 or sum(observation['bump']):
             action = Twist(Vector3(0, 0, 0), Vector3(0, 0, self.vel_angular))
             self.last_action = self.TURN

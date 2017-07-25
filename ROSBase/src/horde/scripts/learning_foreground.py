@@ -41,7 +41,7 @@ class LearningForeground:
        
         self.features_to_use = features_to_use + ['core']
         if 'ir' not in features_to_use:
-            self.features_to_use = features_to_use + ['ir']
+            self.features_to_use += ['ir']
         topics = filter(lambda x: x, 
                         [tools.features[f] for f in self.features_to_use])
 
@@ -70,15 +70,15 @@ class LearningForeground:
         self.behavior_policy = behavior_policy
         self.avg_td_err = None
 
-        self.state_manager = GenTestStateManager(features_to_use)
+        self.state_manager = StateManager(features_to_use)
         self.img_to_cv2 = CvBridge().compressed_imgmsg_to_cv2
 
         # currently costs about 0.0275s per timestep
         rospy.loginfo("Creating visualization.")
 
-        self.visualization = Visualize(self.state_manager.pixel_mask,
-                                       imsizex=640,
-                                       imsizey=480)
+        # self.visualization = Visualize(self.state_manager.pixel_mask,
+        #                                imsizex=640,
+        #                                imsizey=480)
 
         rospy.loginfo("Done creatiing visualization.")
 
@@ -141,6 +141,7 @@ class LearningForeground:
 
         # build data to make phi
         data = {k: None for k in tools.features.keys()}
+        print (self.features_to_use)
         for source in self.features_to_use:
             temp = None
             try:
@@ -150,6 +151,7 @@ class LearningForeground:
                 pass
             data[source] = temp
 
+        print(data['core'])
         if data['core'] is not None:
             bump = data['core'].bumper
             data['bump'] = map(lambda x: bool(x & bump), bump_codes)
@@ -174,11 +176,12 @@ class LearningForeground:
             data['bias'] = True
         data['weights'] = self.gvfs[0].learner.theta if self.gvfs else None
 
+        print(data['bump'])
         phi = self.state_manager.get_phi(**data)
 
         # update the visualization of the image data
-        if (data['image'] is not None):
-            self.visualization.update_colours(data['image'])
+        # if (data['image'] is not None):
+        #     self.visualization.update_colours(data['image'])
 
         # takes a long time, only uncomment if necessary
         # rospy.loginfo(phi)

@@ -14,9 +14,9 @@ class GenTestStateManager(StateManager):
 		super(GenTestStateManager, self).__init__(features_to_use)
 		self.pixel_time_alive = np.zeros(StateConstants.NUM_RANDOM_POINTS)
 
-	@overrides(StateManager)
 	@timing
-	def get_phi(self, image, bump, ir, imu, odom, bias, weights = None):
+	@overrides(StateManager)
+	def get_phi(self, image, bump, ir, imu, odom, bias, weights = None, **kwargs):
 		# update weights to reflect removal of features
 		if (weights is not None):
 			pixel_weights = np.zeros(StateConstants.NUM_RANDOM_POINTS)
@@ -53,7 +53,7 @@ class GenTestStateManager(StateManager):
 
 		
         # get the new state
-		feature_state = super(GenTestStateManager, self).get_phi(image, bump, ir, imu, odom, bias, None)
+		feature_state = super(GenTestStateManager, self).get_phi(image, bump, ir, imu, odom, bias, None, **kwargs)
 
 		self.pixel_time_alive += 1 # increment time alive	
 
