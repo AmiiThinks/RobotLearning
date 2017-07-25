@@ -141,7 +141,7 @@ class LearningForeground:
 
         # build data to make phi
         data = {k: None for k in tools.features.keys()}
-        print (self.features_to_use)
+
         for source in self.features_to_use:
             temp = None
             try:
@@ -151,7 +151,6 @@ class LearningForeground:
                 pass
             data[source] = temp
 
-        print(data['core'])
         if data['core'] is not None:
             bump = data['core'].bumper
             data['bump'] = map(lambda x: bool(x & bump), bump_codes)
@@ -176,7 +175,6 @@ class LearningForeground:
             data['bias'] = True
         data['weights'] = self.gvfs[0].learner.theta if self.gvfs else None
 
-        print(data['bump'])
         phi = self.state_manager.get_phi(**data)
 
         # update the visualization of the image data
