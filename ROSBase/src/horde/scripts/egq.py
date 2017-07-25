@@ -142,7 +142,7 @@ class GreedyGQ:
         self.delta = self.td_error
         self.tderr_elig = self.td_error* self.etrace
 
-        if reward > 0:
+        if reward > 0 or reward < -100:
             print 'Episode finished'
             self.finished_episode = True
             self.etrace = np.zeros(self.num_features_state_action)

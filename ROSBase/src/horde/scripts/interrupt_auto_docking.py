@@ -31,7 +31,6 @@ def feedbackCb(feedback):
   print 'Feedback: [DockDrive: ' + feedback.state + ']: ' + feedback.text
   global client
   if str(feedback.state).startswith('ALIGNED'):
-    print 'yes starting with this'
     client.cancel_goal()
 
 def dock_drive_client():
