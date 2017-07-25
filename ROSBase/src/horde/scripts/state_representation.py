@@ -24,7 +24,8 @@ class StateConstants:
     NUM_IMAGE_INTERVALS = 4 
     SCALE_RGB = NUM_IMAGE_TILINGS/256.0
     IMAGE_IHT_SIZE = (NUM_IMAGE_INTERVALS + 1) * NUM_IMAGE_TILINGS
-    TOTAL_PIXEL_FEATURE_LENGTH = NUM_RANDOM_POINTS * 3 * IMAGE_IHT_SIZE
+    PIXEL_FEATURE_LENGTH = CHANNELS * IMAGE_IHT_SIZE
+    TOTAL_IMAGE_FEATURE_LENGTH = NUM_RANDOM_POINTS * PIXEL_FEATURE_LENGTH
     IMAGE_START_INDEX = 0
 
     # constants relating to image size recieved
@@ -36,7 +37,7 @@ class StateConstants:
     NUM_IMU_TILES = 40
     SCALE_IMU = NUM_IMU_TILES/2.0 # range is [-1, 1]
     IMU_IHT_SIZE = (NUM_IMU_TILES + 1) * NUM_IMU_TILINGS
-    IMU_START_INDEX = IMAGE_START_INDEX + TOTAL_PIXEL_FEATURE_LENGTH
+    IMU_START_INDEX = IMAGE_START_INDEX + TOTAL_IMAGE_FEATURE_LENGTH
 
     # Odom tiles
     NUM_ODOM_TILINGS = 8
@@ -51,9 +52,9 @@ class StateConstants:
     IR_ITH_SIZE = 6*3
 
     # the 1 represents the bias unit, 3 for bump
-    TOTAL_FEATURE_LENGTH = TOTAL_PIXEL_FEATURE_LENGTH + IMU_IHT_SIZE + ODOM_IHT_SIZE + IR_ITH_SIZE + 3 + 1
+    TOTAL_FEATURE_LENGTH = TOTAL_IMAGE_FEATURE_LENGTH + IMU_IHT_SIZE + ODOM_IHT_SIZE + IR_ITH_SIZE + 3 + 1
 
-    indices_in_phi = {'image':np.arange(0,TOTAL_PIXEL_FEATURE_LENGTH),
+    indices_in_phi = {'image':np.arange(0,TOTAL_IMAGE_FEATURE_LENGTH),
                         'imu':np.arange(IMU_START_INDEX,IMU_START_INDEX + IMU_IHT_SIZE),
                         'odom':np.arange(ODOM_START_INDEX,ODOM_START_INDEX + ODOM_IHT_SIZE),
                         'ir':np.arange(IR_START_INDEX,IR_START_INDEX+IR_ITH_SIZE),
