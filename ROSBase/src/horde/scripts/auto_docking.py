@@ -115,16 +115,18 @@ if __name__ == "__main__":
             times_field_reward_is_zero = 0
             def reward_function(action_space):
                 def award(observation):
-                    # print observation
+                    global times_field_reward_is_zero
+
                     aligned_near = (observation['ir'][1]%4)/2
                     aligned_far = (observation['ir'][1]%16)/8
                     aligned = aligned_near or aligned_far
-                    global times_field_reward_is_zero
+                    print 'ir data: ', observation['ir']
                     field_award = 0
                     action_award = 0
                     success_award = 0
                     if aligned:
-                        field_award = 1
+                        pass
+                        # field_award = 1
                         # if aligned_far:
                         #     field_award = 1
                         # if aligned_near:
@@ -138,17 +140,21 @@ if __name__ == "__main__":
                         success_award = 50
                     if field_award == -1:
                         times_field_reward_is_zero += 1
-                    if times_field_reward_is_zero >= 3:
+                        print times_field_reward_is_zero
+                    else:
+                        times_field_reward_is_zero = 0
+                    if times_field_reward_is_zero >= 20:
+                        print 'field reward is negative'
                         times_field_reward_is_zero = 0
                         return -1000
                     return field_award + success_award + action_award
                 return award
 
             action_space = [#Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
-                            Twist(Vector3(0.05, 0, 0), Vector3(0, 0, 0)), # forward
+                            Twist(Vector3(0.1, 0, 0), Vector3(0, 0, 0)), # forward
                             # Twist(Vector3(-0.05, 0, 0), Vector3(0, 0, 0)), # backward
-                            Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.3)), # turn acw/cw
-                            Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.3)) # turn cw/acw
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.5)), # turn acw/cw
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.5)) # turn cw/acw
                             ]
 
 

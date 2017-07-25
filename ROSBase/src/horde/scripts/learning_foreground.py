@@ -190,17 +190,27 @@ class LearningForeground:
         self.publishers['action'].publish(action)
 
     def reset_episode(self):
+        temp = random.randint(0,20)
+        for i in range(50):
+            if i < 10:
+                self.take_action(Twist(Vector3(-0.1, 0, 0), Vector3(0, 0, 0)))
+            elif i >= 10 and i < 10+temp:
+                self.take_action(Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.5)))
+            else:
+                self.take_action(Twist(Vector3(0.1, 0, 0), Vector3(0, 0, 0)))
+            rospy.loginfo('taking random action number: {}'.format(i))
+            self.r.sleep()
         self.publishers["pause"].publish(True)
         os.system('python interrupt_auto_docking.py')
         self.publishers["pause"].publish(False)
-        
+
         # for i in range(random.randint(0,40)):
         #     action, mu = self.gvfs[0].learner.take_random_action()
         #     self.take_action(action)
         #     rospy.loginfo('taking random action number: {}'.format(i))
         #     # with open('/home/turtlebot/average_rewards','w') as f:
         #     #     pickle.dump(average_rewards, f)
-        #     self.r.sleep()
+        #     self.r.sleep()        
     
     def run(self):
 
