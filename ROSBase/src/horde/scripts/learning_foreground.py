@@ -20,6 +20,9 @@ import threading
 import time
 import sys
 import pickle
+import random
+import subprocess
+import os, sys
 
 from gvf import GVF
 from state_representation import StateManager
@@ -36,8 +39,11 @@ class LearningForeground:
                  behavior_policy,
                  control_gvf=None):
        
+        self.features_to_use = features_to_use + ['core']
+        if 'ir' not in features_to_use:
+            self.features_to_use = features_to_use + ['ir']
         topics = filter(lambda x: x, 
-                        [tools.features[f] for f in features_to_use])
+                        [tools.features[f] for f in self.features_to_use])
 
         # set up dictionary to receive sensor info
         self.recent = {topic:Queue(0) for topic in topics}
@@ -51,7 +57,6 @@ class LearningForeground:
                              tools.topic_format[topic],
                              self.recent[topic].put)
         self.topics = topics
-        self.features_to_use = features_to_use
 
         rospy.loginfo("Started sensor threads.")
 
@@ -92,8 +97,11 @@ class LearningForeground:
         action_publisher = rospy.Publisher('action_cmd', 
                                            geom_msg.Twist,
                                            queue_size=1)
+        pause_publisher = rospy.Publisher('pause', 
+                                                std_msg.Bool,
+                                                queue_size=1)
 
-        self.publishers = {'action': action_publisher}
+        self.publishers = {'action': action_publisher,'pause': pause_publisher}
         labels = ['prediction', 'td_error', 'avg_td_error', 'rupee', 
                   'cumulant']
         label_pubs = {g:{l:pub(g.name, l) for l in labels} for g in self.gvfs}
@@ -142,9 +150,13 @@ class LearningForeground:
                 pass
             data[source] = temp
 
-        if data['bump'] is not None:
-            bump = data['bump'].bumper
+        if data['core'] is not None:
+            bump = data['core'].bumper
             data['bump'] = map(lambda x: bool(x & bump), bump_codes)
+            data['charging'] = bool(data['core'].charger & 2)
+        else:
+            data['bump'] = None
+            data['charging'] = None
         if data['ir'] is not None:
             data['ir'] = [ord(obs) for obs in data['ir'].data]
         if data['image'] is not None:
@@ -172,19 +184,34 @@ class LearningForeground:
         # rospy.loginfo(phi)
 
         observation = self.state_manager.get_observations(**data)
+        observation['action'] =self.last_action
         return phi, observation
 
     def take_action(self, action):
         self.publishers['action'].publish(action)
 
     def reset_episode(self):
-        for i in range(10):
-            action, mu = self.gvfs[0].learner.take_random_action()
-            self.take_action(action)
+        temp = random.randint(0,20)
+        for i in range(50):
+            if i < 10:
+                self.take_action(Twist(Vector3(-0.1, 0, 0), Vector3(0, 0, 0)))
+            elif i >= 10 and i < 10+temp:
+                self.take_action(Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.5)))
+            else:
+                self.take_action(Twist(Vector3(0.1, 0, 0), Vector3(0, 0, 0)))
             rospy.loginfo('taking random action number: {}'.format(i))
-            # with open('/home/turtlebot/average_rewards','w') as f:
-            #     pickle.dump(average_rewards, f)
             self.r.sleep()
+        self.publishers["pause"].publish(True)
+        os.system('python interrupt_auto_docking.py')
+        self.publishers["pause"].publish(False)
+
+        # for i in range(random.randint(0,40)):
+        #     action, mu = self.gvfs[0].learner.take_random_action()
+        #     self.take_action(action)
+        #     rospy.loginfo('taking random action number: {}'.format(i))
+        #     # with open('/home/turtlebot/average_rewards','w') as f:
+        #     #     pickle.dump(average_rewards, f)
+        #     self.r.sleep()        
     
     def run(self):
 

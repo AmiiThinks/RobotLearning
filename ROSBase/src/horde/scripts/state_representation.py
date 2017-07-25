@@ -48,7 +48,8 @@ class StateConstants:
 
     # IR tiles
     IR_START_INDEX = ODOM_START_INDEX + ODOM_IHT_SIZE
-    IR_ITH_SIZE = 64*3
+    # IR_ITH_SIZE = 64*3
+    IR_ITH_SIZE = 6*3
 
     # the 1 represents the bias unit, 3 for bump
     TOTAL_FEATURE_LENGTH = TOTAL_IMAGE_FEATURE_LENGTH + IMU_IHT_SIZE + ODOM_IHT_SIZE + IR_ITH_SIZE + 3 + 1
@@ -90,7 +91,7 @@ class StateManager(object):
         self.features_to_use = features_to_use
 
     @timing
-    def get_phi(self, image, bump, ir, imu, odom, bias, weights = None):
+    def get_phi(self, image, bump, ir, imu, odom, bias, weights = None,*args, **kwargs):
 
         phi = np.zeros(StateConstants.TOTAL_FEATURE_LENGTH)
 
@@ -148,9 +149,11 @@ class StateManager(object):
 
             if odom is not None:
                 self.last_odom_raw = odom
-                indices = np.array(tiles.tiles(self.odom_iht,
-                                                StateConstants.NUM_ODOM_TILINGS,
-                                                odom * StateConstants.SCALE_ODOM))
+                print odom, StateConstants.SCALE_ODOM, odom * StateConstants.SCALE_ODOM
+                indices = np.array(tiles.tiles(StateConstants.NUM_ODOM_TILINGS,
+                                                self.odom_iht,
+                                                (odom * StateConstants.SCALE_ODOM).tolist(),
+                                                []))
 
                 phi[indices + StateConstants.ODOM_START_INDEX] = True
 
@@ -163,23 +166,29 @@ class StateManager(object):
 
             if ir is not None:
                 self.last_ir_raw = ir
-                indices = np.asarray(ir)
-                indices += np.array([0,64,128])
-                phi[indices + StateConstants.IR_START_INDEX] = True
+                # indices = np.asarray(ir)
+                # indices += np.array([0,64,128])
+                value = [int(x) for x in format(ir[0], '#08b')[2:]]
+                value += [int(x) for x in format(ir[1], '#08b')[2:]]
+                value += [int(x) for x in format(ir[2], '#08b')[2:]]
+                indices = np.nonzero(value)[0]
+
+                phi[np.asarray(indices) + StateConstants.IR_START_INDEX] = True
 
         # bump
-        if bump is not None:
+        if 'bump' in self.features_to_use:
             phi[StateConstants.indices_in_phi['bump']] = bump
 
         # bias unit
-        if bias is not None:
+        if 'bias' in self.features_to_use:
             phi[StateConstants.indices_in_phi['bias']] = True
 
         return phi
 
-    def get_observations(self, bump, ir, **kwargs):
+    def get_observations(self, bump, ir,charging, **kwargs):
         observations = {'bump': bump if bump else (0,0,0),
                           'ir': ir if ir else (0,0,0),
+                          'charging': charging if charging else False,
                        }
 
         return observations
