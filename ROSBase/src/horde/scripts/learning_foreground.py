@@ -21,6 +21,8 @@ import time
 import sys
 import pickle
 import random
+import subprocess
+import os, sys
 
 from gvf import GVF
 from state_representation import StateManager
@@ -95,8 +97,11 @@ class LearningForeground:
         action_publisher = rospy.Publisher('action_cmd', 
                                            geom_msg.Twist,
                                            queue_size=1)
+        pause_publisher = rospy.Publisher('pause', 
+                                                std_msg.Bool,
+                                                queue_size=1)
 
-        self.publishers = {'action': action_publisher}
+        self.publishers = {'action': action_publisher,'pause': pause_publisher}
         labels = ['prediction', 'td_error', 'avg_td_error', 'rupee', 
                   'cumulant']
         label_pubs = {g:{l:pub(g.name, l) for l in labels} for g in self.gvfs}
@@ -185,13 +190,17 @@ class LearningForeground:
         self.publishers['action'].publish(action)
 
     def reset_episode(self):
-        for i in range(random.randint(0,40)):
-            action, mu = self.gvfs[0].learner.take_random_action()
-            self.take_action(action)
-            rospy.loginfo('taking random action number: {}'.format(i))
-            # with open('/home/turtlebot/average_rewards','w') as f:
-            #     pickle.dump(average_rewards, f)
-            self.r.sleep()
+        self.publishers["pause"].publish(True)
+        os.system('python interrupt_auto_docking.py')
+        self.publishers["pause"].publish(False)
+        
+        # for i in range(random.randint(0,40)):
+        #     action, mu = self.gvfs[0].learner.take_random_action()
+        #     self.take_action(action)
+        #     rospy.loginfo('taking random action number: {}'.format(i))
+        #     # with open('/home/turtlebot/average_rewards','w') as f:
+        #     #     pickle.dump(average_rewards, f)
+        #     self.r.sleep()
     
     def run(self):
 
