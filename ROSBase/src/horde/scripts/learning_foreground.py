@@ -195,7 +195,7 @@ class LearningForeground:
 
     def reset_episode(self):
         temp = random.randint(0,20)
-        for i in range(50):
+        for i in range(30):
             if i < 10:
                 self.take_action(Twist(Vector3(-0.1, 0, 0), Vector3(0, 0, 0)))
             elif i >= 10 and i < 10+temp:
@@ -224,7 +224,7 @@ class LearningForeground:
 
             # make prediction
             self.last_preds = {g:g.predict(phi_prime) for g in self.gvfs}
-
+    
             # take action
             action, mu = self.behavior_policy(phi_prime, observation)
             self.take_action(action)

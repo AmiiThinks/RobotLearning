@@ -23,7 +23,6 @@ class ActionManager():
         self.termination_flag = termination_flag
 
     def set_pause_flag(self, pause_flag):
-        print 'pause flabe set to : ', pause_flag.data
         self.pause_flag = pause_flag.data
 
     def update_action(self, action_cmd):
