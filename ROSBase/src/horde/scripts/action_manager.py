@@ -14,6 +14,8 @@ class ActionManager():
                          topic_format["/mobile_base/sensors/core"],
                          self.update_base_state)
         self.termination_flag = False
+        self.pause_flag = False
+
     def update_base_state(self, val):
         self.base_state = val
 
@@ -44,14 +46,14 @@ class ActionManager():
         while not rospy.is_shutdown():
             if self.termination_flag:
                 break
-            # log action
-            speeds = (self.action.linear.x, self.action.linear.z)
-            actn = "linear: {}, angular: {}".format(*speeds)
-            rospy.logdebug("Sending action to Turtlebot: {}".format(actn))
-
-            # send new actions
             if self.pause_flag is False:
+                # log action
+                speeds = (self.action.linear.x, self.action.linear.z)
+                actn = "linear: {}, angular: {}".format(*speeds)
+                rospy.logdebug("Sending action to Turtlebot: {}".format(actn))
+                # send new actions
                 action_publisher.publish(self.action)
+
             action_pub_rate.sleep()
 
 def start_action_manager():
