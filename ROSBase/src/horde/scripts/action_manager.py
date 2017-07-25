@@ -23,7 +23,8 @@ class ActionManager():
         self.termination_flag = termination_flag
 
     def set_pause_flag(self, pause_flag):
-        self.pause_flag = pause_flag
+        print 'pause flabe set to : ', pause_flag.data
+        self.pause_flag = pause_flag.data
 
     def update_action(self, action_cmd):
         if action_cmd.linear.x and self.base_state.bumper:
@@ -53,7 +54,6 @@ class ActionManager():
                 rospy.logdebug("Sending action to Turtlebot: {}".format(actn))
                 # send new actions
                 action_publisher.publish(self.action)
-
             action_pub_rate.sleep()
 
 def start_action_manager():

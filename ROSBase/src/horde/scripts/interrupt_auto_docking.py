@@ -30,12 +30,19 @@ def feedbackCb(feedback):
   # Print state of dock_drive module (or node.)
   print 'Feedback: [DockDrive: ' + feedback.state + ']: ' + feedback.text
   global client
+  global aligned_once
   if str(feedback.state).startswith('ALIGNED'):
-    client.cancel_goal()
+    if aligned_once:
+      client.cancel_goal()
+    aligned_once = True
+  else:
+    aligned_once = False
 
 def dock_drive_client():
   # add timeout setting
   global client
+  global aligned_once
+  aligned_once = False
   client = actionlib.SimpleActionClient('dock_drive_action', AutoDockingAction)
   while not client.wait_for_server(rospy.Duration(5.0)):
     if rospy.is_shutdown(): return
