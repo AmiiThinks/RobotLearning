@@ -49,7 +49,7 @@ if __name__ == "__main__":
     try:
         # random.seed(20170612)
         
-        time_scale = 0.2
+        time_scale = 0.1
         forward_speed = 0.15
         turn_speed = 1
 

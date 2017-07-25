@@ -65,15 +65,15 @@ class LearningForeground:
         self.behavior_policy = behavior_policy
         self.avg_td_err = None
 
-        self.state_manager = StateManager(features_to_use)
+        self.state_manager = GenTestStateManager(features_to_use)
         self.img_to_cv2 = CvBridge().compressed_imgmsg_to_cv2
 
         # currently costs about 0.0275s per timestep
         rospy.loginfo("Creating visualization.")
 
-        # self.visualization = Visualize(self.state_manager.pixel_mask,
-        #                                imsizex=640,
-        #                                imsizey=480)
+        self.visualization = Visualize(self.state_manager.pixel_mask,
+                                       imsizex=640,
+                                       imsizey=480)
 
         rospy.loginfo("Done creatiing visualization.")
 
@@ -165,7 +165,8 @@ class LearningForeground:
         phi = self.state_manager.get_phi(**data)
 
         # update the visualization of the image data
-        # self.visualization.update_colours(image_data)
+        if (data['image'] is not None):
+            self.visualization.update_colours(data['image'])
 
         # takes a long time, only uncomment if necessary
         # rospy.loginfo(phi)
@@ -188,7 +189,6 @@ class LearningForeground:
     def run(self):
 
         while not rospy.is_shutdown():
-
             # get new state
             phi_prime, observation = self.create_state()
 
