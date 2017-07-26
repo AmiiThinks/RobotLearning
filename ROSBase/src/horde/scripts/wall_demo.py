@@ -54,9 +54,10 @@ if __name__ == "__main__":
 
         alpha0 = 1
         lambda_ = 0.1
-        features_to_use = ['image', 'bump', 'bias']
+        features_to_use = ['image', 'bias']
         num_features = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use]).size
-        alpha = (1 - lambda_) * alpha0 / num_features
+        num_active_features = StateConstants.TOTAL_IMAGE_FEATURE_LENGTH / (StateConstants.NUM_IMAGE_INTERVALS + 1)
+        alpha = (lambda_) * alpha0 / num_active_features
         parameters = { 'alpha': alpha,
                         'beta': 0.005 * alpha,
                       'lambda': lambda_,
