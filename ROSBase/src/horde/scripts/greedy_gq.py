@@ -42,9 +42,9 @@ class GreedyGQ:
         if action is not None:
             q = np.dot(self.get_state_action(phi, action), self.theta)
         else:
-            gen = (self.get_state_action(phi, a) for a in self.action_space)
-            action_phis = np.fromiter(gen, )
-            q = np.mean(np.dot(self.get_state_action(phi, action), self.theta))
+            get_a_phi = lambda a: self.get_state_action(phi, a)
+            dot_fun = np.vectorize(lambda a: np.dot(get_a_phi(a), self.theta))
+            q = np.mean(dot_fun(self.action_space))
 
         return q
 
