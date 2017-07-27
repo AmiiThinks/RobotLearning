@@ -43,4 +43,24 @@ class Greedy(Policy):
         self.pi[max_indices] = 1 / max_indices.sum()
         self.pi[~max_indices] = 0
 
+class Alternating_Rotation(Policy):
+    def __init__(self, *args, **kwargs):
+        self.time_steps = 0
+        self.num_time_steps = 100
+        Policy.__init__(self, *args, **kwargs)
 
+        self.LEFT = 0
+        self.RIGHT = 1
+
+    def update(self, *args ,**kwargs):
+        if self.time_steps > self.num_time_steps:
+            self.last_index = self.LEFT
+        else: 
+            self.last_index = self.RIGHT
+        print 'in alternating Rotation num time step is : ', self.time_steps
+
+        self.pi = np.zeros(self.action_space.size, float)
+        self.pi[self.last_index] = 1
+
+        self.time_steps += 1
+        self.time_steps %= 2*self.num_time_steps

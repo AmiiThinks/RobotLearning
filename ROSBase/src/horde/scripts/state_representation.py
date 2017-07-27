@@ -33,14 +33,14 @@ class StateConstants:
     IMAGE_CO = 640 # columns
 
     # IMU tiles
-    NUM_IMU_TILINGS = 8
-    NUM_IMU_TILES = 40
+    NUM_IMU_TILINGS = 1
+    NUM_IMU_TILES = 6
     SCALE_IMU = NUM_IMU_TILES/2.0 # range is [-1, 1]
     IMU_IHT_SIZE = get_next_pow2((NUM_IMU_TILES + 1) * NUM_IMU_TILINGS)
     IMU_START_INDEX = IMAGE_START_INDEX + TOTAL_IMAGE_FEATURE_LENGTH
 
     # Odom tiles
-    NUM_ODOM_TILINGS = 8
+    NUM_ODOM_TILINGS = 1
     NUM_ODOM_TILES = 5
     SCALE_ODOM = NUM_ODOM_TILES/2.0 # range is [0, 2]
     ODOM_IHT_SIZE = get_next_pow2((NUM_ODOM_TILES + 1) * (NUM_ODOM_TILES + 1) * NUM_ODOM_TILINGS)

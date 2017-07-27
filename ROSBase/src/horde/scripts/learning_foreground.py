@@ -141,7 +141,7 @@ class LearningForeground:
 
         # build data (used to make phi)
         data = {sensor: None for sensor in sensors}
-        for source in self.features_to_use - set(['ir']):
+        for source in sensors - set(['ir']):
             temp = None
             try:
                 while True:
@@ -149,6 +149,14 @@ class LearningForeground:
             except:
                 pass
             data[source] = temp
+        # temp = []
+        # try:
+        #     while True:
+        #         temp.append(self.recent[tools.features['ir']].get_nowait())
+        # except:
+        #     pass
+        # print 'length of data',len(temp)
+        # data['ir'] = temp if temp else None
 
         temp = []
         try:
@@ -164,6 +172,12 @@ class LearningForeground:
             data['charging'] = bool(data['core'].charger & 2)
         if data['ir'] is not None:
             data['ir'] = [ord(obs) for obs in data['ir'].data]
+            # temp_1 = []
+            # # a |= []
+            # for temp in data['ir']:
+            #     temp_1.append([ord(obs) for obs in temp.data])
+            # # print temp_1
+            # data['ir'] = temp_1[-1]
         if data['image'] is not None:
             data['image'] = np.asarray(self.img_to_cv2(data['image']))
         if data['odom'] is not None:
@@ -189,29 +203,27 @@ class LearningForeground:
         self.publishers['action'].publish(action)
 
     def reset_episode(self):
-        temp = random.randint(0,20)
-        for i in range(30):
-            if i < 10:
-                self.take_action(Twist(Vector3(-0.1, 0, 0), Vector3(0, 0, 0)))
-            elif i >= 10 and i < 10+temp:
-                self.take_action(Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.5)))
-            else:
-                self.take_action(Twist(Vector3(0.1, 0, 0), Vector3(0, 0, 0)))
-            rospy.loginfo('taking random action number: {}'.format(i))
-            self.r.sleep()
-        self.publishers["pause"].publish(True)
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        interrupt = os.path.join(dir_path, 'interrupt_auto_docking.py')
-        os.system('python {}'.format(interrupt))
-        self.publishers["pause"].publish(False)
-
-        # for i in range(random.randint(0,40)):
-        #     action, mu = self.gvfs[0].learner.take_random_action()
-        #     self.take_action(action)
+        # temp = random.randint(0,50)
+        # for i in range(temp):
+        #     if i < temp:
+        #         self.take_action(Twist(Vector3(-0.1, 0, 0), Vector3(0, 0, 0)))
+        #     # elif i >= 50 and i < 50+temp:
+        #     #     self.take_action(Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.5)))
+        #     # else:
+        #     #     self.take_action(Twist(Vector3(0.1, 0, 0), Vector3(0, 0, 0)))
         #     rospy.loginfo('taking random action number: {}'.format(i))
-        #     # with open('/home/turtlebot/average_rewards','w') as f:
-        #     #     pickle.dump(average_rewards, f)
-        #     self.r.sleep()        
+        #     self.r.sleep()
+        # self.publishers["pause"].publish(True)
+        # dir_path = os.path.dirname(os.path.realpath(__file__))
+        # interrupt = os.path.join(dir_path, 'interrupt_auto_docking.py')
+        # os.system('python {}'.format(interrupt))
+        # self.publishers["pause"].publish(False)
+
+        for i in range(random.randint(0,40)):
+            action, mu = self.gvfs[0].learner.take_random_action()
+            self.take_action(action)
+            rospy.loginfo('taking random action number: {}'.format(i))
+            self.r.sleep()        
     
     def run(self):
 
