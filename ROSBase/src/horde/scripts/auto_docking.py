@@ -9,12 +9,42 @@ import subprocess
 
 from action_manager import start_action_manager
 from gtd import GTD
-from egq import GreedyGQ
+from greedy_GQ import GreedyGQ
 from gvf import GVF
 from learning_foreground import start_learning_foreground
-from auto_docking_policies import eGreedy, Greedy
+from auto_docking_policies import *
 from state_representation import StateConstants
 from std_msgs.msg import Bool
+
+class Switch:
+    def __init__(self, explorer, exploiter, num_timesteps_explore):
+        self.explorer = explorer
+        self.exploiter = exploiter
+        self.num_timesteps_explore = num_timesteps_explore
+        self.t = 0
+
+    def update(self, *args, **kwargs):
+        if self.t > self.num_timesteps_explore:
+            self.exploiter.update(*args, **kwargs)
+        else:
+            self.explorer.update(*args, **kwargs)
+        self.t += 1
+        self.t %= 2*self.num_timesteps_explore
+        print 'in class switch, num time steps = ', self.t 
+
+    def get_probability(self, *args, **kwargs):
+        if self.t > self.num_timesteps_explore:
+            prob = self.exploiter.get_probability(*args, **kwargs)
+        else:
+            prob = self.explorer.get_probability(*args, **kwargs)
+        return prob
+
+    def choose_action(self, *args, **kwargs):
+        if self.t > self.num_timesteps_explore:
+            action = self.exploiter.choose_action(*args, **kwargs)
+        else:
+            action = self.explorer.choose_action(*args, **kwargs)
+        return action
 
 if __name__ == "__main__":
     try:
@@ -25,7 +55,7 @@ if __name__ == "__main__":
 
         alpha0 = 5
         lmbda = 0.9
-        features_to_use = ['imu', 'ir', 'bias']
+        features_to_use = ['ir', 'bias']
         feature_indices = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use])
         num_features = feature_indices.size
         alpha = alpha0 / num_features
@@ -34,7 +64,7 @@ if __name__ == "__main__":
                      'lmbda': lmbda,
                      'alpha0': alpha0}
 
-        task_to_learn = 4
+        task_to_learn = 3
         if task_to_learn == 1: #reach the IR region
             def reward_function(action_space):
                 def award(observation):
@@ -97,8 +127,7 @@ if __name__ == "__main__":
             secondaryLearningRate = learningRate/10
             epsilon = 0.5
             # lmbda = lambda observation: 0.95
-            lmbda = 0.4
-
+            lmbda = 0.9
 
         if task_to_learn == 4: #align center IR reciever and sender
             global times_field_reward_is_zero
@@ -115,36 +144,37 @@ if __name__ == "__main__":
                     action_award = 0
                     success_award = 0
                     if aligned:
-                        pass
+                        # pass
                         # field_award = 1
-                        # if aligned_far:
-                        #     field_award = 1
-                        # if aligned_near:
-                        #     field_award = 2
-                        # if tools.equal_twists(action_space[0] ,observation['action']):
-                        #     action_award = 5
+                        if aligned_far:
+                            field_award = 1
+                        if aligned_near:
+                            field_award = 1
+                        if tools.equal_twists(action_space[0] ,observation['action']):
+                            action_award = 2
                     else:
                         field_award = -1
                     if observation['charging']:
-                        print '                     charging===================='
+                        print '====================charging===================='
                         success_award = 50
                     if field_award == -1:
                         times_field_reward_is_zero += 1
                         print times_field_reward_is_zero
                     else:
                         times_field_reward_is_zero = 0
-                    if times_field_reward_is_zero >= 20:
+                    if times_field_reward_is_zero >= 15:
                         print 'field reward is negative'
                         times_field_reward_is_zero = 0
-                        return -1000
+                        return -10
+                    print field_award, action_award
                     return field_award + success_award + action_award
                 return award
 
             action_space = [#Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
-                            Twist(Vector3(0.1, 0, 0), Vector3(0, 0, 0)), # forward
+                            Twist(Vector3(0.08, 0, 0), Vector3(0, 0, 0)), # forward
                             # Twist(Vector3(-0.05, 0, 0), Vector3(0, 0, 0)), # backward
-                            Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.5)), # turn acw/cw
-                            Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.5)) # turn cw/acw
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.3)), # turn acw/cw
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.3)) # turn cw/acw
                             ]
 
             # learningRate = 0.1/(4*900)
@@ -182,10 +212,19 @@ if __name__ == "__main__":
 
 
 
-        behavior_policy = eGreedy(epsilon = epsilon,
+        # behavior_policy = eGreedy(epsilon = epsilon,
+        #                           value_function=auto_docking.learner.predict,
+        #                           action_space=action_space,
+        #                           feature_indices=feature_indices)
+
+        exploring_policy = Alternating_Rotation(epsilon = epsilon,
                                   value_function=auto_docking.learner.predict,
                                   action_space=action_space,
                                   feature_indices=feature_indices)
+
+
+        behavior_policy = Switch(explorer=exploring_policy, exploiter=target_policy, num_timesteps_explore=200)
+
 
         foreground_process = mp.Process(target=start_learning_foreground,
                                         name="foreground",
