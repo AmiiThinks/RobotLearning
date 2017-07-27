@@ -25,8 +25,8 @@ class Policy:
         # update the probability of chosing each action
         if self.value is not None:
             phi = phi[self.feature_indices]
-            q_map = map(lambda a: self.value(phi, a), action_space)
-            q_values = np.fromiter(q_map, float)
+            q_fun = np.vectorize(lambda a: self.value(phi, a))
+            q_values = q_fun(self.action_space)
             self.pi = np.array(q_values) / sum(q_values)
 
     def get_probability(self, action, *args, **kwargs):

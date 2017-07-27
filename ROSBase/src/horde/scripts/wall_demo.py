@@ -7,7 +7,7 @@ import rospy
 from scipy import optimize
 
 from action_manager import start_action_manager
-from egq import GreedyGQ
+from greedy_GQ import GreedyGQ
 from gtd import GTD
 from gvf import GVF
 from learning_foreground import start_learning_foreground
@@ -18,6 +18,11 @@ import tools
 class AvoidWallMEMM(Policy):
     # uses maximum entropy mellowmax
     def __init__(self, omega, *args, **kwargs):
+        # where the last action is recorded according
+        # to its respective constants
+        self.TURN = 2
+        self.FORWARD = 1
+        self.STOP = 0
         
         Policy.__init__(self, *args, **kwargs)        
 
@@ -29,40 +34,36 @@ class AvoidWallMEMM(Policy):
 
         q_fun = np.vectorize(lambda action: self.value(phi, action))
         q_values = q_fun(self.action_space)
+        mm = self.mellowmax(q_values)
+        diff = q_values - mm
         
-        beta = optimize.brent(self.find_beta(q_values))
+        beta = optimize.brentq(self.find_beta(diff), -10, 10)
+        print(beta)
         beta_q = beta * q_values
         exp_q = np.exp(beta_q - np.max(beta_q)) # numerical stability
         self.pi = exp_q / np.sum(exp_q)
 
-    def choose_action(self, *args, **kwargs):
-        # if we just turned, stop for one action
-        chosen_index = np.random.choice(a=self.action_space.size, p=self.pi)
-        if self.last_index == 2 and chosen_index == 1: 
-            self.last_index = 0
-        else: 
-            self.last_index = chosen_index
+        if self.last_index == self.TURN:
+            self.pi[self.STOP] += self.pi[self.FORWARD]
+            self.pi[self.FORWARD] = 0
 
-        return self.action_space[self.last_index]
+        # print(self.pi)
 
-    def find_beta(self, q_values):
+    def find_beta(self, diff):
         def optimize_this(beta, *args):
-            mm = self.mellowmax(q_values)
-            diff = q_values - mm
             return np.sum(np.exp(beta * diff) * diff)
         return optimize_this
 
-    @staticmethod
-    def cumulant(observation):
-        c = 0.1
+    def cumulant(self, observation):
+        c = -2
         if observation is not None:
-            if int(any(observation['bump'])):
+            if int(any(observation['bump'])) and self.last_index != self.STOP:
                 c = -1
-            elif tools.equal_twists(observation['action'],
-                            Twist(Vector3(0,0,0), Vector3(0,0,turn_speed))):
+            elif self.last_index == self.TURN:
                 c = 0
-
-        return -c
+            elif self.last_index == self.FORWARD:
+                c = 0.5
+        return c
 
 class GoForward(Policy):
     def __init__(self, *args, **kwargs):
@@ -78,7 +79,6 @@ class ForwardIfClear(Policy):
     def __init__(self, *args, **kwargs):
         # where the last action is recorded according
         # to its respective constants
-        self.last_action = None
         self.TURN = 2
         self.FORWARD = 1
         self.STOP = 0
@@ -87,17 +87,17 @@ class ForwardIfClear(Policy):
 
     def update(self, phi, observation, *args, **kwargs):
         phi = phi[self.feature_indices]
-        # q_values = map(lambda a: self.value(phi, a), action_space)
+
         if self.value(phi) > 0.75 or sum(observation['bump']):
-            self.pi = np.array([0, 0, 1])
-            self.last_action = self.TURN
+            self.last_index = self.TURN
         else:
-            if self.last_action == self.TURN:
-                self.pi = np.array([1, 0, 0])
-                self.last_action = self.STOP
+            if self.last_index == self.TURN:
+                self.last_index = self.STOP
             else:
-                self.pi = np.array([0, 1, 0])
-                self.last_action = self.FORWARD
+                self.last_index = self.FORWARD
+
+        self.pi = np.zeros(self.action_space.size)
+        self.pi[self.last_index] = 1
 
 class Switch:
     def __init__(self, explorer, exploiter, num_timesteps_explore):
@@ -111,6 +111,7 @@ class Switch:
             self.exploiter.update(*args, **kwargs)
         else:
             self.explorer.update(*args, **kwargs)
+        self.t += 1
 
     def get_probability(self, *args, **kwargs):
         if self.t > self.num_timesteps_explore:
@@ -122,8 +123,12 @@ class Switch:
     def choose_action(self, *args, **kwargs):
         if self.t > self.num_timesteps_explore:
             action = self.exploiter.choose_action(*args, **kwargs)
+            msg = "Calling exploitative policy."
         else:
             action = self.explorer.choose_action(*args, **kwargs)
+            msg = "Calling exploratory policy."
+
+        rospy.loginfo(msg)
         return action
 
 if __name__ == "__main__":
@@ -135,30 +140,36 @@ if __name__ == "__main__":
         forward_speed = 0.2
         turn_speed = 1
 
+        # all available actions
+        action_space = np.array([Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)),
+                         Twist(Vector3(forward_speed,0,0), Vector3(0,0,0)),
+                         Twist(Vector3(0, 0, 0), Vector3(0, 0, turn_speed))])
+
         # learning parameters
         alpha0 = 0.1
-        lmbda = 0.9
         features_to_use = ['image', 'bias']
         feature_indices = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use])
         num_features = feature_indices.size
         alpha = alpha0 / num_features * 16
         discount_if_bump = lambda obs: 0 if sum(obs["bump"]) else 0.98
         one_if_bump = lambda obs: int(any(obs['bump'])) if obs is not None else 0
-        hyperparameters = {'alpha': alpha,
-                           'beta': 0.005 * alpha,
-                           'lmbda': lmbda,
-                           'alpha0': alpha0,
-                           'omega': -1,
-                          }
+        dtb_hp = {'alpha': alpha0 / num_features * 16,
+                  'beta': 0.005 * alpha0 / num_features * 16,
+                  'lmbda': 0.9,
+                  'alpha0': alpha0,
+                 }
 
-        # all available actions
-        action_space = np.array([Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)),
-                         Twist(Vector3(forward_speed,0,0), Vector3(0,0,0)),
-                         Twist(Vector3(0, 0, 0), Vector3(0, 0, turn_speed))])
+        avoid_wall_omega = 10
+        alpha0 = 0.01
+        avoid_wall_hp = {'alpha': alpha0 / num_features * 16,
+                         'beta': 0.01 * alpha0 / num_features * 16,
+                         'lmbda': 0.95,
+                         'alpha0': alpha0,
+                        }
 
         # prediction GVF
         dtb_policy = GoForward(action_space=action_space)
-        dtb_learner = GTD(num_features, **hyperparameters)
+        dtb_learner = GTD(num_features, **dtb_hp)
         threshold_policy = ForwardIfClear(action_space=action_space,
                                           feature_indices=feature_indices,
                                           value_function=dtb_learner.predict)
@@ -170,18 +181,18 @@ if __name__ == "__main__":
                                name = 'DistanceToBump',
                                logger = rospy.loginfo,
                                feature_indices = feature_indices,
-                               **hyperparameters)
+                               **dtb_hp)
 
         # softmax control GVF
         avoid_wall_learner = GreedyGQ(num_features * action_space.size,
                                       action_space,
                                       finished_episode=lambda x: False,
-                                      **hyperparameters)
-        avoid_wall_policy = AvoidWallMEMM(hyperparameters['omega'], 
+                                      **avoid_wall_hp)
+        avoid_wall_policy = AvoidWallMEMM(omega=avoid_wall_omega,
                                           value_function=avoid_wall_learner.predict,
                                           action_space=action_space,
                                           feature_indices=feature_indices)
-        avoid_wall_memm = GVF(cumulant = AvoidWallMEMM.cumulant,
+        avoid_wall_memm = GVF(cumulant = avoid_wall_policy.cumulant,
                               gamma    = discount_if_bump,
                               target_policy = avoid_wall_policy,
                               num_features = num_features * action_space.size,
@@ -189,10 +200,12 @@ if __name__ == "__main__":
                               name = 'AvoidWall',
                               logger = rospy.loginfo,
                               feature_indices = feature_indices,
-                              **hyperparameters)
+                              **avoid_wall_hp)
 
         # behavior_policy
-        behavior_policy = Switch(threshold_policy, avoid_wall_policy, 1000)
+        behavior_policy = Switch(explorer=threshold_policy,
+                                 exploiter=avoid_wall_policy,
+                                 num_timesteps_explore=180/time_scale)
 
 
         # start processes

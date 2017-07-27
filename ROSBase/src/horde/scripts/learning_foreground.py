@@ -224,6 +224,7 @@ class LearningForeground:
             # select and take an action
             self.behavior_policy.update(phi_prime, observation)
             action = self.behavior_policy.choose_action()
+            mu = self.behavior_policy.get_probability(action)
             self.take_action(action)
 
             # make prediction
@@ -241,7 +242,7 @@ class LearningForeground:
             # save values
             self.last_phi = phi_prime if len(phi_prime) else None
             self.last_action = action
-            self.last_mu = self.behavior_policy.get_probability(action)
+            self.last_mu = mu
             self.last_observation = observation
 
             # timestep logging
