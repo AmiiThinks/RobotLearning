@@ -1,7 +1,7 @@
 ### 1. Installation
 ```
-sudo apt install ros-kinetic-kobuki
-sudo pip install future
+sudo apt-get install ros-kinetic-kobuki libblas-dev liblapack-dev libatlas-base-dev gfortran
+sudo pip install future scipy
 ```
 
 ### 2. Bash Environment Setup

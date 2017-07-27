@@ -23,7 +23,7 @@ class StateConstants:
     NUM_IMAGE_TILINGS = 4
     NUM_IMAGE_INTERVALS = 4 
     SCALE_RGB = NUM_IMAGE_TILINGS/256.0
-    IMAGE_IHT_SIZE = (NUM_IMAGE_INTERVALS + 1) * NUM_IMAGE_TILINGS
+    IMAGE_IHT_SIZE = get_next_pow2((NUM_IMAGE_INTERVALS + 1) * NUM_IMAGE_TILINGS)
     PIXEL_FEATURE_LENGTH = CHANNELS * IMAGE_IHT_SIZE
     TOTAL_IMAGE_FEATURE_LENGTH = NUM_RANDOM_POINTS * PIXEL_FEATURE_LENGTH
     IMAGE_START_INDEX = 0
@@ -36,14 +36,14 @@ class StateConstants:
     NUM_IMU_TILINGS = 8
     NUM_IMU_TILES = 40
     SCALE_IMU = NUM_IMU_TILES/2.0 # range is [-1, 1]
-    IMU_IHT_SIZE = (NUM_IMU_TILES + 1) * NUM_IMU_TILINGS
+    IMU_IHT_SIZE = get_next_pow2((NUM_IMU_TILES + 1) * NUM_IMU_TILINGS)
     IMU_START_INDEX = IMAGE_START_INDEX + TOTAL_IMAGE_FEATURE_LENGTH
 
     # Odom tiles
     NUM_ODOM_TILINGS = 8
     NUM_ODOM_TILES = 5
     SCALE_ODOM = NUM_ODOM_TILES/2.0 # range is [0, 2]
-    ODOM_IHT_SIZE = (NUM_ODOM_TILES + 1) * (NUM_ODOM_TILES + 1) * NUM_ODOM_TILINGS
+    ODOM_IHT_SIZE = get_next_pow2((NUM_ODOM_TILES + 1) * (NUM_ODOM_TILES + 1) * NUM_ODOM_TILINGS)
     ODOM_START_INDEX = IMU_START_INDEX + IMU_IHT_SIZE
 
     # IR tiles
@@ -67,10 +67,10 @@ class StateManager(object):
 
         num_img_ihts = StateConstants.NUM_RANDOM_POINTS * StateConstants.CHANNELS
         img_iht_size = StateConstants.IMAGE_IHT_SIZE
-        self.img_ihts = [tiles.CollisionTable(get_next_pow2(img_iht_size), "unsafe") for _ in xrange(num_img_ihts)]
+        self.img_ihts = [tiles.CollisionTable(img_iht_size, "unsafe") for _ in xrange(num_img_ihts)]
 
-        self.imu_iht = tiles.CollisionTable(get_next_pow2(StateConstants.IMU_IHT_SIZE), "unsafe")
-        self.odom_iht = tiles.CollisionTable(get_next_pow2(StateConstants.ODOM_IHT_SIZE), "unsafe")
+        self.imu_iht = tiles.CollisionTable(StateConstants.IMU_IHT_SIZE, "unsafe")
+        self.odom_iht = tiles.CollisionTable(StateConstants.ODOM_IHT_SIZE, "unsafe")
 
         # set up mask to chose pixels
         num_pixels = StateConstants.IMAGE_LI*StateConstants.IMAGE_CO
@@ -95,7 +95,6 @@ class StateManager(object):
 
         phi = np.zeros(StateConstants.TOTAL_FEATURE_LENGTH)
 
-        # IMAGE STUFF
         if 'image' in self.features_to_use:
             # check if there is an image
             valid_image = lambda image: image is not None and len(image) > 0 and len(image[0]) > 0
@@ -125,7 +124,6 @@ class StateManager(object):
                 phi[(tile_inds + rgb_inds[:, np.newaxis]).flatten()] = True
 
         if 'imu' in self.features_to_use:
-            # IMU STUFF
             if imu is None:
                 rospy.logwarn("No imu value.")
                 if self.last_imu_raw is not None:
@@ -141,7 +139,6 @@ class StateManager(object):
                 phi[indices + StateConstants.IMU_START_INDEX] = True
 
         if 'odom' in self.features_to_use:
-            # ODOM STUFF
             if odom is None:
                 rospy.logwarn("No odom value.")
                 if self.last_odom_raw is not None:
@@ -149,7 +146,6 @@ class StateManager(object):
 
             if odom is not None:
                 self.last_odom_raw = odom
-                print odom, StateConstants.SCALE_ODOM, odom * StateConstants.SCALE_ODOM
                 indices = np.array(tiles.tiles(StateConstants.NUM_ODOM_TILINGS,
                                                 self.odom_iht,
                                                 (odom * StateConstants.SCALE_ODOM).tolist(),
@@ -158,7 +154,6 @@ class StateManager(object):
                 phi[indices + StateConstants.ODOM_START_INDEX] = True
 
         if 'ir' in self.features_to_use:
-            # IR STUFF  
             if ir is None:
                 rospy.logwarn("No ir value.")
                 if self.last_ir_raw is not None:
@@ -176,7 +171,7 @@ class StateManager(object):
                 phi[np.asarray(indices) + StateConstants.IR_START_INDEX] = True
 
         # bump
-        if 'bump' in self.features_to_use:
+        if 'bump' in self.features_to_use and bump is not None:
             phi[StateConstants.indices_in_phi['bump']] = bump
 
         # bias unit
@@ -185,7 +180,7 @@ class StateManager(object):
 
         return phi
 
-    def get_observations(self, bump, ir,charging, **kwargs):
+    def get_observations(self, bump, ir, charging, **kwargs):
         observations = {'bump': bump if bump else (0,0,0),
                           'ir': ir if ir else (0,0,0),
                           'charging': charging if charging else False,

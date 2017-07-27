@@ -3,32 +3,31 @@ import rospy
 
 class GTD:
 
-	def __init__(self, parameters, num_features):
-		self.num_features = num_features
-		self.theta 		  = np.zeros(self.num_features)
-		self.w			  = np.zeros(self.num_features)
-		self.e     		  = np.zeros(self.num_features)
-		
-		self.alpha = parameters["alpha"]
-		self.beta = parameters["beta"]
-		self.lmbda = parameters["lambda"]
-		self.old_gamma = 0
-		self.delta = 0
-		self.tderr_elig = np.zeros(self.num_features)
+    def __init__(self, num_features, alpha, beta, lmbda, **kwargs):
+        self.theta        = np.zeros(num_features)
+        self.w            = np.zeros(num_features)
+        self.e            = np.zeros(num_features)
+        
+        self.alpha = alpha
+        self.beta = beta
+        self.lmbda = lmbda
+        self.old_gamma = 0
+        self.delta = 0
+        self.tderr_elig = np.zeros(num_features)
 
-	def update(self, phi, phi_prime, cumulant, gamma, rho, **kwargs):
-		self.tderr_elig = self.delta * self.e
+    def update(self, phi, phi_prime, cumulant, gamma, rho, **kwargs):
+        self.tderr_elig = self.delta * self.e
 
-		self.delta = cumulant + gamma * np.dot(phi_prime, self.theta) - np.dot(phi, self.theta)
-		self.e = rho * (self.lmbda * self.old_gamma * self.e + phi)
+        self.delta = cumulant + gamma * np.dot(phi_prime, self.theta) - np.dot(phi, self.theta)
+        self.e = rho * (self.lmbda * self.old_gamma * self.e + phi)
 
-		self.theta += self.alpha * (self.tderr_elig - gamma * (1 - self.lmbda) * np.dot(self.e, self.w) * phi_prime)
-		self.w += self.beta * (self.tderr_elig - np.dot(phi, self.w) * phi)
+        self.theta += self.alpha * (self.tderr_elig - gamma * (1 - self.lmbda) * np.dot(self.e, self.w) * phi_prime)
+        self.w += self.beta * (self.tderr_elig - np.dot(phi, self.w) * phi)
 
-		self.old_gamma = gamma
+        self.old_gamma = gamma
 
-		# for compatibility with calculating RUPEE for control gvfs
-		return phi
+        # for compatibility with calculating RUPEE for control gvfs
+        return phi
 
-	def predict(self, phi):
-		return np.dot(phi, self.theta)
+    def predict(self, phi):
+        return np.dot(phi, self.theta)

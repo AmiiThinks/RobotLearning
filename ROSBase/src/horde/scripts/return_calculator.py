@@ -207,7 +207,8 @@ class ReturnCalculator:
             print "-------------------------------------"
 
             # take action
-            action, _ = self.current_policy(phi, observations)
+            self.current_policy.update(phi, observations)
+            action = self.current_policy.choose_action()
             self.take_action(action)
 
             # reset tic
