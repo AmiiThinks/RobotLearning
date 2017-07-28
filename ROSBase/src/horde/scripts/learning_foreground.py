@@ -166,6 +166,14 @@ class LearningForeground:
             pass
         data['ir'] = temp[-1] if temp else None
 
+        temp = []
+        try:
+            while True:
+                temp.append(self.recent[tools.features['ir']].get_nowait())
+        except:
+            pass
+        data['ir'] = temp[-1] if temp else None
+
         if data['core'] is not None:
             bump = data['core'].bumper
             data['bump'] = map(lambda x: bool(x & bump), bump_codes)
@@ -230,6 +238,8 @@ class LearningForeground:
         while not rospy.is_shutdown():
             start_time = time.time()
 
+            start_time = time.time()
+
             # get new state
             phi_prime, observation = self.create_state()
 
@@ -254,7 +264,7 @@ class LearningForeground:
             # save values
             self.last_phi = phi_prime if len(phi_prime) else None
             self.last_action = action
-            self.last_mu = mu
+            self.last_mu = self.behavior_policy.get_probability(action)
             self.last_observation = observation
 
             # timestep logging
@@ -262,9 +272,7 @@ class LearningForeground:
             time_msg = "Current timestep took {:.4f} sec.".format(total_time)
             rospy.loginfo(time_msg)
             if total_time > self.time_scale:
-                if self.control_gvf is not None:
-                    if not self.control_gvf.learner.finished_episode(self.control_gvf.last_cumulant):
-                        rospy.logerr("Timestep took too long!")
+                rospy.logerr("Timestep took too long!")
 
             # sleep until next time step
             self.r.sleep()

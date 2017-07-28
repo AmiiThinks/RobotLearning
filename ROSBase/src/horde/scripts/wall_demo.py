@@ -7,7 +7,7 @@ import rospy
 from scipy import optimize
 
 from action_manager import start_action_manager
-from greedy_GQ import GreedyGQ
+from greedy_gq import GreedyGQ
 from gtd import GTD
 from gvf import GVF
 from learning_foreground import start_learning_foreground
@@ -34,6 +34,7 @@ class AvoidWallMEMM(Policy):
 
         q_fun = np.vectorize(lambda action: self.value(phi, action))
         q_values = q_fun(self.action_space)
+
         mm = self.mellowmax(q_values)
         diff = q_values - mm
         
@@ -64,6 +65,25 @@ class AvoidWallMEMM(Policy):
             elif self.last_index == self.FORWARD:
                 c = 0.5
         return c
+
+    def find_beta(self, q_values):
+        def optimize_this(beta, *args):
+            mm = self.mellowmax(q_values)
+            diff = q_values - mm
+            return np.sum(np.exp(beta * diff) * diff)
+        return optimize_this
+
+    @staticmethod
+    def cumulant(observation):
+        c = 0.1
+        if observation is not None:
+            if int(any(observation['bump'])):
+                c = -1
+            elif tools.equal_twists(observation['action'],
+                            Twist(Vector3(0,0,0), Vector3(0,0,turn_speed))):
+                c = 0
+
+        return -c
 
 class GoForward(Policy):
     def __init__(self, *args, **kwargs):
@@ -154,7 +174,7 @@ if __name__ == "__main__":
         discount_if_bump = lambda obs: 0 if sum(obs["bump"]) else 0.98
         one_if_bump = lambda obs: int(any(obs['bump'])) if obs is not None else 0
         dtb_hp = {'alpha': alpha0 / num_features * 16,
-                  'beta': 0.005 * alpha0 / num_features * 16,
+                  'beta': 0.001 * alpha0 / num_features * 16,
                   'lmbda': 0.9,
                   'alpha0': alpha0,
                  }
@@ -162,7 +182,7 @@ if __name__ == "__main__":
         avoid_wall_omega = 10
         alpha0 = 0.01
         avoid_wall_hp = {'alpha': alpha0 / num_features * 16,
-                         'beta': 0.01 * alpha0 / num_features * 16,
+                         'beta': 0.001 * alpha0 / num_features * 16,
                          'lmbda': 0.95,
                          'alpha0': alpha0,
                         }
@@ -170,6 +190,7 @@ if __name__ == "__main__":
         # prediction GVF
         dtb_policy = GoForward(action_space=action_space)
         dtb_learner = GTD(num_features, **dtb_hp)
+
         threshold_policy = ForwardIfClear(action_space=action_space,
                                           feature_indices=feature_indices,
                                           value_function=dtb_learner.predict)
@@ -206,7 +227,6 @@ if __name__ == "__main__":
         behavior_policy = Switch(explorer=threshold_policy,
                                  exploiter=avoid_wall_policy,
                                  num_timesteps_explore=180/time_scale)
-
 
         # start processes
         foreground_process = mp.Process(target=start_learning_foreground,

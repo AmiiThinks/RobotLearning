@@ -9,10 +9,10 @@ import subprocess
 
 from action_manager import start_action_manager
 from gtd import GTD
-from greedy_GQ import GreedyGQ
+from greedy_gq import GreedyGQ
 from gvf import GVF
 from learning_foreground import start_learning_foreground
-from auto_docking_policies import *
+from auto_docking_policies import eGreedy, Greedy
 from state_representation import StateConstants
 from std_msgs.msg import Bool
 
@@ -210,8 +210,6 @@ if __name__ == "__main__":
                         logger=rospy.loginfo,
                         feature_indices=feature_indices,
                         **parameters)
-
-
 
         # behavior_policy = eGreedy(epsilon = epsilon,
         #                           value_function=auto_docking.learner.predict,
