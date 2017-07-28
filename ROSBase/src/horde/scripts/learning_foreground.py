@@ -149,14 +149,6 @@ class LearningForeground:
             except:
                 pass
             data[source] = temp
-        # temp = []
-        # try:
-        #     while True:
-        #         temp.append(self.recent[tools.features['ir']].get_nowait())
-        # except:
-        #     pass
-        # print 'length of data',len(temp)
-        # data['ir'] = temp if temp else None
 
         temp = []
         try:
@@ -164,20 +156,21 @@ class LearningForeground:
                 temp.append(self.recent[tools.features['ir']].get_nowait())
         except:
             pass
-        data['ir'] = temp[-1] if temp else None
+        print 'number of IR data collected in last timestep - ', len(temp)
+        # use only the last 10 values, helpful at the end of episode when we have accumulated at lot or IR data
+        data['ir'] = temp[-10:] if temp else None
 
         if data['core'] is not None:
             bump = data['core'].bumper
             data['bump'] = map(lambda x: bool(x & bump), bump_codes)
             data['charging'] = bool(data['core'].charger & 2)
         if data['ir'] is not None:
-            data['ir'] = [ord(obs) for obs in data['ir'].data]
-            # temp_1 = []
-            # # a |= []
-            # for temp in data['ir']:
-            #     temp_1.append([ord(obs) for obs in temp.data])
-            # # print temp_1
-            # data['ir'] = temp_1[-1]
+            ir = [[0]*6]*3
+            # bitwise 'or' of all the ir data in last time_step
+            for temp in data['ir']:
+                a = [[int(x) for x in format(temp, '#08b')[2:]] for temp in [ord(obs) for obs in temp.data]]
+                ir = [[k | l for k, l in zip(i, j)] for i, j in zip(a, ir)]
+            data['ir'] = [int(''.join([str(i) for i in ir_temp]),2) for ir_temp in ir] 
         if data['image'] is not None:
             data['image'] = np.asarray(self.img_to_cv2(data['image']))
         if data['odom'] is not None:
@@ -188,7 +181,7 @@ class LearningForeground:
         if 'bias' in self.features_to_use:
             data['bias'] = True
         data['weights'] = self.gvfs[0].learner.theta if self.gvfs else None
-
+        print 'data - ir:  ' , data['ir']
         phi = self.state_manager.get_phi(**data)
 
         # update the visualization of the image data
@@ -265,7 +258,8 @@ class LearningForeground:
                 if self.control_gvf is not None:
                     if not self.control_gvf.learner.finished_episode(self.control_gvf.last_cumulant):
                         rospy.logerr("Timestep took too long!")
-
+                else:
+                    rospy.logerr("Timestep took too long!")
             # sleep until next time step
             self.r.sleep()
 
