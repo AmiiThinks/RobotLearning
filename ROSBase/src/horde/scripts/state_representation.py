@@ -61,6 +61,13 @@ class StateConstants:
                         'bump':np.arange(IR_START_INDEX+IR_ITH_SIZE, IR_START_INDEX+IR_ITH_SIZE+3),
                         'bias':np.array([TOTAL_FEATURE_LENGTH-1])}
 
+    num_active_features = {'image':NUM_RANDOM_POINTS*CHANNELS*NUM_IMAGE_TILINGS,
+                        'imu':NUM_IMU_TILES,
+                        'odom':NUM_ODOM_TILES,
+                        'ir':6,
+                        'bump':3,
+                        'bias':1}
+
 
 class StateManager(object):
     def __init__(self, features_to_use):
@@ -157,15 +164,16 @@ class StateManager(object):
             if ir is None:
                 rospy.logwarn("No ir value.")
                 if self.last_ir_raw is not None:
-                    ir = self.last_ir_raw                
+                    ir = self.last_ir_raw
 
             if ir is not None:
                 self.last_ir_raw = ir
                 # indices = np.asarray(ir)
                 # indices += np.array([0,64,128])
-                value = [int(x) for x in format(ir[0], '#08b')[2:]]
-                value += [int(x) for x in format(ir[1], '#08b')[2:]]
-                value += [int(x) for x in format(ir[2], '#08b')[2:]]
+                ir_1 = [int(x) for x in format(ir[0], '#08b')[2:]]
+                ir_2 = [int(x) for x in format(ir[1], '#08b')[2:]]
+                ir_3 = [int(x) for x in format(ir[2], '#08b')[2:]]
+                value = ir_1 + ir_2 + ir_3
                 indices = np.nonzero(value)[0]
 
                 phi[np.asarray(indices) + StateConstants.IR_START_INDEX] = True

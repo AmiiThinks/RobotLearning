@@ -9,7 +9,7 @@ import subprocess
 
 from action_manager import start_action_manager
 from gtd import GTD
-from greedy_GQ import GreedyGQ
+from greedy_gq import GreedyGQ
 from gvf import GVF
 from learning_foreground import start_learning_foreground
 from auto_docking_policies import *
@@ -50,20 +50,24 @@ class Switch:
 if __name__ == "__main__":
     try:
 
-        time_scale = 0.5
+        time_scale = 0.3
         forward_speed = 0.2
         turn_speed = 2
 
-        alpha0 = 5
+        alpha0 = 0.1
         lmbda = 0.9
-        features_to_use = ['ir', 'bias']
+        features_to_use = ['imu', 'bias']
         feature_indices = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use])
         num_features = feature_indices.size
-        alpha = alpha0 / num_features
+        num_active_features = sum(StateConstants.num_active_features[f] for f in features_to_use)
+        alpha = alpha0 / num_active_features
         parameters = {'alpha': alpha,
                      'beta': 0.01 * alpha,
                      'lmbda': lmbda,
                      'alpha0': alpha0}
+
+        learningRate = alpha
+        secondaryLearningRate = learningRate/10
 
         task_to_learn = 3
         if task_to_learn == 1: #reach the IR region
@@ -78,9 +82,6 @@ if __name__ == "__main__":
                             Twist(Vector3(0, 0, 0), Vector3(0, 0, 1.5)), # turn acw/cw
                             Twist(Vector3(0, 0, 0), Vector3(0, 0, -1.5)) # turn cw/acw
                             ]
-            # learningRate = 0.1/(4*900)
-            learningRate = 0.1/(100)
-            secondaryLearningRate = learningRate/10
             epsilon = 0.1
             # lmbda = lambda observation: 0.95
             lmbda = 0.95
@@ -101,9 +102,6 @@ if __name__ == "__main__":
                             Twist(Vector3(0, 0, 0), Vector3(0, 0, -1.0)) # turn cw/acw
                             ]
 
-            # learningRate = 0.1/(4*900)
-            learningRate = 0.1/(10)
-            secondaryLearningRate = learningRate/10
             epsilon = 0.2
             # lmbda = lambda observation: 0.95
             lmbda = 0.4
@@ -119,13 +117,10 @@ if __name__ == "__main__":
             action_space = [#Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
                             # Twist(Vector3(0.05, 0, 0), Vector3(0, 0, 0)), # forward
                             # Twist(Vector3(-0.05, 0, 0), Vector3(0, 0, 0)), # backward
-                            Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.3)), # turn acw/cw
-                            Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.3)) # turn cw/acw
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.003)), # turn acw/cw
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.003)) # turn cw/acw
                             ]
 
-            # learningRate = 0.1/(4*900)
-            learningRate = 0.1/(10)
-            secondaryLearningRate = learningRate/10
             epsilon = 0.5
             # lmbda = lambda observation: 0.95
             lmbda = 0.9
@@ -178,9 +173,6 @@ if __name__ == "__main__":
                             Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.3)) # turn cw/acw
                             ]
 
-            # learningRate = 0.1/(4*900)
-            learningRate = 0.1/(10)
-            secondaryLearningRate = learningRate/10
             epsilon = 0.1
             # lmbda = lambda observation: 0.95
             lmbda = 0.95
