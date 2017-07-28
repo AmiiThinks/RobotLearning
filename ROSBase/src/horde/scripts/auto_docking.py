@@ -26,11 +26,12 @@ class Switch:
     def update(self, *args, **kwargs):
         if self.t > self.num_timesteps_explore:
             self.exploiter.update(*args, **kwargs)
+            rospy.loginfo('Greedy policy is the behaviour policy')
         else:
             self.explorer.update(*args, **kwargs)
+            rospy.loginfo('Explorer policy is the behaviour policy')
         self.t += 1
         self.t %= 2*self.num_timesteps_explore
-        print 'in class switch, num time steps = ', self.t 
 
     def get_probability(self, *args, **kwargs):
         if self.t > self.num_timesteps_explore:

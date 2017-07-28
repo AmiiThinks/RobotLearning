@@ -219,7 +219,7 @@ class LearningForeground:
         # os.system('python {}'.format(interrupt))
         # self.publishers["pause"].publish(False)
 
-        for i in range(random.randint(0,40)):
+        for i in range(random.randint(0,60)):
             action, mu = self.gvfs[0].learner.take_random_action()
             self.take_action(action)
             rospy.loginfo('taking random action number: {}'.format(i))
@@ -262,7 +262,9 @@ class LearningForeground:
             time_msg = "Current timestep took {:.4f} sec.".format(total_time)
             rospy.loginfo(time_msg)
             if total_time > self.time_scale:
-                rospy.logerr("Timestep took too long!")
+                if self.control_gvf is not None:
+                    if not self.control_gvf.learner.finished_episode(self.control_gvf.last_cumulant):
+                        rospy.logerr("Timestep took too long!")
 
             # sleep until next time step
             self.r.sleep()

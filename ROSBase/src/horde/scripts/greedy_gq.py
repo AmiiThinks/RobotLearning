@@ -37,6 +37,7 @@ class GreedyGQ:
 
         # helper
         self.get_state_action = tools.action_state_rep(action_space)
+        self.episode_finished_last_step = False
 
     def predict(self, phi, action):
         if action is not None:
@@ -58,7 +59,8 @@ class GreedyGQ:
 
         # to make sure we don't update anything between the last termination step and the new start step
         # i.e. skip one learning step
-        if self.finished_episode(cumulant):
+        if self.episode_finished_last_step:
+            self.episode_finished_last_step = False
             return self.action_phi
 
         action_phi_primes = {temp_action: self.get_state_action(phi_prime, temp_action) for temp_action in self.action_space}
@@ -92,17 +94,19 @@ class GreedyGQ:
             if np.dot(self.theta, action_phis[temp_action]) >= np.dot(self.theta, action_phis[previous_greedy_action]):
                 previous_greedy_action = temp_action
 
+        if np.count_nonzero(self.theta) == 0:
+            rospy.logwarn('self.theta is zero')
 
-        # if np.count_nonzero(self.action_phi) == 0:
-        #     print 'self.action_phi is zero'
+        if np.count_nonzero(self.action_phi) == 0:
+            rospy.logwarn('self.action_phi is zero')
 
         # e_t update
         self.etrace *= gamma * self.lmbda * rho
         self.etrace += self.action_phi #(phi_t) 
 
-        # if np.count_nonzero(self.etrace) == 0:
-        #     print 'self.eTrace is zero'
-                
+        if np.count_nonzero(self.etrace) == 0:
+            rospy.logwarn('self.eTrace is zero')
+
         # theta_t update
         self.theta += self.learning_rate * (self.td_error * self.etrace - 
                         gamma * (1 - self.lmbda) * np.dot(self.sec_weights, self.action_phi) * action_phi_bar)
@@ -124,6 +128,7 @@ class GreedyGQ:
 
         if self.finished_episode(cumulant):
             rospy.loginfo('Episode finished')
+            self.episode_finished_last_step  = True
             self.etrace = np.zeros(self.num_features_state_action)
 
         # returing to make sure action_phi is used in RUPEE calculation
