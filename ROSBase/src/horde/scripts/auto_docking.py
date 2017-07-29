@@ -68,8 +68,10 @@ if __name__ == "__main__":
 
         learningRate = alpha
         secondaryLearningRate = learningRate/10
+        finished_episode = lambda x: x > 0 or x < -100
+        epsilon = 0.1
 
-        task_to_learn = 3
+        task_to_learn = 4
         if task_to_learn == 1: #reach the IR region
             def reward_function(action_space):
                 def award(observation):
@@ -82,9 +84,6 @@ if __name__ == "__main__":
                             Twist(Vector3(0, 0, 0), Vector3(0, 0, 1.5)), # turn acw/cw
                             Twist(Vector3(0, 0, 0), Vector3(0, 0, -1.5)) # turn cw/acw
                             ]
-            epsilon = 0.1
-            # lmbda = lambda observation: 0.95
-            lmbda = 0.95
 
         if task_to_learn == 2: #reach the center IR region
             def reward_function(action_space):
@@ -102,10 +101,6 @@ if __name__ == "__main__":
                             Twist(Vector3(0, 0, 0), Vector3(0, 0, -1.0)) # turn cw/acw
                             ]
 
-            epsilon = 0.2
-            # lmbda = lambda observation: 0.95
-            lmbda = 0.4
-
         if task_to_learn == 3: #align center IR reciever and sender
             def reward_function(action_space):
                 def award(observation):
@@ -117,37 +112,33 @@ if __name__ == "__main__":
             action_space = [#Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
                             # Twist(Vector3(0.05, 0, 0), Vector3(0, 0, 0)), # forward
                             # Twist(Vector3(-0.05, 0, 0), Vector3(0, 0, 0)), # backward
-                            Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.003)), # turn acw/cw
-                            Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.003)) # turn cw/acw
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.3)), # turn acw/cw
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.3)) # turn cw/acw
                             ]
 
-            epsilon = 0.5
-            # lmbda = lambda observation: 0.95
-            lmbda = 0.9
-
-        if task_to_learn == 4: #align center IR reciever and sender
+        if task_to_learn == 4: #reach docking station while staying in the center region
             global times_field_reward_is_zero
             times_field_reward_is_zero = 0
             def reward_function(action_space):
                 def award(observation):
                     global times_field_reward_is_zero
 
-                    aligned_near = (observation['ir'][1]%4)/2
-                    aligned_far = (observation['ir'][1]%16)/8
+                    aligned_near = int((observation['ir'][1]%4)/2)
+                    aligned_far = int((observation['ir'][1]%16)/8)
                     aligned = aligned_near or aligned_far
-                    print 'ir data: ', observation['ir']
                     field_award = 0
                     action_award = 0
                     success_award = 0
                     if aligned:
+                        print observation['ir'], aligned_near, aligned_far
                         # pass
                         # field_award = 1
                         if aligned_far:
                             field_award = 1
                         if aligned_near:
                             field_award = 1
-                        if tools.equal_twists(action_space[0] ,observation['action']):
-                            action_award = 2
+                        # if tools.equal_twists(action_space[0] ,observation['action']):
+                        #     action_award = 2
                     else:
                         field_award = -1
                     if observation['charging']:
@@ -155,27 +146,24 @@ if __name__ == "__main__":
                         success_award = 50
                     if field_award == -1:
                         times_field_reward_is_zero += 1
-                        print times_field_reward_is_zero
                     else:
                         times_field_reward_is_zero = 0
-                    if times_field_reward_is_zero >= 15:
+                    print 'times_field_reward_is_zero', times_field_reward_is_zero
+                    if times_field_reward_is_zero >= 3:
                         print 'field reward is negative'
                         times_field_reward_is_zero = 0
-                        return -10
-                    print field_award, action_award
+                        return -2
+                    # print field_award, action_award
                     return field_award + success_award + action_award
                 return award
+            finished_episode = lambda x: x > 10 or x < -1
 
             action_space = [#Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
                             Twist(Vector3(0.08, 0, 0), Vector3(0, 0, 0)), # forward
                             # Twist(Vector3(-0.05, 0, 0), Vector3(0, 0, 0)), # backward
-                            Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.3)), # turn acw/cw
-                            Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.3)) # turn cw/acw
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.5)), # turn acw/cw
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.5)) # turn cw/acw
                             ]
-
-            epsilon = 0.1
-            # lmbda = lambda observation: 0.95
-            lmbda = 0.95
 
         action_space = np.array(action_space)
 
@@ -184,7 +172,7 @@ if __name__ == "__main__":
                               'lmbda': lmbda,
                               'num_features_state_action': num_features*action_space.size,
                               'action_space': action_space,
-                              'finished_episode': lambda x: x > 0 or x < -100
+                              'finished_episode': finished_episode
                              }
 
         learner = GreedyGQ(**learner_parameters)
@@ -203,21 +191,17 @@ if __name__ == "__main__":
                         feature_indices=feature_indices,
                         **parameters)
 
-
-
-        # behavior_policy = eGreedy(epsilon = epsilon,
-        #                           value_function=auto_docking.learner.predict,
-        #                           action_space=action_space,
-        #                           feature_indices=feature_indices)
-
-        exploring_policy = Alternating_Rotation(epsilon = epsilon,
+        behavior_policy = eGreedy(epsilon = epsilon,
                                   value_function=auto_docking.learner.predict,
                                   action_space=action_space,
                                   feature_indices=feature_indices)
 
+        # exploring_policy = Alternating_Rotation(epsilon = epsilon,
+        #                           value_function=auto_docking.learner.predict,
+        #                           action_space=action_space,
+        #                           feature_indices=feature_indices)
 
-        behavior_policy = Switch(explorer=exploring_policy, exploiter=target_policy, num_timesteps_explore=200)
-
+        # behavior_policy = Switch(explorer=exploring_policy, exploiter=target_policy, num_timesteps_explore=200)
 
         foreground_process = mp.Process(target=start_learning_foreground,
                                         name="foreground",

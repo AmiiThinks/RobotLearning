@@ -35,9 +35,14 @@ class GreedyGQ:
         self.delta = 0
         self.tderr_elig = np.zeros(num_features_state_action)
 
+        # prioritized experience replay
+        self.worst_experiences = []
+
         # helper
         self.get_state_action = tools.action_state_rep(action_space)
         self.episode_finished_last_step = False
+
+        self.temp = np.zeros(9, dtype = bool)
 
     def predict(self, phi, action):
         if action is not None:
@@ -54,7 +59,19 @@ class GreedyGQ:
         return random_action, 1/len(self.action_space)
 
     def update(self, phi, last_action, phi_prime, cumulant, gamma, rho, **kwargs):
+        self.new_experience = {
+                            'phi'=phi,
+                            'last_action'=last_action,
+                            'phi_prime'=phi_prime,
+                            'cumulant'=cumulant,
+                            'gamma'=gamma,
+                            'rho'=rho,
+        }
         self.action_phi = self.get_state_action(phi, last_action)
+        # print self.action_phi
+        self.temp += np.asarray(phi, dtype=bool)
+        # print 'temp : ',self.temp
+ 
         self.tderr_elig = self.delta * self.etrace
 
         # to make sure we don't update anything between the last termination step and the new start step
@@ -88,7 +105,10 @@ class GreedyGQ:
 
         # delta_t update
         self.td_error = cumulant + gamma * np.dot(self.theta, action_phi_bar) - np.dot(self.theta,self.action_phi)
-        
+        # print '----------------------------------- TD error- ',td_error
+        # For importance sampling correction in prioritized action replay
+        if 'importance_sampling_correction' in kwargs.keys():
+            self.td_error *= kwargs['importance_sampling_correction']
         previous_greedy_action = last_action
         for temp_action in self.action_space:
             if np.dot(self.theta, action_phis[temp_action]) >= np.dot(self.theta, action_phis[previous_greedy_action]):
@@ -126,11 +146,56 @@ class GreedyGQ:
         # for calculating RUPEE
         self.delta = self.td_error
 
+        self.new_experience['td_error'] = self.td_error
+        # returing to make sure action_phi is used in RUPEE calculation
+        if len(worst_experiences) > 100:
+            if self.new_experience['td_error'] > self.worst_experiences[-1]['td_error']:
+                self.worst_experiences.append(self.new_experience)
+            self.worst_experiences = sorted(self.worst_experiences, key=lambda k: k['td_error'])[:100]
+
         if self.finished_episode(cumulant):
             rospy.loginfo('Episode finished')
             self.episode_finished_last_step  = True
             self.etrace = np.zeros(self.num_features_state_action)
 
-        # returing to make sure action_phi is used in RUPEE calculation
+
         return self.action_phi
 
+    def uniform_experience_replay():
+        # pick 10 random numbers between 0 and 100
+        num_updates_to_make = 100
+        random_indices = [randint(0, 100) for i in range(num_updates_to_make)]
+        # bias not needed as there is uniform selection
+        for i in random_indices:
+            temp_experience = self.worst_experiences[i]
+            # find the updated rho as well
+            importance_sampling_correction = 1
+            self.update(phi=temp_experience['phi'],
+                        last_action=temp_experience['last_action'],
+                        phi_prime=temp_experience['phi_prime'],
+                        cumulant=temp_experience['cumulant'],
+                        gamma=temp_experience['gamma'],
+                        rho=temp_experience['rho'],
+                        importance_sampling_correction=importance_sampling_correction)
+            temp['td_error'] = self.td_error
+            # put new_experience back in the heap, with updated replay
+            self.worst_experiences = sorted(self.worst_experiences, key=lambda k: k['td_error']) 
+
+    def td_error_prioritized_experience_replay():
+        # in the saved experience - (phi, last_action, phi_prime, cumulant, gamma, rho, td_error)
+        num_updates_to_make = 100
+        for i in range(max(num_updates_to_make,len(worst_experiences))):
+            # try both with and without bias correction
+            importance_sampling_correction =  1/num_updates_to_make
+            # pop the next worst experience, prioritized by td_error
+            temp_experience = self.worst_experiences[-i]
+            self.update(phi=temp_experience['phi'],
+                        last_action=temp_experience['last_action'],
+                        phi_prime=temp_experience['phi_prime'],
+                        cumulant=temp_experience['cumulant'],
+                        gamma=temp_experience['gamma'],
+                        rho=temp_experience['rho'],
+                        importance_sampling_correction=importance_sampling_correction)
+            temp['td_error'] = self.td_error
+            # put new_experience back in the heap, with updated replay
+            self.worst_experiences = sorted(self.worst_experiences, key=lambda k: k['td_error']) 
