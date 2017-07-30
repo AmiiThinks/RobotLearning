@@ -34,7 +34,7 @@ class GVF:
         self.time_step = 0
 
         # See Adam White's PhD Thesis, section 8.4.2
-        self.alpha_rupee = 5 * * alpha
+        self.alpha_rupee = 5 * alpha
         self.beta0_rupee = alpha0 / 30
         self.evaluator = Evaluator(gvf_name = name, 
                                    num_features = num_features, 
