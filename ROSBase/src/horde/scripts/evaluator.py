@@ -1,4 +1,7 @@
+"""
+Author: Banafsheh Rafiee, Niko Yasui
 
+"""
 import numpy as np
 
 class Evaluator:

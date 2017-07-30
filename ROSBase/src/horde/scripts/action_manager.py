@@ -41,7 +41,7 @@ class ActionManager():
                                            Twist,
                                            queue_size=1)
 
-        action_pub_rate = rospy.Rate(30)
+        action_pub_rate = rospy.Rate(40)
         
         while not rospy.is_shutdown():
             if self.termination_flag:
