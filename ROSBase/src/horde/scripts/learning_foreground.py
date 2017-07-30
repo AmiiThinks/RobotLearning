@@ -123,9 +123,9 @@ class LearningForeground:
         for gvf in self.gvfs:
             self.publishers[gvf]['prediction'].publish(self.last_preds[gvf])
             self.publishers[gvf]['cumulant'].publish(gvf.last_cumulant)
-            self.publishers[gvf]['td_error'].publish(gvf.td_error)
-            self.publishers[gvf]['avg_td_error'].publish(gvf.avg_td_error)
-            self.publishers[gvf]['rupee'].publish(gvf.rupee())
+            self.publishers[gvf]['td_error'].publish(gvf.evaluator.td_error)
+            self.publishers[gvf]['avg_td_error'].publish(gvf.evaluator.avg_td_error)
+            self.publishers[gvf]['rupee'].publish(gvf.evaluator.rupee)
 
     @timing
     def create_state(self):
