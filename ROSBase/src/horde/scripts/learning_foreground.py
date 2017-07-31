@@ -126,9 +126,9 @@ class LearningForeground:
         for gvf in self.gvfs:
             self.publishers[gvf]['prediction'].publish(self.preds[gvf])
             self.publishers[gvf]['cumulant'].publish(gvf.last_cumulant)
-            self.publishers[gvf]['td_error'].publish(gvf.td_error)
-            self.publishers[gvf]['avg_td_error'].publish(gvf.avg_td_error)
-            self.publishers[gvf]['rupee'].publish(gvf.rupee())
+            self.publishers[gvf]['td_error'].publish(gvf.evaluator.td_error)
+            self.publishers[gvf]['avg_td_error'].publish(gvf.evaluator.avg_td_error)
+            self.publishers[gvf]['rupee'].publish(gvf.evaluator.rupee)
 
     @timing
     def create_state(self):
@@ -149,14 +149,6 @@ class LearningForeground:
             except:
                 pass
             data[source] = temp
-        # temp = []
-        # try:
-        #     while True:
-        #         temp.append(self.recent[tools.features['ir']].get_nowait())
-        # except:
-        #     pass
-        # print 'length of data',len(temp)
-        # data['ir'] = temp if temp else None
 
         temp = []
         try:
@@ -164,7 +156,9 @@ class LearningForeground:
                 temp.append(self.recent[tools.features['ir']].get_nowait())
         except:
             pass
-        data['ir'] = temp[-1] if temp else None
+        print 'number of IR data collected in last timestep - ', len(temp)
+        # use only the last 10 values, helpful at the end of episode when we have accumulated at lot or IR data
+        data['ir'] = temp[-10:] if temp else None
 
         temp = []
         try:
@@ -179,13 +173,12 @@ class LearningForeground:
             data['bump'] = map(lambda x: bool(x & bump), bump_codes)
             data['charging'] = bool(data['core'].charger & 2)
         if data['ir'] is not None:
-            data['ir'] = [ord(obs) for obs in data['ir'].data]
-            # temp_1 = []
-            # # a |= []
-            # for temp in data['ir']:
-            #     temp_1.append([ord(obs) for obs in temp.data])
-            # # print temp_1
-            # data['ir'] = temp_1[-1]
+            ir = [[0]*6]*3
+            # bitwise 'or' of all the ir data in last time_step
+            for temp in data['ir']:
+                a = [[int(x) for x in format(temp, '#08b')[2:]] for temp in [ord(obs) for obs in temp.data]]
+                ir = [[k | l for k, l in zip(i, j)] for i, j in zip(a, ir)]
+            data['ir'] = [int(''.join([str(i) for i in ir_temp]),2) for ir_temp in ir] 
         if data['image'] is not None:
             data['image'] = np.asarray(self.img_to_cv2(data['image']))
         if data['odom'] is not None:
@@ -196,7 +189,7 @@ class LearningForeground:
         if 'bias' in self.features_to_use:
             data['bias'] = True
         data['weights'] = self.gvfs[0].learner.theta if self.gvfs else None
-
+        print 'data - ir:  ' , data['ir']
         phi = self.state_manager.get_phi(**data)
 
         # update the visualization of the image data
@@ -272,8 +265,11 @@ class LearningForeground:
             time_msg = "Current timestep took {:.4f} sec.".format(total_time)
             rospy.loginfo(time_msg)
             if total_time > self.time_scale:
-                rospy.logerr("Timestep took too long!")
-
+                if self.control_gvf is not None:
+                    if not self.control_gvf.learner.finished_episode(self.control_gvf.last_cumulant):
+                        rospy.logerr("Timestep took too long!")
+                else:
+                    rospy.logerr("Timestep took too long!")
             # sleep until next time step
             self.r.sleep()
 

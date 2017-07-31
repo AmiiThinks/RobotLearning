@@ -169,20 +169,20 @@ if __name__ == "__main__":
         alpha0 = 0.1
         features_to_use = ['image', 'bias']
         feature_indices = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use])
+        num_active_features = sum(StateConstants.num_active_features[f] for f in features_to_use)
         num_features = feature_indices.size
-        alpha = alpha0 / num_features * 16
         discount_if_bump = lambda obs: 0 if sum(obs["bump"]) else 0.98
         one_if_bump = lambda obs: int(any(obs['bump'])) if obs is not None else 0
-        dtb_hp = {'alpha': alpha0 / num_features * 16,
-                  'beta': 0.001 * alpha0 / num_features * 16,
+        dtb_hp = {'alpha': alpha0 / num_active_features,
+                  'beta': 0.001 * alpha0 / num_active_features,
                   'lmbda': 0.9,
                   'alpha0': alpha0,
                  }
 
         avoid_wall_omega = 10
         alpha0 = 0.01
-        avoid_wall_hp = {'alpha': alpha0 / num_features * 16,
-                         'beta': 0.001 * alpha0 / num_features * 16,
+        avoid_wall_hp = {'alpha': alpha0 / num_active_features,
+                         'beta': 0.001 * alpha0 / num_active_features,
                          'lmbda': 0.95,
                          'alpha0': alpha0,
                         }
