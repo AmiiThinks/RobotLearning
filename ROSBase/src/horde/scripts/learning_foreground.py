@@ -39,8 +39,10 @@ class LearningForeground:
                  behavior_policy,
                  control_gvf=None):
         
+        # Initiates this session's cumulant tallies with 'T:' 
         self.observation_file = open('observations.txt', 'ab+')
         self.observation_file.write('T:')
+        self.observation_file.close()
 
         self.vis = False
 
@@ -98,7 +100,7 @@ class LearningForeground:
         pub = lambda g, lab: rospy.Publisher(pub_name(g, lab), 
                                              std_msg.Float64, 
                                              queue_size=10)
-        action_publisher = rospy.Publisher('action_cmd', 
+        action_publisher = rospy.Publisher('action_cmd2', 
                                            geom_msg.Twist,
                                            queue_size=1)
         pause_publisher = rospy.Publisher('pause', 
@@ -238,7 +240,10 @@ class LearningForeground:
             phi_prime, observation = self.create_state()
 
             if (observation['bump']):
+                # adds a tally for the added cumulant
+                self.observation_file = open('observations.txt', 'ab+')
                 self.observation_file.write('1')
+                self.observation_file.close()
 
             # select and take an action
             self.behavior_policy.update(phi_prime, observation)

@@ -233,7 +233,9 @@ class Switch:
 if __name__ == "__main__":
     try:
         # random.seed(20170823)
-        hyperparameter_experiment_mode = False
+
+        # turns on and off the hyperparameter search
+        hyperparameter_experiment_mode = True
 
         action_manager_process = mp.Process(target=start_action_manager,
                                             name="action_manager",
@@ -251,6 +253,8 @@ if __name__ == "__main__":
                                  Twist(Vector3(0, 0, 0),
                                        Vector3(0, 0, turn_speed))])
 
+        # either cycles through hyperparameter possibilities or 
+        # runs wall demo once with default hyperparameters
         if (hyperparameter_experiment_mode):
           hyperparameters = [{"alpha0":0.1, "lmbda":0.87}, {"alpha0":0.1, "lmbda":0.9},
                              {"alpha0":0.1, "lmbda":0.93}]
@@ -258,7 +262,6 @@ if __name__ == "__main__":
           hyperparameters = [{}]
 
         for hps in hyperparameters:
-
           # learning parameters
           alpha0 = 0.05
           features_to_use = ['image', 'bias']
@@ -336,8 +339,10 @@ if __name__ == "__main__":
           foreground_process.start()
           if hyperparameter_experiment_mode is False:
             break;
-          rospy.sleep(5)
-          foreground_process.terminate()
+          else:
+            # start and stop wall demo if hyper parameter search is on
+            rospy.sleep(5)
+            foreground_process.terminate()
 
         if (hyperparameter_experiment_mode is True):
           action_manager_process.terminate()
