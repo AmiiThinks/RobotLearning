@@ -170,7 +170,7 @@ if __name__ == "__main__":
         learner_parameters = {'alpha' : learningRate,
                               'beta' : secondaryLearningRate,
                               'lmbda': lmbda,
-                              'num_features_state_action': num_features*action_space.size,
+                              'num_features': num_features*action_space.size,
                               'action_space': action_space,
                               'finished_episode': finished_episode
                              }

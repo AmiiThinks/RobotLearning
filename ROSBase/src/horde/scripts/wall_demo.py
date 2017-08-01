@@ -233,7 +233,13 @@ class Switch:
 if __name__ == "__main__":
     try:
         # random.seed(20170823)
+        hyperparameter_experiment_mode = False
 
+        action_manager_process = mp.Process(target=start_action_manager,
+                                            name="action_manager",
+                                            args=())
+        action_manager_process.start()
+        
         # robotic parameters
         time_scale = 0.05
         forward_speed = 0.2
@@ -245,86 +251,96 @@ if __name__ == "__main__":
                                  Twist(Vector3(0, 0, 0),
                                        Vector3(0, 0, turn_speed))])
 
-        # learning parameters
-        alpha0 = 0.05
-        features_to_use = ['image', 'bias']
-        feature_indices = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use])
-        num_active_features = sum(StateConstants.num_active_features[f] for f in features_to_use)
-        num_features = feature_indices.size
-        turn_sec_to_bump = 2
-        # discount = math.pow(0.75, time_scale / turn_sec_to_bump)
-        discount = 1 - time_scale
-        discount_if_bump = lambda obs: 0 if sum(obs["bump"]) else discount
-        one_if_bump = lambda obs: int(any(obs['bump'])) if obs is not None else 0
-        dtb_hp = {'alpha': alpha0 / num_active_features,
-                  'beta': 0.001 * alpha0 / num_active_features,
-                  'lmbda': 0.9,
-                  'alpha0': alpha0,
-                  'num_features': num_features,
-                  'feature_indices': feature_indices,
-                 }
+        if (hyperparameter_experiment_mode):
+          hyperparameters = [{"alpha0":0.1, "lmbda":0.87}, {"alpha0":0.1, "lmbda":0.9},
+                             {"alpha0":0.1, "lmbda":0.93}]
+        else:
+          hyperparameters = [{}]
 
-        # avoid_wall_omega = 10
-        # alpha0 = 0.01
-        # avoid_wall_hp = {'alpha': alpha0 / num_active_features,
-        #                  'beta': 0.001 * alpha0 / num_active_features,
-        #                  'lmbda': 0.1,
-        #                  'alpha0': alpha0,
-        #                  'num_features': num_features * action_space.size,
-        #                  'feature_indices': feature_indices,
-        #                 }
+        for hps in hyperparameters:
 
-        # prediction GVF
-        dtb_policy = GoForward(action_space=action_space)
-        dtb_learner = GTD(**dtb_hp)
+          # learning parameters
+          alpha0 = 0.05
+          features_to_use = ['image', 'bias']
+          feature_indices = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use])
+          num_active_features = sum(StateConstants.num_active_features[f] for f in features_to_use)
+          num_features = feature_indices.size
+          turn_sec_to_bump = 2
+          # discount = math.pow(0.75, time_scale / turn_sec_to_bump)
+          discount = 1 - time_scale
+          discount_if_bump = lambda obs: 0 if sum(obs["bump"]) else discount
+          one_if_bump = lambda obs: int(any(obs['bump'])) if obs is not None else 0
+          dtb_hp = {'alpha': alpha0 / num_active_features,
+                    'beta': 0.001 * alpha0 / num_active_features,
+                    'lmbda': 0.9,
+                    'alpha0': alpha0,
+                    'num_features': num_features,
+                    'feature_indices': feature_indices,
+                   }
 
-        threshold_policy = PavlovSoftmax(action_space=action_space,
-                                    feature_indices=dtb_hp['feature_indices'],
-                                    value_function=dtb_learner.predict,
-                                    time_scale=time_scale)
-        distance_to_bump = GVF(cumulant = one_if_bump,
-                               gamma    = discount_if_bump,
-                               target_policy = dtb_policy,
-                               learner = dtb_learner,
-                               name = 'DistanceToBump',
-                               logger = rospy.loginfo,
-                               **dtb_hp)
+          # avoid_wall_omega = 10
+          # alpha0 = 0.01
+          # avoid_wall_hp = {'alpha': alpha0 / num_active_features,
+          #                  'beta': 0.001 * alpha0 / num_active_features,
+          #                  'lmbda': 0.1,
+          #                  'alpha0': alpha0,
+          #                  'num_features': num_features * action_space.size,
+          #                  'feature_indices': feature_indices,
+          #                 }
 
-        # # softmax control GVF
-        # avoid_wall_learner = GreedyGQ(action_space,
-        #                               finished_episode=lambda x: False,
-        #                               **avoid_wall_hp)
-        # avoid_wall_policy = AvoidWallSoftmax(#omega=avoid_wall_omega,
-        #                     value_function=avoid_wall_learner.predict,
-        #                     action_space=action_space,
-        #                     feature_indices=avoid_wall_hp['feature_indices'])
-        # avoid_wall_memm = GVF(cumulant = avoid_wall_policy.cumulant,
-        #                       gamma    = discount_if_bump,
-        #                       target_policy = avoid_wall_policy,
-        #                       learner = avoid_wall_learner,
-        #                       name = 'AvoidWall',
-        #                       logger = rospy.loginfo,
-        #                       **avoid_wall_hp)
+          # prediction GVF
+          dtb_policy = GoForward(action_space=action_space)
+          dtb_learner = GTD(**dtb_hp)
 
-        # # behavior_policy
-        # behavior_policy = Switch(explorer=threshold_policy,
-        #                          exploiter=avoid_wall_policy,
-        #                          num_timesteps_explore=60/time_scale)
+          threshold_policy = PavlovSoftmax(action_space=action_space,
+                                      feature_indices=dtb_hp['feature_indices'],
+                                      value_function=dtb_learner.predict,
+                                      time_scale=time_scale)
+          distance_to_bump = GVF(cumulant = one_if_bump,
+                                 gamma    = discount_if_bump,
+                                 target_policy = dtb_policy,
+                                 learner = dtb_learner,
+                                 name = 'DistanceToBump',
+                                 logger = rospy.loginfo,
+                                 **dtb_hp)
 
-        # start processes
-        foreground_process = mp.Process(target=start_learning_foreground,
-                                        name="foreground",
-                                        args=(time_scale,
-                                              [distance_to_bump],
-                                               # avoid_wall_memm],
-                                              features_to_use,
-                                              threshold_policy))
+          # # softmax control GVF
+          # avoid_wall_learner = GreedyGQ(action_space,
+          #                               finished_episode=lambda x: False,
+          #                               **avoid_wall_hp)
+          # avoid_wall_policy = AvoidWallSoftmax(#omega=avoid_wall_omega,
+          #                     value_function=avoid_wall_learner.predict,
+          #                     action_space=action_space,
+          #                     feature_indices=avoid_wall_hp['feature_indices'])
+          # avoid_wall_memm = GVF(cumulant = avoid_wall_policy.cumulant,
+          #                       gamma    = discount_if_bump,
+          #                       target_policy = avoid_wall_policy,
+          #                       learner = avoid_wall_learner,
+          #                       name = 'AvoidWall',
+          #                       logger = rospy.loginfo,
+          #                       **avoid_wall_hp)
 
-        action_manager_process = mp.Process(target=start_action_manager,
-                                            name="action_manager",
-                                            args=())
-        foreground_process.start()
-        action_manager_process.start()
+          # # behavior_policy
+          # behavior_policy = Switch(explorer=threshold_policy,
+          #                          exploiter=avoid_wall_policy,
+          #                          num_timesteps_explore=60/time_scale)
+
+          # start processes
+          foreground_process = mp.Process(target=start_learning_foreground,
+                                          name="foreground",
+                                          args=(time_scale,
+                                                [distance_to_bump],
+                                                features_to_use,
+                                                threshold_policy))
+
+          foreground_process.start()
+          if hyperparameter_experiment_mode is False:
+            break;
+          rospy.sleep(5)
+          foreground_process.terminate()
+
+        if (hyperparameter_experiment_mode is True):
+          action_manager_process.terminate()
 
     except rospy.ROSInterruptException as detail:
         rospy.loginfo("Handling: {}".format(detail))

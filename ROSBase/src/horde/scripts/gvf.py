@@ -26,7 +26,8 @@ class GVF:
         self.cumulant = cumulant
         self.gamma = gamma
         self.target_policy = target_policy 
-        
+        self.last_cumulant = 0
+
         self.name = name
         self.feature_indices = feature_indices
         self.learner = learner

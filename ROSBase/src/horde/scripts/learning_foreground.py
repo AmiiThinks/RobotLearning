@@ -8,26 +8,26 @@ LearningForeground contains a collection of GVF's. It accepts new state represen
 
 """
 from __future__ import division
-from cv_bridge.core import CvBridge
+
+import geometry_msgs.msg as geom_msg
 import numpy as np
-import geometry_msgs.msg as geom_msg
-from Queue import Queue
+import os, sys
+import pickle
 import rospy
+import random
 import std_msgs.msg as std_msg
-import geometry_msgs.msg as geom_msg
-from geometry_msgs.msg import Twist, Vector3
+import subprocess
+import sys
 import threading
 import time
-import sys
-import pickle
-import random
-import subprocess
-import os, sys
-
-from gvf import GVF
-from state_representation import StateManager
-from gentest_state_representation import GenTestStateManager
 import tools
+
+from cv_bridge.core import CvBridge
+from gentest_state_representation import GenTestStateManager
+from geometry_msgs.msg import Twist, Vector3
+from gvf import GVF
+from Queue import Queue
+from state_representation import StateManager
 from tools import timing
 from visualize_pixels import Visualize
 
@@ -38,7 +38,10 @@ class LearningForeground:
                  features_to_use,
                  behavior_policy,
                  control_gvf=None):
-       
+        
+        self.observation_file = open('observations.txt', 'ab+')
+        self.observation_file.write('T:')
+
         self.vis = False
 
         self.features_to_use = set(features_to_use + ['core', 'ir'])
@@ -101,9 +104,13 @@ class LearningForeground:
         pause_publisher = rospy.Publisher('pause', 
                                           std_msg.Bool,
                                           queue_size=1)
+        termination_publisher = rospy.Publisher('termination', 
+                                                std_msg.Bool,
+                                                queue_size=1)
 
         self.publishers = {'action': action_publisher,
-                           'pause': pause_publisher
+                           'pause': pause_publisher,
+                           'termination': termination_publisher
                           }
         labels = ['prediction', 'td_error', 'avg_td_error', 'rupee', 
                   'cumulant']
@@ -224,12 +231,14 @@ class LearningForeground:
             self.r.sleep()        
     
     def run(self):
-
         while not rospy.is_shutdown():
             start_time = time.time()
 
             # get new state
             phi_prime, observation = self.create_state()
+
+            if (observation['bump']):
+                self.observation_file.write('1')
 
             # select and take an action
             self.behavior_policy.update(phi_prime, observation)

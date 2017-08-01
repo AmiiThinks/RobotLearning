@@ -44,7 +44,7 @@ class GreedyGQ:
         self.get_state_action = tools.action_state_rep(action_space)
         self.episode_finished_last_step = False
 
-        self.temp = np.zeros(9, dtype = bool)
+        #self.temp = np.zeros(9, dtype = bool)
 
     def predict(self, phi, action):
         if action is not None:
@@ -82,6 +82,7 @@ class GreedyGQ:
         self.action_phi = self.get_state_action(phi, last_action)
         # print self.action_phi
         # self.temp += np.asarray(phi, dtype=bool)
+
         # print 'temp : ',self.temp
  
         self.tderr_elig = self.delta * self.e
