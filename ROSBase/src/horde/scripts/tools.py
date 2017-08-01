@@ -33,8 +33,14 @@ features = {'core': "/mobile_base/sensors/core",
             'image': "/camera/rgb/image_rect_color/compressed",
             'odom': "/odom",
             'bias': None,
-            'bump': None}
+            'bump': None,
+            'last_action': None,
+            'pixel_pairs': None}
 
+def softmax(q):
+    max_q = np.max(q)
+    exp_q = np.exp(q - max_q)
+    return exp_q / exp_q.sum()
 
 def equal_twists(t1, t2):
     return all([np.isclose(t1.linear.x, t2.linear.x),

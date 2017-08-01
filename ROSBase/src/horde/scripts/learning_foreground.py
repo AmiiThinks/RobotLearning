@@ -156,17 +156,9 @@ class LearningForeground:
                 temp.append(self.recent[tools.features['ir']].get_nowait())
         except:
             pass
-        print 'number of IR data collected in last timestep - ', len(temp)
+
         # use only the last 10 values, helpful at the end of episode when we have accumulated at lot or IR data
         data['ir'] = temp[-10:] if temp else None
-
-        temp = []
-        try:
-            while True:
-                temp.append(self.recent[tools.features['ir']].get_nowait())
-        except:
-            pass
-        data['ir'] = temp[-1] if temp else None
 
         if data['core'] is not None:
             bump = data['core'].bumper
@@ -189,8 +181,12 @@ class LearningForeground:
         if 'bias' in self.features_to_use:
             data['bias'] = True
         data['weights'] = self.gvfs[0].learner.theta if self.gvfs else None
-        print 'data - ir:  ' , data['ir']
         phi = self.state_manager.get_phi(**data)
+
+        if 'last_action' in self.features_to_use:
+            last_action = np.zeros(self.behavior_policy.action_space.size)
+            last_action[self.behavior_policy.last_index] = 1
+            phi = np.concatenate([phi, last_action])
 
         # update the visualization of the image data
         if self.vis:
@@ -198,6 +194,7 @@ class LearningForeground:
 
         observation = self.state_manager.get_observations(**data)
         observation['action'] = self.last_action
+
         return phi, observation
 
     def take_action(self, action):
@@ -229,8 +226,6 @@ class LearningForeground:
     def run(self):
 
         while not rospy.is_shutdown():
-            start_time = time.time()
-
             start_time = time.time()
 
             # get new state
@@ -270,6 +265,7 @@ class LearningForeground:
                         rospy.logerr("Timestep took too long!")
                 else:
                     rospy.logerr("Timestep took too long!")
+
             # sleep until next time step
             self.r.sleep()
 

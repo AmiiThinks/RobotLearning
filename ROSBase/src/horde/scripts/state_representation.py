@@ -1,7 +1,8 @@
 import math
 import numpy as np
 import random
-import rospy 
+import rospy
+from scipy.misc import comb
 
 from CTiles import tiles
 from tools import timing, get_next_pow2
@@ -18,10 +19,10 @@ values to obtain the state representation
 class StateConstants:
 
     # image tiles
-    NUM_RANDOM_POINTS = 300
+    NUM_RANDOM_POINTS = 500
     CHANNELS = 3
     NUM_IMAGE_TILINGS = 4
-    NUM_IMAGE_INTERVALS = 4 
+    NUM_IMAGE_INTERVALS = 4
     SCALE_RGB = NUM_IMAGE_TILINGS/256.0
     IMAGE_IHT_SIZE = get_next_pow2((NUM_IMAGE_INTERVALS + 1) * NUM_IMAGE_TILINGS)
     PIXEL_FEATURE_LENGTH = CHANNELS * IMAGE_IHT_SIZE
@@ -51,22 +52,35 @@ class StateConstants:
     # IR_ITH_SIZE = 64*3
     IR_ITH_SIZE = 6*3
 
+    # pixel pairs
+    NUM_PP = comb(NUM_RANDOM_POINTS, 2, exact=True)
+    NUM_PP_TILINGS = 4
+    NUM_PP_INTERVALS = 4 
+    SCALE_PP = NUM_PP_TILINGS/2 # [-1, 1]
+    PP_IHT_SIZE = get_next_pow2((NUM_PP_INTERVALS + 1) * NUM_PP_TILINGS)
+    PP_FEATURE_LENGTH = NUM_RANDOM_POINTS * PP_IHT_SIZE
+    PP_START_INDEX = IR_START_INDEX + IR_ITH_SIZE
+
     # the 1 represents the bias unit, 3 for bump
-    TOTAL_FEATURE_LENGTH = TOTAL_IMAGE_FEATURE_LENGTH + IMU_IHT_SIZE + ODOM_IHT_SIZE + IR_ITH_SIZE + 3 + 1
+    TOTAL_FEATURE_LENGTH = TOTAL_IMAGE_FEATURE_LENGTH + IMU_IHT_SIZE + ODOM_IHT_SIZE + IR_ITH_SIZE + 3 + 1 + PP_IHT_SIZE
 
     indices_in_phi = {'image':np.arange(0,TOTAL_IMAGE_FEATURE_LENGTH),
                         'imu':np.arange(IMU_START_INDEX,IMU_START_INDEX + IMU_IHT_SIZE),
                         'odom':np.arange(ODOM_START_INDEX,ODOM_START_INDEX + ODOM_IHT_SIZE),
                         'ir':np.arange(IR_START_INDEX,IR_START_INDEX+IR_ITH_SIZE),
+                        'pixel_pairs': np.arange(PP_START_INDEX, PP_START_INDEX + PP_IHT_SIZE),
                         'bump':np.arange(IR_START_INDEX+IR_ITH_SIZE, IR_START_INDEX+IR_ITH_SIZE+3),
-                        'bias':np.array([TOTAL_FEATURE_LENGTH-1])}
+                        'bias':np.array([TOTAL_FEATURE_LENGTH-1]),
+                        'last_action': np.array([], dtype=int)}
 
     num_active_features = {'image':NUM_RANDOM_POINTS*CHANNELS*NUM_IMAGE_TILINGS,
-                        'imu':NUM_IMU_TILES,
-                        'odom':NUM_ODOM_TILES,
+                        'imu':NUM_IMU_TILINGS,
+                        'odom':NUM_ODOM_TILINGS,
                         'ir':6,
                         'bump':3,
-                        'bias':1}
+                        'bias':1,
+                        'last_action': 1,
+                        'pixel_pairs': NUM_PP*NUM_PP_TILINGS}
 
 
 class StateManager(object):
@@ -75,6 +89,8 @@ class StateManager(object):
         num_img_ihts = StateConstants.NUM_RANDOM_POINTS * StateConstants.CHANNELS
         img_iht_size = StateConstants.IMAGE_IHT_SIZE
         self.img_ihts = [tiles.CollisionTable(img_iht_size, "safe") for _ in xrange(num_img_ihts)]
+
+        self.pp_ihts = [tiles.CollisionTable(StateConstants.PP_IHT_SIZE, "safe") for _ in xrange(StateConstants.NUM_PP)]
 
         self.imu_iht = tiles.CollisionTable(StateConstants.IMU_IHT_SIZE, "safe")
         self.odom_iht = tiles.CollisionTable(StateConstants.ODOM_IHT_SIZE, "safe")
@@ -102,10 +118,9 @@ class StateManager(object):
 
         phi = np.zeros(StateConstants.TOTAL_FEATURE_LENGTH)
 
-        if 'image' in self.features_to_use:
-            # check if there is an image
-            valid_image = lambda image: image is not None and len(image) > 0 and len(image[0]) > 0
+        valid_image = lambda image: image is not None and len(image) > 0 and len(image[0]) > 0
 
+        if 'image' in self.features_to_use:
             # adding image data to state
             if not valid_image(image):
                 rospy.logwarn("Image is empty.")
@@ -120,15 +135,58 @@ class StateManager(object):
 
                 tile_inds = [tiles.tiles(StateConstants.NUM_IMAGE_TILINGS,
                                          self.img_ihts[i],
-                                         [rgb_points[i]],
-                                         []) for i in rgb_inds]
+                                         [rgb_points[i]]) for i in rgb_inds]
 
                 # tile_inds = np.ones((900,4), dtype=int)
 
                 rgb_inds *= StateConstants.IMAGE_IHT_SIZE
 
-                indices = tile_inds + rgb_inds[:, np.newaxis]
-                phi[(tile_inds + rgb_inds[:, np.newaxis]).flatten()] = True
+                indices = (tile_inds + rgb_inds[:, np.newaxis]).flatten()
+                phi[indices] = True
+
+        if 'image_pairs' in self.features_to_use:
+            # check if there is an image
+            if valid_image(image):
+
+                # save the valid image
+                self.last_image_raw = image 
+
+                # get vector of pixels with each pixel=(Channel1,Channel2,...)
+                num_channels = StateConstants.CHANNELS
+                pixels = image[self.pixel_mask].reshape(-1, num_channels)
+
+                # get vector of L2 norms of above pixels
+                norms = np.linalg.norm(pixels, axis=1)
+
+                # find indices to multiply to get upper triangle
+                # of the outer product of the arrays
+                row, col = np.triu_indices(num_channels, 1)
+
+                # calculate upper triangle of outer product: pixels, pixels
+                dots = np.einsum('ij,ij->i', pixels[row], pixels[col])
+
+                # calculate upper triangle of outer product: norms, norms
+                norm_product = np.einsum('i,i->i', norms[row], norms[col])
+
+                # find cosine similarity
+                cos_sim = dots/norm * StateConstants.SCALE_PP
+                assert cos_sim.size == StateConstants.NUM_PP
+
+                # get indices form tile coding
+                pp_inds = np.arange(StateConstants.NUM_PP)
+                tile_inds = [tiles.tiles(StateConstants.NUM_PP_TILINGS,
+                                         self.pp_ihts[i],
+                                         [cos_sim[i]]) for i in pp_inds]
+
+                # offset tilecoding for each pixel by the IHT size to map
+                # each pixel to a different set of PP_IHT_SIZE indices
+                pp_inds *= StateConstants.PP_IHT_SIZE
+                indices = (tile_inds + pp_inds[:, np.newaxis]).flatten()
+
+                # offset all indices to correspond to the Pixel pairs
+                # section of the feature array
+                indices += StateConstants.PP_START_INDEX
+                phi[indices] = True
 
         if 'imu' in self.features_to_use:
             if imu is None:
@@ -141,8 +199,7 @@ class StateManager(object):
 
                 indices = np.array(tiles.tiles(StateConstants.NUM_IMU_TILINGS,
                                                 self.imu_iht, 
-                                                [imu*StateConstants.SCALE_IMU],
-                                                ))
+                                                [imu*StateConstants.SCALE_IMU]))
 
                 phi[indices + StateConstants.IMU_START_INDEX] = True
 

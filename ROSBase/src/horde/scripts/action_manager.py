@@ -18,6 +18,8 @@ class ActionManager():
 
     def update_base_state(self, val):
         self.base_state = val
+        if self.action.linear.x and self.base_state.bumper:
+            self.action = self.STOP_ACTION
 
     def set_termination_flag(self, termination_flag):
         self.termination_flag = termination_flag
@@ -28,8 +30,11 @@ class ActionManager():
     def update_action(self, action_cmd):
         if action_cmd.linear.x and self.base_state.bumper:
             self.action = self.STOP_ACTION
+        elif action_cmd.linear.x and self.action.angular.z:
+            self.action = self.STOP_ACTION
         else:
             self.action = action_cmd
+
 
     def run(self):
         rospy.init_node('action_manager', anonymous=True)
