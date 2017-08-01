@@ -35,7 +35,7 @@ class StateConstants:
     # IMU tiles
     NUM_IMU_TILINGS = 1
     NUM_IMU_TILES = 6
-    SCALE_IMU = NUM_IMU_TILES/2.0 # range is [-1, 1]
+    SCALE_IMU = (NUM_IMU_TILES)/2.0 # range is [-1, 1]
     IMU_IHT_SIZE = get_next_pow2((NUM_IMU_TILES + 1) * NUM_IMU_TILINGS)
     IMU_START_INDEX = IMAGE_START_INDEX + TOTAL_IMAGE_FEATURE_LENGTH
 
@@ -74,10 +74,10 @@ class StateManager(object):
 
         num_img_ihts = StateConstants.NUM_RANDOM_POINTS * StateConstants.CHANNELS
         img_iht_size = StateConstants.IMAGE_IHT_SIZE
-        self.img_ihts = [tiles.CollisionTable(img_iht_size, "unsafe") for _ in xrange(num_img_ihts)]
+        self.img_ihts = [tiles.CollisionTable(img_iht_size, "safe") for _ in xrange(num_img_ihts)]
 
-        self.imu_iht = tiles.CollisionTable(StateConstants.IMU_IHT_SIZE, "unsafe")
-        self.odom_iht = tiles.CollisionTable(StateConstants.ODOM_IHT_SIZE, "unsafe")
+        self.imu_iht = tiles.CollisionTable(StateConstants.IMU_IHT_SIZE, "safe")
+        self.odom_iht = tiles.CollisionTable(StateConstants.ODOM_IHT_SIZE, "safe")
 
         # set up mask to chose pixels
         num_pixels = StateConstants.IMAGE_LI*StateConstants.IMAGE_CO
@@ -138,10 +138,11 @@ class StateManager(object):
 
             if imu is not None:
                 self.last_imu_raw = imu
+
                 indices = np.array(tiles.tiles(StateConstants.NUM_IMU_TILINGS,
                                                 self.imu_iht, 
                                                 [imu*StateConstants.SCALE_IMU],
-                                                []))
+                                                ))
 
                 phi[indices + StateConstants.IMU_START_INDEX] = True
 
@@ -153,6 +154,7 @@ class StateManager(object):
 
             if odom is not None:
                 self.last_odom_raw = odom
+
                 indices = np.array(tiles.tiles(StateConstants.NUM_ODOM_TILINGS,
                                                 self.odom_iht,
                                                 (odom * StateConstants.SCALE_ODOM).tolist(),
