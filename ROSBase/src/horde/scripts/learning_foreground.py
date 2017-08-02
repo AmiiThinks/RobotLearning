@@ -90,6 +90,9 @@ class LearningForeground:
         self.last_observation = None
         self.last_mu = 1
 
+        # experience replay
+        self.to_replay_experience = False
+
         # Set up publishers
         pub_name = lambda g, lab: '{}/{}'.format(g, lab) if g else lab
         pub = lambda g, lab: rospy.Publisher(pub_name(g, lab), 
@@ -156,17 +159,9 @@ class LearningForeground:
                 temp.append(self.recent[tools.features['ir']].get_nowait())
         except:
             pass
-        print 'number of IR data collected in last timestep - ', len(temp)
         # use only the last 10 values, helpful at the end of episode when we have accumulated at lot or IR data
+        rospy.logdebug('number of IR data collected in last timestep - {}', len(temp))
         data['ir'] = temp[-10:] if temp else None
-
-        temp = []
-        try:
-            while True:
-                temp.append(self.recent[tools.features['ir']].get_nowait())
-        except:
-            pass
-        data['ir'] = temp[-1] if temp else None
 
         if data['core'] is not None:
             bump = data['core'].bumper
@@ -178,7 +173,7 @@ class LearningForeground:
             for temp in data['ir']:
                 a = [[int(x) for x in format(temp, '#08b')[2:]] for temp in [ord(obs) for obs in temp.data]]
                 ir = [[k | l for k, l in zip(i, j)] for i, j in zip(a, ir)]
-            data['ir'] = [int(''.join([str(i) for i in ir_temp]),2) for ir_temp in ir] 
+            data['ir'] = [int(''.join([str(i) for i in ir_temp]),2) for ir_temp in ir]
         if data['image'] is not None:
             data['image'] = np.asarray(self.img_to_cv2(data['image']))
         if data['odom'] is not None:
@@ -189,7 +184,6 @@ class LearningForeground:
         if 'bias' in self.features_to_use:
             data['bias'] = True
         data['weights'] = self.gvfs[0].learner.theta if self.gvfs else None
-        print 'data - ir:  ' , data['ir']
         phi = self.state_manager.get_phi(**data)
 
         # update the visualization of the image data
@@ -204,7 +198,7 @@ class LearningForeground:
         self.publishers['action'].publish(action)
 
     def reset_episode(self):
-        # temp = random.randint(0,50)
+        # temp = random.randint(0,30)
         # for i in range(temp):
         #     if i < temp:
         #         self.take_action(Twist(Vector3(-0.1, 0, 0), Vector3(0, 0, 0)))
@@ -220,17 +214,17 @@ class LearningForeground:
         # os.system('python {}'.format(interrupt))
         # self.publishers["pause"].publish(False)
 
-        for i in range(random.randint(0,60)):
+        for i in range(random.randint(0,80)):
             action, mu = self.gvfs[0].learner.take_random_action()
             self.take_action(action)
             rospy.loginfo('taking random action number: {}'.format(i))
+            if self.to_replay_experience:
+                self.control_gvf.learner.uniform_experience_replay()
             self.r.sleep()        
     
     def run(self):
 
         while not rospy.is_shutdown():
-            start_time = time.time()
-
             start_time = time.time()
 
             # get new state
@@ -244,15 +238,17 @@ class LearningForeground:
 
             # make prediction
             self.preds = {g:g.predict(phi_prime, action) for g in self.gvfs}
-
             # learn
             if self.last_observation is not None:
                 self.update_gvfs(phi_prime, observation)
 
             # check if episode is over
             if self.control_gvf is not None:
-                if self.control_gvf.learner.finished_episode(self.control_gvf.last_cumulant):
+                if self.control_gvf.learner.episode_finished_last_step:
                     self.reset_episode()
+                elif self.to_replay_experience:
+                    # not to replay when the episode resets at it will also include the experience at the start of new episode
+                    self.control_gvf.learner.uniform_experience_replay()
 
             # save values
             self.last_phi = phi_prime if len(phi_prime) else None
@@ -266,7 +262,7 @@ class LearningForeground:
             rospy.loginfo(time_msg)
             if total_time > self.time_scale:
                 if self.control_gvf is not None:
-                    if not self.control_gvf.learner.finished_episode(self.control_gvf.last_cumulant):
+                    if not self.control_gvf.learner.episode_finished_last_step:
                         rospy.logerr("Timestep took too long!")
                 else:
                     rospy.logerr("Timestep took too long!")
