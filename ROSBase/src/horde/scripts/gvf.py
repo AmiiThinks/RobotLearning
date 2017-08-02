@@ -1,9 +1,10 @@
 """
-Author: Banafsheh Rafiee
-
+Author: Banafsheh Rafiee, Niko Yasui
 """
 from __future__ import division
+# import json
 import numpy as np
+
 from state_representation import StateConstants
 from evaluator import Evaluator
 
@@ -25,7 +26,8 @@ class GVF:
         self.cumulant = cumulant
         self.gamma = gamma
         self.target_policy = target_policy 
-        
+        self.last_cumulant = 0
+
         self.name = name
         self.feature_indices = feature_indices
         self.learner = learner
@@ -87,5 +89,15 @@ class GVF:
         self.evaluator.compute_avg_td_error(delta = self.learner.delta, 
                                             time_step = self.time_step)
         self.phi = phi_prime
-        self.time_step = self.time_step + 1
+        self.time_step += 1
+
+    # def save(self, filename):
+    #     data = {'theta': self.learner.theta.tolist()}
+    #             # 'elig': self.learner.e}
+    #     json.dump(data, open(filename, 'w'))
+
+    # def load(self, filename):
+    #     data = json.load(open(filename, 'r'))
+    #     self.learner.theta = np.asarray(data['theta'])
+
 

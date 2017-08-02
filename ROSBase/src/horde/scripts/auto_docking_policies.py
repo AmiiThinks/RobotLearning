@@ -1,3 +1,12 @@
+#!/usr/bin/env python
+
+"""
+Author: Shibhansh Dohare, Niko Yasui.
+
+Description:
+Contains various possible policies for auto_docking and wall_demo.
+
+"""
 from __future__ import division
 import multiprocessing as mp
 import numpy as np

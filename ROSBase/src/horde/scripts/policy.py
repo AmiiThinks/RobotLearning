@@ -31,11 +31,16 @@ class Policy:
 
             self.pi = np.array(q_values) / sum(q_values)
 
-    def get_probability(self, action, *args, **kwargs):
+    def get_probability(self, action, choice=True, *args, **kwargs):
         # return the probability of taking a given action
         equal_action = lambda i: self.equals(action, self.action_space[i])
-        self.last_index=filter(equal_action, range(self.action_space.size))[0]
-        return self.pi[self.last_index]
+        index  = filter(equal_action, range(self.action_space.size))[0]
+
+        if choice:
+            self.last_index = index
+
+        return self.pi[index]
 
     def choose_action(self, *args, **kwargs):
-        return np.random.choice(self.action_space, p=self.pi)
+        self.last_index = np.random.choice(self.action_space.size, p=self.pi)
+        return self.action_space[self.last_index]

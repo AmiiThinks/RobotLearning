@@ -243,7 +243,7 @@ class ReturnCalculator:
 
             # terminate if collected information for sample size
             if sample_number == self.sample_size:
-                np.savez("sample_returns.npz", _return = self.samples_G, samples = self.samples_phi)
+                np.savez("actual_return_{}.npz".format(self.gvf.name), _return = self.samples_G, samples = self.samples_phi)
                 self.publishers["termination"].publish(True)
                 break
 

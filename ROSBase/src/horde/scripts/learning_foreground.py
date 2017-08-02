@@ -1,33 +1,34 @@
 #!/usr/bin/env python
 
 """
-Author: Michele Albach, David Quail, Parash Rahman, Niko Yasui, June 1, 2017.
+Author: Michele Albach, David Quail, Parash Rahman, Niko Yasui, Shibhansh Dohare, June 1, 2017.
 
 Description:
 LearningForeground contains a collection of GVF's. It accepts new state representations, learns, and then takes action.
 
 """
 from __future__ import division
-from cv_bridge.core import CvBridge
+
+import geometry_msgs.msg as geom_msg
 import numpy as np
-import geometry_msgs.msg as geom_msg
-from Queue import Queue
+import multiprocessing as mp
+import os, sys
+import pickle
 import rospy
+import random
 import std_msgs.msg as std_msg
-import geometry_msgs.msg as geom_msg
-from geometry_msgs.msg import Twist, Vector3
+import subprocess
+import sys
 import threading
 import time
-import sys
-import pickle
-import random
-import subprocess
-import os, sys
-
-from gvf import GVF
-from state_representation import StateManager
-from gentest_state_representation import GenTestStateManager
 import tools
+
+from cv_bridge.core import CvBridge
+from gentest_state_representation import GenTestStateManager
+from geometry_msgs.msg import Twist, Vector3
+from gvf import GVF
+from Queue import Queue
+from state_representation import StateManager
 from tools import timing
 from visualize_pixels import Visualize
 
@@ -37,8 +38,11 @@ class LearningForeground:
                  gvfs,
                  features_to_use,
                  behavior_policy,
-                 control_gvf=None):
-       
+                 control_gvf=None,
+                 cumulant_counter=None):
+
+        self.cumulant_counter = cumulant_counter or mp.Value('d', 0)
+
         self.vis = False
 
         self.features_to_use = set(features_to_use + ['core', 'ir'])
@@ -104,9 +108,13 @@ class LearningForeground:
         pause_publisher = rospy.Publisher('pause', 
                                           std_msg.Bool,
                                           queue_size=1)
+        termination_publisher = rospy.Publisher('termination', 
+                                                std_msg.Bool,
+                                                queue_size=1)
 
         self.publishers = {'action': action_publisher,
-                           'pause': pause_publisher
+                           'pause': pause_publisher,
+                           'termination': termination_publisher
                           }
         labels = ['prediction', 'td_error', 'avg_td_error', 'rupee', 
                   'cumulant']
@@ -159,6 +167,7 @@ class LearningForeground:
                 temp.append(self.recent[tools.features['ir']].get_nowait())
         except:
             pass
+
         # use only the last 10 values, helpful at the end of episode when we have accumulated at lot or IR data
         rospy.logdebug('number of IR data collected in last timestep - {}', len(temp))
         data['ir'] = temp[-10:] if temp else None
@@ -186,12 +195,18 @@ class LearningForeground:
         data['weights'] = self.gvfs[0].learner.theta if self.gvfs else None
         phi = self.state_manager.get_phi(**data)
 
+        if 'last_action' in self.features_to_use:
+            last_action = np.zeros(self.behavior_policy.action_space.size)
+            last_action[self.behavior_policy.last_index] = 1
+            phi = np.concatenate([phi, last_action])
+
         # update the visualization of the image data
         if self.vis:
             self.visualization.update_colours(data['image'])
 
         observation = self.state_manager.get_observations(**data)
         observation['action'] = self.last_action
+
         return phi, observation
 
     def take_action(self, action):
@@ -223,12 +238,15 @@ class LearningForeground:
             self.r.sleep()        
     
     def run(self):
-
         while not rospy.is_shutdown():
             start_time = time.time()
 
             # get new state
             phi_prime, observation = self.create_state()
+
+            if (observation['bump']):
+                # adds a tally for the added cumulant
+                self.cumulant_counter.value += 1
 
             # select and take an action
             self.behavior_policy.update(phi_prime, observation)
@@ -266,6 +284,7 @@ class LearningForeground:
                         rospy.logerr("Timestep took too long!")
                 else:
                     rospy.logerr("Timestep took too long!")
+
             # sleep until next time step
             self.r.sleep()
 
@@ -273,14 +292,16 @@ def start_learning_foreground(time_scale,
                               GVFs,
                               topics,
                               policy,
-                              control_gvf=None):
+                              control_gvf=None,
+                              cumulant_counter=None):
 
     try:
         foreground = LearningForeground(time_scale,
                                         GVFs,
                                         topics,
                                         policy,
-                                        control_gvf)
+                                        control_gvf,
+                                        cumulant_counter)
 
         foreground.run()
     except rospy.ROSInterruptException as detail:
