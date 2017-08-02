@@ -49,7 +49,9 @@ class StateConstants:
     # IR tiles
     IR_START_INDEX = ODOM_START_INDEX + ODOM_IHT_SIZE
     # IR_ITH_SIZE = 64*3
-    IR_ITH_SIZE = 6*3
+    # IR_ITH_SIZE = 6*3
+    # IR_ITH_SIZE = 6
+    IR_ITH_SIZE = 3
 
     # the 1 represents the bias unit, 3 for bump
     TOTAL_FEATURE_LENGTH = TOTAL_IMAGE_FEATURE_LENGTH + IMU_IHT_SIZE + ODOM_IHT_SIZE + IR_ITH_SIZE + 3 + 1
@@ -62,8 +64,8 @@ class StateConstants:
                         'bias':np.array([TOTAL_FEATURE_LENGTH-1])}
 
     num_active_features = {'image':NUM_RANDOM_POINTS*CHANNELS*NUM_IMAGE_TILINGS,
-                        'imu':NUM_IMU_TILES,
-                        'odom':NUM_ODOM_TILES,
+                        'imu':NUM_IMU_TILINGS,
+                        'odom':NUM_ODOM_TILINGS,
                         'ir':6,
                         'bump':3,
                         'bias':1}
@@ -172,10 +174,21 @@ class StateManager(object):
                 self.last_ir_raw = ir
                 # indices = np.asarray(ir)
                 # indices += np.array([0,64,128])
+
                 ir_1 = [int(x) for x in format(ir[0], '#08b')[2:]]
                 ir_2 = [int(x) for x in format(ir[1], '#08b')[2:]]
                 ir_3 = [int(x) for x in format(ir[2], '#08b')[2:]]
                 value = ir_1 + ir_2 + ir_3
+
+                in_right = ir_1[3] | ir_1[0] | ir_2[3] | ir_2[0] | ir_3[3] | ir_3[0]
+                in_left = ir_1[5] | ir_1[1] | ir_2[5] | ir_2[1] | ir_3[5] | ir_3[1]
+                in_center = ir_1[4] | ir_1[2] | ir_2[4] | ir_2[2] | ir_3[4] | ir_3[2]
+                # # if only want to use the data from the center IR of the robot
+                # value = ir_2
+                if in_center:
+                    in_left = 0
+                    in_right = 0
+                value = [in_left, in_center, in_right]
                 indices = np.nonzero(value)[0]
 
                 phi[np.asarray(indices) + StateConstants.IR_START_INDEX] = True
