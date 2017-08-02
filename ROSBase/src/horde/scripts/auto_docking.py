@@ -12,7 +12,7 @@ from gtd import GTD
 from greedy_gq import GreedyGQ
 from gvf import GVF
 from learning_foreground import start_learning_foreground
-from auto_docking_policies import eGreedy, Greedy
+from auto_docking_policies import *
 from state_representation import StateConstants
 from std_msgs.msg import Bool
 
@@ -24,14 +24,18 @@ class Switch:
         self.t = 0
 
     def update(self, *args, **kwargs):
+        print 'num_timesteps_explore: ', self.t
         if self.t > self.num_timesteps_explore:
             self.exploiter.update(*args, **kwargs)
-            rospy.loginfo('Greedy policy is the behaviour policy')
+            rospy.loginfo('Greedy policy is the behaviour policy, no learning now')
+            to_return = 'target_policy'
         else:
             self.explorer.update(*args, **kwargs)
             rospy.loginfo('Explorer policy is the behaviour policy')
+            to_return = 'behavior_policy'
         self.t += 1
-        self.t %= 2*self.num_timesteps_explore
+        self.t %= 1.3*self.num_timesteps_explore
+        return to_return
 
     def get_probability(self, *args, **kwargs):
         if self.t > self.num_timesteps_explore:
@@ -56,7 +60,7 @@ if __name__ == "__main__":
 
         alpha0 = 0.1
         lmbda = 0.9
-        features_to_use = ['imu', 'bias']
+        features_to_use = ['imu' ,'bias','ir','bump']
         feature_indices = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use])
         num_features = feature_indices.size
         num_active_features = sum(StateConstants.num_active_features[f] for f in features_to_use)
@@ -71,7 +75,7 @@ if __name__ == "__main__":
         finished_episode = lambda x: x > 0 or x < -100
         epsilon = 0.1
 
-        task_to_learn = 4
+        task_to_learn = 2
         if task_to_learn == 1: #reach the IR region
             def reward_function(action_space):
                 def award(observation):
@@ -89,16 +93,17 @@ if __name__ == "__main__":
             def reward_function(action_space):
                 def award(observation):
                     # if not in IR region it will get 0 reward
-                    if not any(observation['ir']):
-                        return -1
-                    return 1000*int(any([(b%16)/8 or (b%4)/2 for b in observation['ir']])) if observation is not None else 0
+                    # if not any(observation['ir']):
+                    #     return -1
+                    return int(any([(b%16)//8 or (b%4)//2 for b in observation['ir']])) if observation is not None else 0
                 return award
 
-            action_space = [#Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
-                            Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0)), # forward
-                            Twist(Vector3(-0.2, 0, 0), Vector3(0, 0, 0)), # backward
+            action_space = [
+                            # Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
+                            Twist(Vector3(0.1, 0, 0), Vector3(0, 0, 0)), # forward
+                            # Twist(Vector3(-0.2, 0, 0), Vector3(0, 0, 0)), # backward
                             Twist(Vector3(0, 0, 0), Vector3(0, 0, 1.0)), # turn acw/cw
-                            Twist(Vector3(0, 0, 0), Vector3(0, 0, -1.0)) # turn cw/acw
+                            # Twist(Vector3(0, 0, 0), Vector3(0, 0, -1.0)) # turn cw/acw
                             ]
 
         if task_to_learn == 3: #align center IR reciever and sender
@@ -112,7 +117,7 @@ if __name__ == "__main__":
             action_space = [#Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
                             # Twist(Vector3(0.05, 0, 0), Vector3(0, 0, 0)), # forward
                             # Twist(Vector3(-0.05, 0, 0), Vector3(0, 0, 0)), # backward
-                            Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.3)), # turn acw/cw
+                            Twist(Vector3(0, 0, 0), Vector3(0, 0,  0.3)), # turn acw/cw
                             Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.3)) # turn cw/acw
                             ]
 
@@ -191,17 +196,22 @@ if __name__ == "__main__":
                         feature_indices=feature_indices,
                         **parameters)
 
-        behavior_policy = eGreedy(epsilon = epsilon,
-                                  value_function=auto_docking.learner.predict,
-                                  action_space=action_space,
-                                  feature_indices=feature_indices)
+        # # for testing any task with e-greedy learning
+        # behavior_policy = eGreedy(epsilon = epsilon,
+        #                           value_function=auto_docking.learner.predict,
+        #                           action_space=action_space,
+        #                           feature_indices=feature_indices)
 
+        # # for testing task-3 i.e. aligning robot
         # exploring_policy = Alternating_Rotation(epsilon = epsilon,
         #                           value_function=auto_docking.learner.predict,
         #                           action_space=action_space,
         #                           feature_indices=feature_indices)
 
-        # behavior_policy = Switch(explorer=exploring_policy, exploiter=target_policy, num_timesteps_explore=200)
+        # for testing task-2 i.e. reaching the center region
+        exploring_policy = ForwardIfClear(action_space=action_space, feature_indices=feature_indices)
+
+        behavior_policy = Switch(explorer=exploring_policy, exploiter=target_policy, num_timesteps_explore=400)
 
         foreground_process = mp.Process(target=start_learning_foreground,
                                         name="foreground",
