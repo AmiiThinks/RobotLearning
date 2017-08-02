@@ -13,6 +13,7 @@ from gtd import GTD
 from gvf import GVF
 from learning_foreground import start_learning_foreground
 from policy import Policy
+from Queue import Queue
 from state_representation import StateConstants
 import tools
 
@@ -329,12 +330,15 @@ if __name__ == "__main__":
           #                          num_timesteps_explore=60/time_scale)
 
           # start processes
+          cumulant_counter = mp.Value('d', 0)
           foreground_process = mp.Process(target=start_learning_foreground,
                                           name="foreground",
                                           args=(time_scale,
                                                 [distance_to_bump],
                                                 features_to_use,
-                                                threshold_policy))
+                                                threshold_policy,
+                                                None,
+                                                cumulant_counter))
 
           foreground_process.start()
           if hyperparameter_experiment_mode is False:
@@ -343,10 +347,10 @@ if __name__ == "__main__":
             # start and stop wall demo if hyper parameter search is on
             rospy.sleep(5)
             foreground_process.terminate()
+            print("CUMULANTS: " + str(cumulant_counter.value))
 
         if (hyperparameter_experiment_mode is True):
           action_manager_process.terminate()
-
     except rospy.ROSInterruptException as detail:
         rospy.loginfo("Handling: {}".format(detail))
     finally:

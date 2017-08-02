@@ -11,6 +11,7 @@ from __future__ import division
 
 import geometry_msgs.msg as geom_msg
 import numpy as np
+import multiprocessing as mp
 import os, sys
 import pickle
 import rospy
@@ -37,12 +38,10 @@ class LearningForeground:
                  gvfs,
                  features_to_use,
                  behavior_policy,
-                 control_gvf=None):
-        
-        # Initiates this session's cumulant tallies with 'T:' 
-        self.observation_file = open('observations.txt', 'ab+')
-        self.observation_file.write('T:')
-        self.observation_file.close()
+                 control_gvf=None,
+                 cumulant_counter=None):
+
+        self.cumulant_counter = cumulant_counter or mp.Value('d', 0)
 
         self.vis = False
 
@@ -100,7 +99,7 @@ class LearningForeground:
         pub = lambda g, lab: rospy.Publisher(pub_name(g, lab), 
                                              std_msg.Float64, 
                                              queue_size=10)
-        action_publisher = rospy.Publisher('action_cmd2', 
+        action_publisher = rospy.Publisher('action_cmd', 
                                            geom_msg.Twist,
                                            queue_size=1)
         pause_publisher = rospy.Publisher('pause', 
@@ -241,9 +240,7 @@ class LearningForeground:
 
             if (observation['bump']):
                 # adds a tally for the added cumulant
-                self.observation_file = open('observations.txt', 'ab+')
-                self.observation_file.write('1')
-                self.observation_file.close()
+                self.cumulant_counter.value += 1
 
             # select and take an action
             self.behavior_policy.update(phi_prime, observation)
@@ -287,14 +284,16 @@ def start_learning_foreground(time_scale,
                               GVFs,
                               topics,
                               policy,
-                              control_gvf=None):
+                              control_gvf=None,
+                              cumulant_counter=None):
 
     try:
         foreground = LearningForeground(time_scale,
                                         GVFs,
                                         topics,
                                         policy,
-                                        control_gvf)
+                                        control_gvf,
+                                        cumulant_counter)
 
         foreground.run()
     except rospy.ROSInterruptException as detail:
