@@ -1,3 +1,11 @@
+"""
+Author: Shibhansh Dohare.
+
+Description:
+
+Contains various parameters for various steps of auto-docking. Very similar to 'wall_demo.py' 
+
+"""
 from __future__ import division
 import multiprocessing as mp
 import numpy as np
@@ -16,42 +24,11 @@ from auto_docking_policies import *
 from state_representation import StateConstants
 from std_msgs.msg import Bool
 
-class Switch:
-    def __init__(self, explorer, exploiter, num_timesteps_explore):
-        self.explorer = explorer
-        self.exploiter = exploiter
-        self.num_timesteps_explore = num_timesteps_explore
-        self.t = 0
-
-    def update(self, *args, **kwargs):
-        print 'num_timesteps_explore: ', self.t
-        if self.t > self.num_timesteps_explore:
-            self.exploiter.update(*args, **kwargs)
-            rospy.loginfo('Greedy policy is the behaviour policy, no learning now')
-            to_return = 'target_policy'
-        else:
-            self.explorer.update(*args, **kwargs)
-            rospy.loginfo('Explorer policy is the behaviour policy')
-            to_return = 'behavior_policy'
-        self.t += 1
-        self.t %= 1.3*self.num_timesteps_explore
-        return to_return
-
-    def get_probability(self, *args, **kwargs):
-        if self.t > self.num_timesteps_explore:
-            prob = self.exploiter.get_probability(*args, **kwargs)
-        else:
-            prob = self.explorer.get_probability(*args, **kwargs)
-        return prob
-
-    def choose_action(self, *args, **kwargs):
-        if self.t > self.num_timesteps_explore:
-            action = self.exploiter.choose_action(*args, **kwargs)
-        else:
-            action = self.explorer.choose_action(*args, **kwargs)
-        return action
-
 if __name__ == "__main__":
+    """
+        Change the 'task_to_learn' parameter to learn any task for auto-docking
+        For every task only 'action_space', 'reward_function' and 'behaviour polices are different'
+    """
     try:
 
         time_scale = 0.3
@@ -60,7 +37,7 @@ if __name__ == "__main__":
 
         alpha0 = 0.1
         lmbda = 0.9
-        features_to_use = ['imu' ,'bias','ir','bump']
+        features_to_use = ['imu' ,'bias','ir']
         feature_indices = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use])
         num_features = feature_indices.size
         num_active_features = sum(StateConstants.num_active_features[f] for f in features_to_use)
@@ -72,10 +49,11 @@ if __name__ == "__main__":
 
         learningRate = alpha
         secondaryLearningRate = learningRate/10
+        # finished_episode to decide when the episode in finished
         finished_episode = lambda x: x > 0 or x < -100
         epsilon = 0.1
 
-        task_to_learn = 2
+        task_to_learn = 3
         if task_to_learn == 1: #reach the IR region
             def reward_function(action_space):
                 def award(observation):
@@ -202,16 +180,16 @@ if __name__ == "__main__":
         #                           action_space=action_space,
         #                           feature_indices=feature_indices)
 
-        # # for testing task-3 i.e. aligning robot
-        # exploring_policy = Alternating_Rotation(epsilon = epsilon,
-        #                           value_function=auto_docking.learner.predict,
-        #                           action_space=action_space,
-        #                           feature_indices=feature_indices)
+        # for testing task-3 i.e. aligning robot
+        exploring_policy = Alternating_Rotation(epsilon = epsilon,
+                                  value_function=auto_docking.learner.predict,
+                                  action_space=action_space,
+                                  feature_indices=feature_indices)
 
-        # for testing task-2 i.e. reaching the center region
-        exploring_policy = ForwardIfClear(action_space=action_space, feature_indices=feature_indices)
+        # # for testing task-2 i.e. reaching the center region
+        # exploring_policy = ForwardIfClear(action_space=action_space, feature_indices=feature_indices)
 
-        behavior_policy = Switch(explorer=exploring_policy, exploiter=target_policy, num_timesteps_explore=400)
+        behavior_policy = Switch(explorer=exploring_policy, exploiter=target_policy, num_timesteps_explore=1200)
 
         foreground_process = mp.Process(target=start_learning_foreground,
                                         name="foreground",

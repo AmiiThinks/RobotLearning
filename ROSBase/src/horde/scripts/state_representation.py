@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+
+"""
+Author: Niko Yasui, Shibhansh Dohare, Parash Rahman, Michele Albach, David Quail June 1, 2017.
+
+"""
 import math
 import numpy as np
 import random
@@ -51,8 +57,8 @@ class StateConstants:
     IR_START_INDEX = ODOM_START_INDEX + ODOM_IHT_SIZE
     # IR_ITH_SIZE = 64*3
     # IR_ITH_SIZE = 6*3
-    # IR_ITH_SIZE = 6
-    IR_ITH_SIZE = 3
+    IR_ITH_SIZE = 6
+    # IR_ITH_SIZE = 3
 
     # pixel pairs
     NUM_PP = comb(NUM_RANDOM_POINTS, 2, exact=True)
@@ -78,7 +84,7 @@ class StateConstants:
     num_active_features = {'image':NUM_RANDOM_POINTS*CHANNELS*NUM_IMAGE_TILINGS,
                         'imu':NUM_IMU_TILINGS,
                         'odom':NUM_ODOM_TILINGS,
-                        'ir':6,
+                        'ir':3,
                         'bump':3,
                         'bias':1,
                         'last_action': 1,
@@ -237,15 +243,17 @@ class StateManager(object):
                 ir_3 = [int(x) for x in format(ir[2], '#08b')[2:]]
                 value = ir_1 + ir_2 + ir_3
 
-                in_right = ir_1[3] | ir_1[0] | ir_2[3] | ir_2[0] | ir_3[3] | ir_3[0]
-                in_left = ir_1[5] | ir_1[1] | ir_2[5] | ir_2[1] | ir_3[5] | ir_3[1]
-                in_center = ir_1[4] | ir_1[2] | ir_2[4] | ir_2[2] | ir_3[4] | ir_3[2]
-                # # if only want to use the data from the center IR of the robot
-                # value = ir_2
-                if in_center:
-                    in_left = 0
-                    in_right = 0
-                value = [in_left, in_center, in_right]
+                # # if only need the information about the region the robot is (left,center,right)
+                # in_right = ir_1[3] | ir_1[0] | ir_2[3] | ir_2[0] | ir_3[3] | ir_3[0]
+                # in_left = ir_1[5] | ir_1[1] | ir_2[5] | ir_2[1] | ir_3[5] | ir_3[1]
+                # in_center = ir_1[4] | ir_1[2] | ir_2[4] | ir_2[2] | ir_3[4] | ir_3[2]
+                # if in_center:
+                #     in_left = 0
+                #     in_right = 0
+                # value = [in_left, in_center, in_right]
+
+                # if only want to use the data from the center IR of the robot
+                value = ir_2
                 indices = np.nonzero(value)[0]
 
                 phi[np.asarray(indices) + StateConstants.IR_START_INDEX] = True

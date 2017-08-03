@@ -19,15 +19,35 @@ from state_representation import StateConstants
 import tools
 
 class GreedyGQ:
-    """ From Maei/Sutton 2010, with additional info from Adam White. """
+    """An implementation of GreedyGQ learning algoritm.
+
+    Implementation on greedy_gq based on (https://era.library.ualberta.ca/files/8s45q967t/Hamid_Maei_PhDThesis.pdf) 
+    and prioritized experience replay based on (https://arxiv.org/pdf/1511.05952.pdf)   
+
+    """
 
     def __init__(self, action_space, finished_episode, num_features, alpha, beta, lmbda, **kwargs):
-        """
-        Constructs a new agent with the given parameters. Note that a copy of
-        phi is created during the construction process.
-        """
+        """Initializes the greedy_gq learner.
 
-        # parameters
+        Updates the weights of the greedyGQ learner. Doesn't update some paramenters when we are replaying 
+        experience (either uniform or prioritized). 
+
+        Parameters
+        ----------
+        arg1 : action_space
+            Set of possible actions for the learner
+        arg2 : finished_episode
+            Function that evaluates if an episode is finished or not
+        arg3 : num_features
+            The number of features in the state-action representation
+        arg4 : alpha
+            Primary learning rate
+        arg5 : beta
+            Secondary learning rate
+        arg6 : lmbda
+            lambda in the greedy-gq learning algorithm
+
+        """
         self.lmbda = lmbda
         self.alpha = alpha
         self.beta = beta
@@ -57,6 +77,11 @@ class GreedyGQ:
         self.episode_finished_last_step = False
 
     def predict(self, phi, action):
+        """Calculates theta^(phi)
+        
+        First calculates phi for state-action representation, then calculate theta*phi for the new phi
+
+        """
         if action is not None:
             q = np.dot(self.get_state_action(phi, action), self.theta)
         else:
@@ -67,18 +92,52 @@ class GreedyGQ:
         return q
 
     def take_random_action(self):
+        """Returns a random action from action space
+
+        Selects a random action from the action space. Used while episode reset. Uses one less action
+        to avoide 'wiggling' during episode reset.
+
+        """
         random_action = self.action_space[random.randint(0,len(self.action_space)-2)]
         return random_action, 1/len(self.action_space)
 
     def update(self, phi, last_action, phi_prime, cumulant, gamma, rho, replaying_experience=False, **kwargs):
-        # to make sure we don't update anything between the last termination step and the new start step
-        # i.e. skip one learning step
+        """Updates the parameters (weights) of the greedy_gq learner.
+
+        Updates the weights of the greedyGQ learner. Doesn't update some paramenters when we are replaying experience
+        (either uniform or prioritized). 
+
+        Parameters
+        ----------
+        arg1 : phi
+            Previous state
+        arg2 : last_action
+            Action taken in last step
+        arg3 : phi_prime
+            Current (New) state
+        arg4 : cumulant
+            Returns the cumulant in the existing state
+        arg5 : gamma
+            Discounting factor
+        arg6 : rho
+            off policy importance sampling ratio
+        arg7 : replaying_experience
+            boolean to control updating parameters in case of parametrized update
+        optional arg1 : experience_id
+            Id of the experience that is being replayed
+        Returns
+        -------
+        np.array
+            action_phi : state-action representation for previous state and action
+
+        """
         if replaying_experience is False:
+        # To make sure we don't update anything between the last termination state and the new start state
+        # i.e. Skip one learning step
             if self.episode_finished_last_step:
                 self.episode_finished_last_step = False
                 return self.action_phi
 
-        if replaying_experience is False:
             self.new_experience = {'phi' : phi,
                                 'last_action' : last_action,
                                 'phi_prime' : phi_prime,
@@ -87,6 +146,7 @@ class GreedyGQ:
                                 'rho' : rho,
                                 'id' : self.num_experiences
             }
+            print phi
             self.num_experiences += 1
 
         self.action_phi = self.get_state_action(phi, last_action)
@@ -96,7 +156,6 @@ class GreedyGQ:
         action_phi_primes = {temp_action: self.get_state_action(phi_prime, temp_action) for temp_action in self.action_space}
 
         action_phis = {temp_action: self.get_state_action(phi, temp_action) for temp_action in self.action_space}
-
 
         # A_{t+1} update
         next_greedy_action = last_action
@@ -109,10 +168,6 @@ class GreedyGQ:
 
         # delta_t update
         self.td_error = cumulant + gamma * np.dot(self.theta, action_phi_bar) - np.dot(self.theta,self.action_phi)
-
-        # For importance sampling correction in prioritized action replay
-        if 'importance_sampling_correction' in kwargs.keys():
-            self.td_error *= kwargs['importance_sampling_correction']
 
         previous_greedy_action = last_action
         for temp_action in self.action_space:
@@ -169,6 +224,12 @@ class GreedyGQ:
         return self.action_phi
 
     def uniform_experience_replay(self,*args,**kwargs):
+        """Replays 'num_updates_to_make' experiences from the saved experiences.
+
+        'self.worst_experiences', stores the last 100 experiences, 'num_updates_to_make' 
+        random experiences are chosen for replay
+
+        """
         if self.num_experiences < 1:
             return
 
@@ -184,8 +245,6 @@ class GreedyGQ:
 
         for experience_index in random_indices:
             temp_experience = self.worst_experiences[experience_index]
-            # importance_sampling_correction not needed as there is uniform selection
-            importance_sampling_correction = 1
             replayed_experience_location_in_sorted_list = experience_index
             self.update(phi=temp_experience['phi'],
                         last_action=temp_experience['last_action'],
@@ -193,14 +252,18 @@ class GreedyGQ:
                         cumulant=temp_experience['cumulant'],
                         gamma=temp_experience['gamma'],
                         rho=temp_experience['rho'],
-                        importance_sampling_correction=importance_sampling_correction,
                         replaying_experience=True,
                         experience_id=temp_experience['id'])
             # the new_experience is put back in the array, in the update function itself
             self.worst_experiences[replayed_experience_location_in_sorted_list]['td_error'] = abs(self.td_error)
 
     def td_error_prioritized_experience_replay(self,*args,**kwargs):
-        # to avoide memory overflow
+        """Replays 'num_updates_to_make' worst experiences from the saved experiences.
+
+        'self.worst_experiences', stores the last 100 experiences. Top 'num_updates_to_make' 
+        experiences are chosen for replay. Experiences are prioritized in order of magnitude of td-error.
+
+        """
         self.worst_experiences = sorted(self.worst_experiences, key=lambda k: k['td_error'],reverse=True)[:100]
 
         if self.num_experiences < 1:
@@ -208,8 +271,7 @@ class GreedyGQ:
         num_updates_to_make = 10
 
         for i in range(min(num_updates_to_make,len(self.worst_experiences))):
-            # importance_sampling_correction =  1/self.num_experiences
-            importance_sampling_correction =  1
+            # No need to do importance_sampling_correction as we are already doing off-policy learning
             # pop the next worst experience, prioritized by td_error
             temp_experience = self.worst_experiences[i]
             # print self.worst_experiences[i]['td_error'], 'experience id: ', temp_experience['id']
@@ -220,7 +282,6 @@ class GreedyGQ:
                         cumulant=temp_experience['cumulant'],
                         gamma=temp_experience['gamma'],
                         rho=temp_experience['rho'],
-                        importance_sampling_correction=importance_sampling_correction,
                         replaying_experience=True,
                         experience_id=temp_experience['id'])
             # the new_experience is put back in the heap, in the update function itself
