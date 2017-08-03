@@ -15,6 +15,7 @@ class ActionManager():
                          self.update_base_state)
         self.termination_flag = False
         self.pause_flag = False
+        self.stop_for_one_action_manager_cycle = False
 
     def update_base_state(self, val):
         self.base_state = val
@@ -32,6 +33,7 @@ class ActionManager():
             self.action = self.STOP_ACTION
         elif action_cmd.linear.x and self.action.angular.z:
             self.action = self.STOP_ACTION
+            self.stop_for_one_action_manager_cycle = True
         else:
             self.action = action_cmd
 
@@ -53,11 +55,15 @@ class ActionManager():
                 break
             if self.pause_flag is False:
                 # log action
-                speeds = (self.action.linear.x, self.action.linear.z)
+                speeds = (self.action.linear.x, self.action.angular.z)
                 actn = "linear: {}, angular: {}".format(*speeds)
                 rospy.logdebug("Sending action to Turtlebot: {}".format(actn))
                 # send new actions
-                action_publisher.publish(self.action)
+                if self.stop_for_one_action_manager_cycle:
+                    action_publisher.publish(self.STOP_ACTION)
+                    self.stop_for_one_action_manager_cycle = False
+                else:
+                    action_publisher.publish(self.action)
             action_pub_rate.sleep()
 
 def start_action_manager():

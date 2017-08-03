@@ -1,3 +1,14 @@
+#!/usr/bin/env python
+
+"""
+Author: Shibhansh Dohare, Niko Yasui.
+
+Description:
+GreedyGQ contains an implementatin of greedy-gq along with the ability of prioritized and uniform 
+experience replay.
+
+"""
+
 from __future__ import division
 import numpy as np
 import random
@@ -31,9 +42,10 @@ class GreedyGQ:
 
         # measuring performance
         self.timeStep = 0
-        self.average_rewards = [0]
+        self.average_td_error = 0
+        self.average_td_errors = [0]
         self.delta = 0
-        self.tderr_elig = np.zeros(num_features)
+        self.num_episodes = 0
 
         # prioritized experience replay
         # list is maintained in the reverse order of td_error
@@ -43,8 +55,6 @@ class GreedyGQ:
         # helper
         self.get_state_action = tools.action_state_rep(action_space)
         self.episode_finished_last_step = False
-
-        #self.temp = np.zeros(9, dtype = bool)
 
     def predict(self, phi, action):
         if action is not None:
@@ -80,27 +90,13 @@ class GreedyGQ:
             self.num_experiences += 1
 
         self.action_phi = self.get_state_action(phi, last_action)
-        # print self.action_phi
-        # self.temp += np.asarray(phi, dtype=bool)
-
-        # print 'temp : ',self.temp
  
         self.tderr_elig = self.delta * self.e
-
 
         action_phi_primes = {temp_action: self.get_state_action(phi_prime, temp_action) for temp_action in self.action_space}
 
         action_phis = {temp_action: self.get_state_action(phi, temp_action) for temp_action in self.action_space}
 
-        # self.timeStep = self.timeStep + 1
-        # average_reward = self.average_rewards[-1]
-        # average_reward = average_reward + (reward - average_reward)/self.timeStepreward
-
-        # self.average_rewards.append(average_reward)
-
-        # if self.timeStep%100 == 0:
-        #     with open('average_rewards','w') as f:
-        #         pickle.dump(self.average_rewards,f)
 
         # A_{t+1} update
         next_greedy_action = last_action
@@ -113,7 +109,7 @@ class GreedyGQ:
 
         # delta_t update
         self.td_error = cumulant + gamma * np.dot(self.theta, action_phi_bar) - np.dot(self.theta,self.action_phi)
-        # print '----------------------------------- TD error- ',self.td_error
+
         # For importance sampling correction in prioritized action replay
         if 'importance_sampling_correction' in kwargs.keys():
             self.td_error *= kwargs['importance_sampling_correction']
@@ -139,14 +135,6 @@ class GreedyGQ:
         # theta_t update
         self.theta += self.alpha * (self.td_error * self.e - gamma * (1 - self.lmbda) * np.dot(self.sec_weights, self.action_phi) * action_phi_bar)
 
-        # temp = self.theta
-        # temp = temp/2
-        # print np.argsort(temp)
-
-        # if np.count_nonzero(self.theta) == 0:
-        #       # theta will be zero in some places before all states are visited
-        #     rospy.logwarn('self.theta is zero')
-        
         # w_t update
         self.sec_weights += self.beta * \
             (self.td_error * self.e - np.dot(self.sec_weights, self.action_phi) * self.action_phi)
@@ -159,9 +147,22 @@ class GreedyGQ:
             self.new_experience['td_error'] = abs(self.td_error)
             self.worst_experiences.append(self.new_experience)
 
+            # saving the average abs(td_error) of last 1000 time steps
+            self.timeStep = self.timeStep + 1
+            if len(self.average_td_errors) >= 1000:
+                self.average_td_error += (abs(self.td_error) - abs(self.average_td_errors[-1000]))/1000
+            else:
+                self.average_td_error += (abs(self.td_error) - abs(self.average_td_error))/self.timeStep
+            self.average_td_errors.append(self.average_td_error)
+
+            if self.timeStep%100 == 0:
+                with open('average_td_errors','w') as f:
+                    pickle.dump(self.average_td_errors,f)
+
             if self.finished_episode(cumulant):
                 rospy.loginfo('Episode finished')
                 self.episode_finished_last_step  = True
+                self.num_episodes += 1
                 self.e = np.zeros(self.num_features)
 
         # returing to make sure action_phi is used in RUPEE calculation
@@ -173,12 +174,16 @@ class GreedyGQ:
 
         random_indices = []
         num_updates_to_make = 10
+
+        # to avoide memory overflow
+        self.worst_experiences = self.worst_experiences[-100:]
         try:
-            random_indices = random.sample(range(0,self.num_experiences-1),num_updates_to_make)
-            self.worst_experiences = [self.worst_experiences[index] for index in random_indices]    
+            random_indices = random.sample(range(0,len(self.worst_experiences)-1),num_updates_to_make)
         except:
             pass
-        for experience_index,temp_experience in enumerate(self.worst_experiences):
+
+        for experience_index in random_indices:
+            temp_experience = self.worst_experiences[experience_index]
             # importance_sampling_correction not needed as there is uniform selection
             importance_sampling_correction = 1
             replayed_experience_location_in_sorted_list = experience_index
@@ -191,16 +196,16 @@ class GreedyGQ:
                         importance_sampling_correction=importance_sampling_correction,
                         replaying_experience=True,
                         experience_id=temp_experience['id'])
-            # the new_experience is put back in the heap, in the update function itself
+            # the new_experience is put back in the array, in the update function itself
             self.worst_experiences[replayed_experience_location_in_sorted_list]['td_error'] = abs(self.td_error)
 
     def td_error_prioritized_experience_replay(self,*args,**kwargs):
+        # to avoide memory overflow
         self.worst_experiences = sorted(self.worst_experiences, key=lambda k: k['td_error'],reverse=True)[:100]
 
         if self.num_experiences < 1:
             return
         num_updates_to_make = 10
-
 
         for i in range(min(num_updates_to_make,len(self.worst_experiences))):
             # importance_sampling_correction =  1/self.num_experiences
