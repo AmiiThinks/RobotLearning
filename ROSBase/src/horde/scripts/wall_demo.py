@@ -236,7 +236,7 @@ if __name__ == "__main__":
         # random.seed(20170823)
 
         # turns on and off the hyperparameter search
-        hyperparameter_experiment_mode = True
+        hyperparameter_experiment_mode = False
 
         action_manager_process = mp.Process(target=start_action_manager,
                                             name="action_manager",

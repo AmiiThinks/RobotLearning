@@ -19,7 +19,7 @@ values to obtain the state representation
 class StateConstants:
 
     # image tiles
-    NUM_RANDOM_POINTS = 500
+    NUM_RANDOM_POINTS = 100
     CHANNELS = 3
     NUM_IMAGE_TILINGS = 4
     NUM_IMAGE_INTERVALS = 4
