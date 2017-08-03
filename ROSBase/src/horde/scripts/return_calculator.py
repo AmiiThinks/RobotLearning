@@ -8,26 +8,31 @@ ReturnCalculator samples some time steps from the behavior policy and computes t
 In order to compute the return for each sample time step, it switches from the behavior policy to the target policy. 
 """
 
-from cv_bridge.core import CvBridge
-import numpy as np
-import geometry_msgs.msg as geom_msg
-from Queue import Queue
-import rospy
-import std_msgs.msg as std_msg
-import threading
-import sys
-import time
-from geometry_msgs.msg import Twist, Vector3
-from std_msgs.msg import Bool
+from __future__ import division
 
+import geometry_msgs.msg as geom_msg
+import numpy as np
+import os, sys
+import pickle
+import rospy
+import random
+import std_msgs.msg as std_msg
+import subprocess
+import sys
+import threading
+import time
+import tools
+
+from cv_bridge.core import CvBridge
+from gentest_state_representation import GenTestStateManager
+from geometry_msgs.msg import Twist, Vector3
 from gvf import GVF
+from Queue import Queue
 from state_representation import StateManager
 from state_representation import StateConstants
-from gentest_state_representation import GenTestStateManager
-import tools
 from tools import timing
 from visualize_pixels import Visualize
-
+from std_msgs.msg import Bool
 
 class ReturnCalculator:
 
@@ -39,7 +44,7 @@ class ReturnCalculator:
                  behavior_policy,
                  target_policy):
         
-        self.features_to_use = features_to_use + ['core']
+        self.features_to_use = set(features_to_use + ['core', 'ir'])
         topics = filter(lambda x: x, 
                         [tools.features[f] for f in self.features_to_use])
         
@@ -59,7 +64,8 @@ class ReturnCalculator:
         rospy.loginfo("Started sensor threads.")
 
         # smooth out the actions
-        self.time_scale = time_scale        
+        self.time_scale = time_scale
+        self.r = rospy.Rate(1.0/self.time_scale)        
 
         # agent info
         self.gvf             = gvf
@@ -83,7 +89,7 @@ class ReturnCalculator:
 
 
         # MSRE information
-        self.sample_size = 2
+        self.sample_size = 1000
         self.samples_phi = np.zeros((self.sample_size, num_features))
         self.samples_G   = np.zeros(self.sample_size)
 
@@ -101,19 +107,16 @@ class ReturnCalculator:
         rospy.loginfo("Done LearningForeground init.")
 
     def create_state(self):
-        # TODO: consider moving the data processing elsewhere
-
-        rospy.loginfo("Creating state...")
-
         # bumper constants from http://docs.ros.org/hydro/api/kobuki_msgs/html/msg/SensorState.html
         bump_codes = [1, 4, 2]
-        # BUMPER_RIGHT  = 1
-        # BUMPER_CENTRE = 2
-        # BUMPER_LEFT   = 4
 
-        # build data to make phi
-        data = {k: None for k in tools.features.keys()}
-        for source in self.features_to_use:
+        # initialize data
+        additional_features = set(tools.features.keys() + ['charging'])
+        sensors = self.features_to_use.union(additional_features)
+
+        # build data (used to make phi)
+        data = {sensor: None for sensor in sensors}
+        for source in sensors - set(['ir']):
             temp = None
             try:
                 while True:
@@ -122,39 +125,48 @@ class ReturnCalculator:
                 pass
             data[source] = temp
 
+        temp = []
+        try:
+            while True:
+                temp.append(self.recent[tools.features['ir']].get_nowait())
+        except:
+            pass
+
+        # use only the last 10 values, helpful at the end of episode when we have accumulated at lot or IR data
+        data['ir'] = temp[-10:] if temp else None
+
         if data['core'] is not None:
             bump = data['core'].bumper
             data['bump'] = map(lambda x: bool(x & bump), bump_codes)
             data['charging'] = bool(data['core'].charger & 2)
-        else:
-            data['bump'] = None
-            data['charging'] = None
         if data['ir'] is not None:
-            data['ir'] = [ord(obs) for obs in data['ir'].data]
+            ir = [[0]*6]*3
+            # bitwise 'or' of all the ir data in last time_step
+            for temp in data['ir']:
+                a = [[int(x) for x in format(temp, '#08b')[2:]] for temp in [ord(obs) for obs in temp.data]]
+                ir = [[k | l for k, l in zip(i, j)] for i, j in zip(a, ir)]
+            data['ir'] = [int(''.join([str(i) for i in ir_temp]),2) for ir_temp in ir] 
         if data['image'] is not None:
-            cv2_image = self.img_to_cv2(data['image'])
-            if cv2_image is None:
-                data['image'] = None
-            else:
-                data['image'] = np.asarray(cv2_image)
+            data['image'] = np.asarray(self.img_to_cv2(data['image']))
         if data['odom'] is not None:
             pos = data['odom'].pose.pose.position
             data['odom'] = np.array([pos.x, pos.y])
-        if data['imu'] is not None:
+        if data['imu'] is not None: 
             data['imu'] = data['imu'].orientation.z
         if 'bias' in self.features_to_use:
             data['bias'] = True
-        
-
+        # data['weights'] = self.gvfs[0].learner.theta if self.gvfs else None
         phi = self.state_manager.get_phi(**data)
 
-        # update the visualization of the image data
-        # self.visualization.update_colours(image_data)
+        if 'last_action' in self.features_to_use:
+            last_action = np.zeros(self.behavior_policy.action_space.size)
+            last_action[self.behavior_policy.last_index] = 1
+            phi = np.concatenate([phi, last_action])
 
-        # takes a long time, only uncomment if necessary
-        # rospy.loginfo(phi)
 
         observation = self.state_manager.get_observations(**data)
+        # observation['action'] = self.last_action
+
         return phi, observation
 
 
@@ -184,15 +196,9 @@ class ReturnCalculator:
         num_steps_followed_mu = 0
         num_steps_followed_pi = 0
 
-        # Keep track of time for when to avoid sleeping
-        sleep_time = self.time_scale - 0.0001
-        tic = time.time()
-
         while not rospy.is_shutdown():
 
-            while time.time() < tic:
-                time.sleep(0.0001)
-
+            start_time = time.time()
             # get new state
             phi, observations = self.create_state()
 
@@ -202,16 +208,12 @@ class ReturnCalculator:
             print "current_condition:", self.current_condition
             print "fixed_steps_under_pi:", self.fixed_steps_under_pi
             print "steps_under_mu:", self.steps_under_mu
-            if bool(sum(observations["bump"])):
-                print "bumped"
             print "-------------------------------------"
 
             # take action
-            action, _ = self.current_policy(phi, observations)
+            self.current_policy.update(phi, observations)
+            action = self.current_policy.choose_action()
             self.take_action(action)
-
-            # reset tic
-            tic += sleep_time
 
             # update cumulant and gamma buffers if following the target policy
             if self.current_condition == self.following_pi:
@@ -241,10 +243,16 @@ class ReturnCalculator:
                 self.samples_phi[sample_number, :] = phi[self.feature_indices]
 
             # terminate if collected information for sample size
+            if (sample_number % 10) == 0 and num_steps_followed_pi == (self.fixed_steps_under_pi - 1):
+                np.savez("actual_return_{}.npz".format(self.gvf.name), _return = self.samples_G, samples = self.samples_phi)
             if sample_number == self.sample_size:
-                np.savez("sample_returns.npz", _return = self.samples_G, samples = self.samples_phi)
+                np.savez("actual_return_{}.npz".format(self.gvf.name), _return = self.samples_G, samples = self.samples_phi)
                 self.publishers["termination"].publish(True)
                 break
+
+            # sleep until next time step
+            self.r.sleep()
+
 
 
 

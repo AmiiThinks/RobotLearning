@@ -105,3 +105,6 @@ ENV/
 # emacs
 *#
 *~
+
+# Experiment data
+ROSBase/src/horde/scripts/observations.txt

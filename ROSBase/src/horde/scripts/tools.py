@@ -1,3 +1,4 @@
+from __future__ import division
 from functools import wraps
 import kobuki_msgs.msg as kob_msg
 import nav_msgs.msg as nav_msg
@@ -32,8 +33,14 @@ features = {'core': "/mobile_base/sensors/core",
             'image': "/camera/rgb/image_rect_color/compressed",
             'odom': "/odom",
             'bias': None,
-            'bump': None}
+            'bump': None,
+            'last_action': None,
+            'pixel_pairs': None}
 
+def softmax(q):
+    max_q = np.max(q)
+    exp_q = np.exp(q - max_q)
+    return exp_q / exp_q.sum()
 
 def equal_twists(t1, t2):
     return all([np.isclose(t1.linear.x, t2.linear.x),
@@ -43,15 +50,17 @@ def equal_twists(t1, t2):
                 np.isclose(t1.angular.y, t2.angular.y),
                 np.isclose(t1.angular.z, t2.angular.z)])
 
-def merge_dicts(*dict_args):
-    """
-    Given any number of dicts, shallow copy and merge into a new dict,
-    precedence goes to key value pairs in latter dicts.
-    """
-    result = {}
-    for dictionary in dict_args:
-        result.update(dictionary)
-    return result
+def action_state_rep(action_space):
+    def action_state_phi(state, action):
+        phi = np.zeros(state.size * len(action_space))
+
+        for i, current_action in enumerate(action_space):
+            if equal_twists(action, current_action):
+                phi[np.arange(i * state.size, (i + 1) * state.size)] = state
+
+        return phi
+
+    return action_state_phi
 
 
 """
@@ -65,7 +74,7 @@ def timing(f):
         te = time()
         # print 'func:%r args:[%r, %r] took: %2.4f sec' % \
         # (f.__name__, args, kw, te-ts)
-        rospy.loginfo('func:%r took: %2.4f sec' % (f.__name__, te-ts))
+        rospy.logdebug('func:%r took: %2.4f sec' % (f.__name__, te-ts))
         return result
     return wrap
 

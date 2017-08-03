@@ -1,4 +1,15 @@
 #!/usr/bin/env python
+"""Interupting the existing auto-docking routine in kobuki.
+
+This module is taken from the 'client' of existing auto-docking algorithm - 
+https://github.com/yujinrobot/kobuki/blob/devel/kobuki_auto_docking/scripts/DockDriveActionClient.py.
+
+The modifications are done to control and modify the existing auto-docking algorithm.
+
+Current modifications preempt the goal once the robot has aligned itself with the docking station.
+
+For any further clearifications contact - shibhanshdohare1997@gmail.com
+"""
 
 import roslib; roslib.load_manifest('kobuki_auto_docking')
 import rospy
@@ -27,16 +38,27 @@ def activeCb():
   if 0: print 'Action server went active.'
 
 def feedbackCb(feedback):
-  # Print state of dock_drive module (or node.)
+  """Gets the feedback from the auto-docking server.
+
+  Gets the feedback from the server and preempts when aligned
+
+  Can be changed to preempt at any step of the algorithm.
+
+  """
   print 'Feedback: [DockDrive: ' + feedback.state + ']: ' + feedback.text
   global client
-  if str(feedback.state).startswith('ALIGNED'):
-    print 'yes starting with this'
-    client.cancel_goal()
+  global count
+  count += 1
+  if count > 25:
+    if str(feedback.state).startswith('ALIGNED'):
+        client.cancel_goal()
+        client.cancel_goal()
 
 def dock_drive_client():
   # add timeout setting
   global client
+  global count
+  count = 0
   client = actionlib.SimpleActionClient('dock_drive_action', AutoDockingAction)
   while not client.wait_for_server(rospy.Duration(5.0)):
     if rospy.is_shutdown(): return

@@ -17,6 +17,7 @@ import cv2
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import rospy
 
 from tools import timing
 
