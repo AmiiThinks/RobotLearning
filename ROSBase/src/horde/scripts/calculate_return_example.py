@@ -28,18 +28,15 @@ class GoForwardWithRandomness(Policy):
 
         Policy.__init__(self, *args, **kwargs)
 
-    def update(self, phi, observations, *args, **kwargs):
+    def update(self, phi, observation, *args, **kwargs):
         
         self.pi = np.zeros(self.action_space.size)
 
-        if bool(sum(observations["bump"])):
+        if bool(sum(observation["bump"])):
             self.pi[self.TURN] = 1
         else:
-            if self.last_index == self.TURN:
-                self.pi[self.STOP] = 1
-            else:
-                self.pi[self.FORWARD] = self.forward_percentage
-                self.pi[self.TURN] = 1 - self.forward_percentage
+            self.pi[self.FORWARD] = self.forward_percentage
+            self.pi[self.TURN] = 1 - self.forward_percentage
 
 # go forward if bump sensor is off
 class GoForwardIfNotBump(Policy):
@@ -53,7 +50,7 @@ class GoForwardIfNotBump(Policy):
         Policy.__init__(self, *args, **kwargs)
 
     def update(self, phi, observation, *args, **kwargs):
-        if bool(sum(observations["bump"])):
+        if bool(sum(observation["bump"])):
             chosen_index = self.STOP
         else:
             chosen_index = self.FORWARD
@@ -64,9 +61,9 @@ class GoForwardIfNotBump(Policy):
 if __name__ == "__main__":
     try:
 
-        time_scale = 0.5
-        forward_speed = 0.15
-        turn_speed = 1.5
+        time_scale = 0.1
+        forward_speed = 0.2
+        turn_speed = 1.0
 
         parameters = {'alpha': 0,
                       'alpha0': 0,

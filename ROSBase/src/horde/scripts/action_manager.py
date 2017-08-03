@@ -32,8 +32,8 @@ class ActionManager():
         if action_cmd.linear.x and self.base_state.bumper:
             self.action = self.STOP_ACTION
         elif action_cmd.linear.x and self.action.angular.z:
-            self.action = self.STOP_ACTION
             self.stop_for_one_action_manager_cycle = True
+            self.action = action_cmd
         else:
             self.action = action_cmd
 
@@ -58,6 +58,7 @@ class ActionManager():
                 speeds = (self.action.linear.x, self.action.angular.z)
                 actn = "linear: {}, angular: {}".format(*speeds)
                 rospy.logdebug("Sending action to Turtlebot: {}".format(actn))
+
                 # send new actions
                 if self.stop_for_one_action_manager_cycle:
                     action_publisher.publish(self.STOP_ACTION)

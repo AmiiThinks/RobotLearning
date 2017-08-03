@@ -14,11 +14,14 @@ import numpy as np
 import multiprocessing as mp
 import os, sys
 import pickle
+import rosbag
 import rospy
+from rospy.numpy_msg import numpy_msg
 import random
 import std_msgs.msg as std_msg
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 import tools
@@ -41,7 +44,15 @@ class LearningForeground:
                  control_gvf=None,
                  cumulant_counter=None):
 
+        # set up ros
+        rospy.init_node('agent', anonymous=True)
+
+        # counts the total cumulant for the session
         self.cumulant_counter = cumulant_counter or mp.Value('d', 0)
+
+        # capture this session's data and actions
+        self.history = rosbag.Bag('results.bag', 'w')
+        self.current_time = rospy.Time().now()
 
         self.vis = False
 
@@ -53,8 +64,6 @@ class LearningForeground:
         # set up dictionary to receive sensor info
         self.recent = {topic:Queue(0) for topic in topics}
 
-        # set up ros
-        rospy.init_node('agent', anonymous=True)
 
         # setup sensor parsers
         for topic in topics:
@@ -141,6 +150,19 @@ class LearningForeground:
             self.publishers[gvf]['avg_td_error'].publish(gvf.evaluator.avg_td_error)
             self.publishers[gvf]['rupee'].publish(gvf.evaluator.rupee)
 
+    def read_source(self, source, history=False):
+        temp = [] if history else None
+        try:
+            stream = tools.features[source]
+            while True:
+                if history:
+                    temp.append(self.recent[stream].get_nowait())
+                else:
+                    temp = self.recent[stream].get_nowait()
+        except:
+            pass
+        return temp
+
     @timing
     def create_state(self):
         # bumper constants from http://docs.ros.org/hydro/api/kobuki_msgs/html/msg/SensorState.html
@@ -152,44 +174,67 @@ class LearningForeground:
 
         # build data (used to make phi)
         data = {sensor: None for sensor in sensors}
-        for source in sensors - set(['ir']):
-            temp = None
-            try:
-                while True:
-                    temp = self.recent[tools.features[source]].get_nowait()
-            except:
-                pass
-            data[source] = temp
+        for source in sensors - set(['ir', 'core']):
+            data[source] = self.read_source(source)
 
-        temp = []
-        try:
-            while True:
-                temp.append(self.recent[tools.features['ir']].get_nowait())
-        except:
-            pass
+        data['ir'] = self.read_source('ir', history=True)[-10:]
+        data['core'] = self.read_source('core', history=True)
 
-        # use only the last 10 values, helpful at the end of episode when we have accumulated at lot or IR data
-        rospy.logdebug('number of IR data collected in last timestep - {}', len(temp))
-        data['ir'] = temp[-10:] if temp else None
+        if data['core']:
+            bumps = [dat.bumper for dat in data['core']]
+            data['bump'] = np.sum([[bool(x & bump) for x in bump_codes] for bump in bumps], axis=0).tolist()
+            data['charging'] = bool(data['core'][-1].charger & 2)
 
-        if data['core'] is not None:
-            bump = data['core'].bumper
-            data['bump'] = map(lambda x: bool(x & bump), bump_codes)
-            data['charging'] = bool(data['core'].charger & 2)
-        if data['ir'] is not None:
+             # enter the data into rosbag
+            for bindex in range(len(data['bump'])):
+                bump_bool = std_msg.Bool()
+                bump_bool.data = data['bump'][bindex]
+                self.history.write('bump' + str(bindex), bump_bool, t=self.current_time)
+            charge_bool = std_msg.Bool()
+            charge_bool.data = data['charging']
+            self.history.write('charging', charge_bool, t=self.current_time)
+
+        if data['ir']:
             ir = [[0]*6]*3
             # bitwise 'or' of all the ir data in last time_step
             for temp in data['ir']:
                 a = [[int(x) for x in format(temp, '#08b')[2:]] for temp in [ord(obs) for obs in temp.data]]
                 ir = [[k | l for k, l in zip(i, j)] for i, j in zip(a, ir)]
-            data['ir'] = [int(''.join([str(i) for i in ir_temp]),2) for ir_temp in ir]
+            
+            data['ir'] = [int(''.join([str(i) for i in ir_temp]),2) for ir_temp in ir] 
+
+            # enter the data into rosbag
+            ir_array = std_msg.Int32MultiArray()
+            ir_array.data = data['ir']
+            self.history.write('ir', ir_array, t= self.current_time)
+
         if data['image'] is not None:
+            # enter the data into rosbag
+            # image_array = std_msg.Int32MultiArray()
+            # image_array.data = data['image']
+            self.history.write('image', data['image'], t=self.current_time)
+            
+            # uncompressing image
             data['image'] = np.asarray(self.img_to_cv2(data['image']))
+
+
         if data['odom'] is not None:
             pos = data['odom'].pose.pose.position
             data['odom'] = np.array([pos.x, pos.y])
+
+            # enter the data into rosbag
+            odom_x = std_msg.Float64()
+            odom_x.data = pos.x
+            odom_y = std_msg.Float64()
+            odom_y.data = pos.y
+
+            self.history.write('odom_x', odom_x, t=self.current_time)
+            self.history.write('odom_y', odom_y, t=self.current_time)
+
         if data['imu'] is not None:
             data['imu'] = data['imu'].orientation.z
+
+            # TODO: enter the  data into rosbag
         if 'bias' in self.features_to_use:
             data['bias'] = True
         data['weights'] = self.gvfs[0].learner.theta if self.gvfs else None
@@ -198,7 +243,7 @@ class LearningForeground:
         if 'last_action' in self.features_to_use:
             last_action = np.zeros(self.behavior_policy.action_space.size)
             last_action[self.behavior_policy.last_index] = 1
-            phi = np.concatenate([phi, last_action])
+            phi = np.concatenate([phi, last_action])            
 
         # update the visualization of the image data
         if self.vis:
@@ -206,6 +251,7 @@ class LearningForeground:
 
         observation = self.state_manager.get_observations(**data)
         observation['action'] = self.last_action
+
 
         return phi, observation
 
@@ -240,6 +286,7 @@ class LearningForeground:
     def run(self):
         while not rospy.is_shutdown():
             start_time = time.time()
+            self.current_time = rospy.Time().now()
 
             # get new state
             phi_prime, observation = self.create_state()
@@ -253,6 +300,8 @@ class LearningForeground:
             action = self.behavior_policy.choose_action()
             mu = self.behavior_policy.get_probability(action)
             self.take_action(action)
+
+            self.history.write('action', action, t=self.current_time)
 
             # make prediction
             self.preds = {g:g.predict(phi_prime, action) for g in self.gvfs}
@@ -287,6 +336,7 @@ class LearningForeground:
 
             # sleep until next time step
             self.r.sleep()
+        self.history.close()
 
 def start_learning_foreground(time_scale,
                               GVFs,
