@@ -58,6 +58,7 @@ class ActionManager():
                 speeds = (self.action.linear.x, self.action.angular.z)
                 actn = "linear: {}, angular: {}".format(*speeds)
                 rospy.logdebug("Sending action to Turtlebot: {}".format(actn))
+
                 # send new actions
                 if self.stop_for_one_action_manager_cycle:
                     action_publisher.publish(self.STOP_ACTION)

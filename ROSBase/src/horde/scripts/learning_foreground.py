@@ -150,6 +150,19 @@ class LearningForeground:
             self.publishers[gvf]['avg_td_error'].publish(gvf.evaluator.avg_td_error)
             self.publishers[gvf]['rupee'].publish(gvf.evaluator.rupee)
 
+    def read_source(self, source, history=False):
+        temp = [] if history else None
+        try:
+            stream = tools.features[source]
+            while True:
+                if history:
+                    temp.append(self.recent[stream].get_nowait())
+                else:
+                    temp = self.recent[stream].get_nowait()
+        except:
+            pass
+        return temp
+
     @timing
     def create_state(self):
         # bumper constants from http://docs.ros.org/hydro/api/kobuki_msgs/html/msg/SensorState.html
@@ -161,32 +174,18 @@ class LearningForeground:
 
         # build data (used to make phi)
         data = {sensor: None for sensor in sensors}
-        for source in sensors - set(['ir']):
-            temp = None
-            try:
-                while True:
-                    temp = self.recent[tools.features[source]].get_nowait()
-            except:
-                pass
-            data[source] = temp
+        for source in sensors - set(['ir', 'core']):
+            data[source] = self.read_source(source)
 
-        temp = []
-        try:
-            while True:
-                temp.append(self.recent[tools.features['ir']].get_nowait())
-        except:
-            pass
+        data['ir'] = self.read_source('ir', history=True)[-10:]
+        data['core'] = self.read_source('core', history=True)
 
-        # use only the last 10 values, helpful at the end of episode when we have accumulated at lot or IR data
-        rospy.logdebug('number of IR data collected in last timestep - {}', len(temp))
-        data['ir'] = temp[-10:] if temp else None
+        if data['core']:
+            bumps = [dat.bumper for dat in data['core']]
+            data['bump'] = np.sum([[bool(x & bump) for x in bump_codes] for bump in bumps], axis=0).tolist()
+            data['charging'] = bool(data['core'][-1].charger & 2)
 
-        if data['core'] is not None:
-            bump = data['core'].bumper
-            data['bump'] = map(lambda x: bool(x & bump), bump_codes)
-            data['charging'] = bool(data['core'].charger & 2)
-            
-            # enter the data into rosbag
+             # enter the data into rosbag
             for bindex in range(len(data['bump'])):
                 bump_bool = std_msg.Bool()
                 bump_bool.data = data['bump'][bindex]
@@ -195,7 +194,7 @@ class LearningForeground:
             charge_bool.data = data['charging']
             self.history.write('charging', charge_bool, t=self.current_time)
 
-        if data['ir'] is not None:
+        if data['ir']:
             ir = [[0]*6]*3
             # bitwise 'or' of all the ir data in last time_step
             for temp in data['ir']:

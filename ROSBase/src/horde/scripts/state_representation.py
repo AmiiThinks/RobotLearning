@@ -23,7 +23,7 @@ class StateConstants:
     CHANNELS = 3
     NUM_IMAGE_TILINGS = 4
     NUM_IMAGE_INTERVALS = 4
-    SCALE_RGB = NUM_IMAGE_TILINGS/256.0
+    SCALE_RGB = NUM_IMAGE_INTERVALS/256.0
     IMAGE_IHT_SIZE = get_next_pow2((NUM_IMAGE_INTERVALS + 1) * NUM_IMAGE_TILINGS)
     PIXEL_FEATURE_LENGTH = CHANNELS * IMAGE_IHT_SIZE
     TOTAL_IMAGE_FEATURE_LENGTH = NUM_RANDOM_POINTS * PIXEL_FEATURE_LENGTH
@@ -57,9 +57,9 @@ class StateConstants:
     # pixel pairs
     NUM_PP = comb(NUM_RANDOM_POINTS, 2, exact=True)
     NUM_PP_TILINGS = 4
-    NUM_PP_INTERVALS = 4 
-    SCALE_PP = NUM_PP_TILINGS/2 # [-1, 1]
-    PP_IHT_SIZE = get_next_pow2((NUM_PP_INTERVALS + 1) * NUM_PP_TILINGS)
+    NUM_PP_TILES = 4
+    SCALE_PP = NUM_PP_TILES/2 # [-1, 1]
+    PP_IHT_SIZE = get_next_pow2((NUM_PP_TILES + 1) * NUM_PP_TILINGS)
     PP_FEATURE_LENGTH = NUM_RANDOM_POINTS * PP_IHT_SIZE
     PP_START_INDEX = IR_START_INDEX + IR_ITH_SIZE
 
@@ -143,7 +143,7 @@ class StateManager(object):
 
                 rgb_inds *= StateConstants.IMAGE_IHT_SIZE
 
-                indices = (tile_inds + rgb_inds[:, np.newaxis]).flatten()
+                indices = (tile_inds + rgb_inds[:, np.newaxis]).ravel()
                 phi[indices] = True
 
         if 'image_pairs' in self.features_to_use:
@@ -183,7 +183,7 @@ class StateManager(object):
                 # offset tilecoding for each pixel by the IHT size to map
                 # each pixel to a different set of PP_IHT_SIZE indices
                 pp_inds *= StateConstants.PP_IHT_SIZE
-                indices = (tile_inds + pp_inds[:, np.newaxis]).flatten()
+                indices = (tile_inds + pp_inds[:, np.newaxis]).ravel()
 
                 # offset all indices to correspond to the Pixel pairs
                 # section of the feature array

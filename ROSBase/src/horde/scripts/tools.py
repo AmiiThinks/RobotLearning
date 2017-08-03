@@ -74,7 +74,7 @@ def timing(f):
         te = time()
         # print 'func:%r args:[%r, %r] took: %2.4f sec' % \
         # (f.__name__, args, kw, te-ts)
-        rospy.loginfo('func:%r took: %2.4f sec' % (f.__name__, te-ts))
+        rospy.logdebug('func:%r took: %2.4f sec' % (f.__name__, te-ts))
         return result
     return wrap
 
