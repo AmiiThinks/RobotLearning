@@ -277,7 +277,7 @@ if __name__ == "__main__":
             alpha0 = hps['alpha0']
             lmbda = hps['lmbda']
 
-            features_to_use = ['image', 'bias']
+            features_to_use = ['image', 'bump', 'bias']
             feature_indices = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use])
             num_active_features = sum(StateConstants.num_active_features[f] for f in features_to_use)
             num_features = feature_indices.size

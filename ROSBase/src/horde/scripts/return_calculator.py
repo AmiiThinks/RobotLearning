@@ -83,8 +83,8 @@ class ReturnCalculator:
         
         self.current_policy = self.behavior_policy
         self.fixed_steps_under_pi = 100
-        self.fixed_step_under_mu = 100
-        self.mu_max_horizon      = 100
+        self.fixed_step_under_mu = 50
+        self.mu_max_horizon      = 50
         self.steps_under_mu = self.fixed_step_under_mu + np.random.randint(self.mu_max_horizon)
 
 
@@ -208,6 +208,7 @@ class ReturnCalculator:
             print "current_condition:", self.current_condition
             print "fixed_steps_under_pi:", self.fixed_steps_under_pi
             print "steps_under_mu:", self.steps_under_mu
+            print "sample_number:", sample_number
             print "-------------------------------------"
 
             # take action
@@ -244,9 +245,9 @@ class ReturnCalculator:
 
             # terminate if collected information for sample size
             if (sample_number % 10) == 0 and num_steps_followed_pi == (self.fixed_steps_under_pi - 1):
-                np.savez("actual_return_{}.npz".format(self.gvf.name), _return = self.samples_G, samples = self.samples_phi)
+                np.savez("actual_return_{}.npz".format(self.gvf.name), _return = self.samples_G, samples = self.samples_phi, sample_size = sample_number)
             if sample_number == self.sample_size:
-                np.savez("actual_return_{}.npz".format(self.gvf.name), _return = self.samples_G, samples = self.samples_phi)
+                np.savez("actual_return_{}.npz".format(self.gvf.name), _return = self.samples_G, samples = self.samples_phi, sample_size = sample_number)
                 self.publishers["termination"].publish(True)
                 break
 

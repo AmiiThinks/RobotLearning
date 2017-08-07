@@ -15,10 +15,35 @@ from policy import Policy
 
 
 # go forward with probability 0.9 and left with probability 0.1
-class GoForwardWithRandomness(Policy):
-    def __init__(self, forward_percentage, *args, **kwargs):
+# class GoForwardWithRandomness(Policy):
+#     def __init__(self, forward_percentage, *args, **kwargs):
 
-        self.forward_percentage = forward_percentage
+#         self.forward_percentage = forward_percentage
+
+#         # where the last action is recorded according
+#         # to its respective constants
+#         self.TURN = 2
+#         self.FORWARD = 1
+#         self.STOP = 0
+
+#         Policy.__init__(self, *args, **kwargs)
+
+#     def update(self, phi, observation, *args, **kwargs):
+        
+#         self.pi = np.zeros(self.action_space.size)
+
+#         if bool(sum(observation["bump"])):
+#             self.pi[self.TURN] = 1
+#         else:
+#             self.pi[self.FORWARD] = self.forward_percentage
+#             self.pi[self.TURN] = 1 - self.forward_percentage
+
+class GoForwardWithRandomness(Policy):
+    def __init__(self, forward_repeat_percentage, turn_repeat_percentage, *args, **kwargs):
+
+        # self.forward_percentage = forward_percentage
+        self.forward_repeat_percentage = forward_repeat_percentage
+        self.turn_repeat_percentage = turn_repeat_percentage
 
         # where the last action is recorded according
         # to its respective constants
@@ -35,8 +60,12 @@ class GoForwardWithRandomness(Policy):
         if bool(sum(observation["bump"])):
             self.pi[self.TURN] = 1
         else:
-            self.pi[self.FORWARD] = self.forward_percentage
-            self.pi[self.TURN] = 1 - self.forward_percentage
+            if self.last_index == self.FORWARD:
+                self.pi[self.FORWARD] = self.forward_repeat_percentage
+                self.pi[self.TURN] = 1 - self.forward_repeat_percentage
+            else:
+                self.pi[self.FORWARD] = 1 - self.turn_repeat_percentage
+                self.pi[self.TURN] = self.turn_repeat_percentage
 
 # go forward if bump sensor is off
 class GoForwardIfNotBump(Policy):
@@ -61,7 +90,7 @@ class GoForwardIfNotBump(Policy):
 if __name__ == "__main__":
     try:
 
-        time_scale = 0.1
+        time_scale = 0.2
         forward_speed = 0.2
         turn_speed = 1.0
 
@@ -92,9 +121,10 @@ if __name__ == "__main__":
                                **parameters)
 
 
-        behavior_policy = GoForwardWithRandomness(forward_percentage=0.9,
-                                            action_space=action_space,
-                                            feature_indices=feature_indices)
+        behavior_policy = GoForwardWithRandomness(forward_repeat_percentage=0.9,
+                                                  turn_repeat_percentage = 0.5,
+                                                  action_space=action_space,
+                                                  feature_indices=feature_indices)
         target_policy   = GoForwardIfNotBump(action_space=action_space,
                                              feature_indices=feature_indices)
 
