@@ -90,7 +90,7 @@ class GoForwardIfNotBump(Policy):
 if __name__ == "__main__":
     try:
 
-        time_scale = 0.2
+        time_scale = 0.1
         forward_speed = 0.2
         turn_speed = 1.0
 
@@ -98,7 +98,7 @@ if __name__ == "__main__":
                       'alpha0': 0,
                       'lmbda': 0,
                      }
-        features_to_use = ['image','bump','bias']
+        features_to_use = ['image', 'bias']
         feature_indices = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use])
         num_features = feature_indices.size
         

@@ -241,13 +241,19 @@ class ReturnCalculator:
                 num_steps_followed_mu = 0
                 
                 # store phi
+                print "----------------------------------"
+                print ""
+                print ""
+                print ""
+                print "sample phi: ", np.sum(phi[self.feature_indices])
+                print "----------------------------------"
                 self.samples_phi[sample_number, :] = phi[self.feature_indices]
 
             # terminate if collected information for sample size
             if (sample_number % 10) == 0 and num_steps_followed_pi == (self.fixed_steps_under_pi - 1):
-                np.savez("actual_return_{}.npz".format(self.gvf.name), _return = self.samples_G, samples = self.samples_phi, sample_size = sample_number)
+                np.savez("actual_return_{}.npz".format(self.gvf.name), _return = self.samples_G[:sample_number], samples = self.samples_phi[:sample_number, :], sample_size = sample_number)
             if sample_number == self.sample_size:
-                np.savez("actual_return_{}.npz".format(self.gvf.name), _return = self.samples_G, samples = self.samples_phi, sample_size = sample_number)
+                np.savez("actual_return_{}.npz".format(self.gvf.name), _return = self.samples_G[:sample_number], samples = self.samples_phi[:sample_number, :], sample_size = sample_number)
                 self.publishers["termination"].publish(True)
                 break
 
