@@ -7,14 +7,17 @@ import numpy as np
 class Evaluator:
     def __init__(self, gvf_name, num_features, alpha_rupee, beta0_rupee):
 
-        # # load the state representation and actual return for sample states
-        # data = np.load("actual_return_" + gvf_name + ".npz")
-        # self.samples_phi = data["samples"]
-        # self.samples_G   = data["_return"]
-        # self.sample_size = len(self.sample_states)
+        MAX_TIME_STEPS = 1000000
+
+        # load the state representation and actual return for sample states
+        data = np.load("actual_return_" + gvf_name + ".npz")
+        self.samples_phi = data["samples"]
+        self.samples_G   = data["_return"]
+        self.sample_size = data["sample_size"]
 
         # # initialize the preformance measures
         self.MSRE = 0.0
+        self.MSRE_over_time = np.zeros(MAX_TIME_STEPS)
         self.td_error = 0.0
         self.avg_td_error = 0.0
         
@@ -27,13 +30,16 @@ class Evaluator:
         self.td_elig_avg = np.zeros(num_features)
         self.rupee = 0.0
 
-    def compute_MSRE(self, theta):
+    def compute_MSRE(self, theta, time_step):
         self.MSRE = 0.0
         for i, phi in enumerate(self.samples_phi):
             estimated_value = np.dot(theta, phi)
             self.MSRE = self.MSRE + (estimated_value - self.samples_G[i]) * (estimated_value - self.samples_G[i])
         self.MSRE = self.MSRE / self.sample_size
         self.MSRE = np.sqrt(self.MSRE)
+        self.MSRE_over_time[time_step] = self.MSRE
+        if (time_step % 10 == 0.0):
+            np.savez("MSRE_over_time.npz", MSRE = self.MSRE_over_time, time_step = time_step) 
 
     def compute_rupee(self, tderr_elig, delta, phi):
 

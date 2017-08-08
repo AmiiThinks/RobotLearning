@@ -83,7 +83,7 @@ class GVF:
                                      delta = self.learner.delta,
                                      phi = phi)
         # update MSRE
-        # self.evaluator.compute_MSRE(self.learner.theta)
+        self.evaluator.compute_MSRE(self.learner.theta, self.time_step)
 
         # update avg TD error
         self.evaluator.compute_avg_td_error(delta = self.learner.delta, 
