@@ -1,12 +1,10 @@
 #!/usr/bin/env python
+"""Module containing the GreedyGQ algorithm.
 
-"""
-Author: Shibhansh Dohare, Niko Yasui.
+Also supports prioritized and uniform experience replay
 
-Description:
-GreedyGQ contains an implementatin of greedy-gq along with the ability of prioritized and uniform 
-experience replay.
-
+Authors: 
+    Shibhansh Dohare, Niko Yasui.
 """
 
 from __future__ import division
@@ -21,33 +19,28 @@ import tools
 class GreedyGQ:
     """An implementation of GreedyGQ learning algoritm.
 
-    Implementation on greedy_gq based on (https://era.library.ualberta.ca/files/8s45q967t/Hamid_Maei_PhDThesis.pdf) 
-    and prioritized experience replay based on (https://arxiv.org/pdf/1511.05952.pdf)   
+    Implementation on greedy_gq based on https://era.library.ualberta.ca/files/8s45q967t/Hamid_Maei_PhDThesis.pdf
+    and prioritized experience replay based on https://arxiv.org/pdf/1511.05952.pdf
+    Doesn't update some paramenters when we are replaying experience 
+    (either uniform or prioritized). 
+
+    Attributes:
+        action_space (numpy array of action): Numpy array containing
+            all actions available to any agent.
+        finished_episode (fun): Function that evaluates if an episode
+            has been finished or not.
+        num_features (int): The number of features in the state-action
+            representation.
+        alpha (float): Primary learning rate.
+        beta (float): Secondary learning rate
+        lmbda (float): Trace decay rate.
+
+        Note: A copy of phi is created during the construction process.
 
     """
 
     def __init__(self, action_space, finished_episode, num_features, alpha, beta, lmbda, **kwargs):
-        """Initializes the greedy_gq learner.
 
-        Updates the weights of the greedyGQ learner. Doesn't update some paramenters when we are replaying 
-        experience (either uniform or prioritized). 
-
-        Parameters
-        ----------
-        arg1 : action_space
-            Set of possible actions for the learner
-        arg2 : finished_episode
-            Function that evaluates if an episode is finished or not
-        arg3 : num_features
-            The number of features in the state-action representation
-        arg4 : alpha
-            Primary learning rate
-        arg5 : beta
-            Secondary learning rate
-        arg6 : lmbda
-            lambda in the greedy-gq learning algorithm
-
-        """
         self.lmbda = lmbda
         self.alpha = alpha
         self.beta = beta
@@ -59,6 +52,7 @@ class GreedyGQ:
         self.theta = np.zeros(num_features)
         self.sec_weights = np.zeros(num_features)
         self.e = np.zeros(num_features)
+        self.last_gamma = 0
 
         # measuring performance
         self.timeStep = 0
@@ -77,14 +71,16 @@ class GreedyGQ:
         self.episode_finished_last_step = False
 
     def predict(self, phi, action):
-        """Calculates theta^(phi)
-        
-        First calculates phi for state-action representation, then calculate theta*phi for the new phi
+        """Builds the action state reperesentaiton and multiplies by theta.
 
+        Args:
+            phi (numpy array of bool): Boolean feature vector.
+            action (action): Action that was taken.
         """
         if action is not None:
             q = np.dot(self.get_state_action(phi, action), self.theta)
         else:
+            # get average value of actions
             get_a_phi = lambda a: self.get_state_action(phi, a)
             dot_fun = np.vectorize(lambda a: np.dot(get_a_phi(a), self.theta))
             q = np.mean(dot_fun(self.action_space))
@@ -92,10 +88,11 @@ class GreedyGQ:
         return q
 
     def take_random_action(self):
-        """Returns a random action from action space
+        """Returns a random action from action space.
 
-        Selects a random action from the action space. Used while episode reset. Uses one less action
-        to avoide 'wiggling' during episode reset.
+        Returns:
+            (action, prob) where prob is 1 over the size of the action
+                space.
 
         """
         random_action = self.action_space[random.randint(0,len(self.action_space)-2)]
@@ -104,31 +101,26 @@ class GreedyGQ:
     def update(self, phi, last_action, phi_prime, cumulant, gamma, rho, replaying_experience=False, **kwargs):
         """Updates the parameters (weights) of the greedy_gq learner.
 
-        Updates the weights of the greedyGQ learner. Doesn't update some paramenters when we are replaying experience
+        Doesn't update some paramenters when we are replaying experience
         (either uniform or prioritized). 
 
-        Parameters
-        ----------
-        arg1 : phi
-            Previous state
-        arg2 : last_action
-            Action taken in last step
-        arg3 : phi_prime
-            Current (New) state
-        arg4 : cumulant
-            Returns the cumulant in the existing state
-        arg5 : gamma
-            Discounting factor
-        arg6 : rho
-            off policy importance sampling ratio
-        arg7 : replaying_experience
-            boolean to control updating parameters in case of parametrized update
-        optional arg1 : experience_id
-            Id of the experience that is being replayed
-        Returns
-        -------
-        np.array
-            action_phi : state-action representation for previous state and action
+        Parameters:
+            phi (numpy array of bool): State at time t.
+            last_action (action): Action at time t.
+            phi_prime (numpy array of bool): State at time t+1.
+            cumulant (float): Cumulant at time t.
+            gamma (float): Discounting factor at time t+1.
+            rho (float): Off policy importance sampling ratio at time t.
+            replaying_experience (bool): True if replaying an 
+                experience, false if gathering a new experience from the
+                environment.
+            experience_id (optional int): ID number of the experience
+                that is being replayed
+
+        Returns:
+            action_phi (numpy array of bool): Representation for the
+                state-action pair at time t. Only used to calculate
+                RUPEE.
 
         """
         if replaying_experience is False:
@@ -181,14 +173,14 @@ class GreedyGQ:
             rospy.logwarn('self.action_phi in greedy_gq is zero')
 
         # e_t update
-        self.e *= gamma * self.lmbda * rho
+        self.e *= self.last_gamma * self.lmbda * rho
         self.e += self.action_phi #(phi_t)
 
         if np.count_nonzero(self.e) == 0:
             rospy.logwarn('self.e in greedy_gq is zero')
 
         # theta_t update
-        self.theta += self.alpha * (self.td_error * self.e - gamma * (1 - self.lmbda) * np.dot(self.sec_weights, self.action_phi) * action_phi_bar)
+        self.theta += self.alpha * (self.td_error * self.e - self.last_gamma * (1 - self.lmbda) * np.dot(self.sec_weights, self.action_phi) * action_phi_bar)
 
         # w_t update
         self.sec_weights += self.beta * \
@@ -196,6 +188,9 @@ class GreedyGQ:
 
         # for calculating RUPEE
         self.delta = self.td_error
+
+        # save gamma
+        self.last_gamma = gamma
 
 
         if replaying_experience is False:
@@ -224,10 +219,11 @@ class GreedyGQ:
         return self.action_phi
 
     def uniform_experience_replay(self,*args,**kwargs):
-        """Replays 'num_updates_to_make' experiences from the saved experiences.
+        """Replays experiences from saved memory.
 
-        'self.worst_experiences', stores the last 100 experiences, 'num_updates_to_make' 
-        random experiences are chosen for replay
+        Replays ``num_updates_to_make`` experiences. 
+        ``self.worst_experiences`` stores the most recent 100
+        experiences.
 
         """
         if self.num_experiences < 1:
@@ -258,11 +254,11 @@ class GreedyGQ:
             self.worst_experiences[replayed_experience_location_in_sorted_list]['td_error'] = abs(self.td_error)
 
     def td_error_prioritized_experience_replay(self,*args,**kwargs):
-        """Replays 'num_updates_to_make' worst experiences from the saved experiences.
+        """Replays worst experiences from memory.
 
-        'self.worst_experiences', stores the last 100 experiences. Top 'num_updates_to_make' 
-        experiences are chosen for replay. Experiences are prioritized in order of magnitude of td-error.
-
+        ``self.worst_experiences`` stores the last 100 experiences.
+        The ``num_updates_to_make`` experiences with the highest TD
+        error are chosen for replay.
         """
         self.worst_experiences = sorted(self.worst_experiences, key=lambda k: k['td_error'],reverse=True)[:100]
 

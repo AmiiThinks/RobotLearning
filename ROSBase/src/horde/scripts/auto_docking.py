@@ -1,33 +1,37 @@
-"""
-Author: Shibhansh Dohare.
+"""Describes the auto-docking task.
 
-Description:
+Contains various parameters for various steps of auto-docking. Very 
+similar to 'wall_demo.py'.
 
-Contains various parameters for various steps of auto-docking. Very similar to 'wall_demo.py' 
-
+Authors: 
+    Shibhansh Dohare, Niko Yasui.
 """
 from __future__ import division
 import multiprocessing as mp
 import numpy as np
 import random
+
 import rospy
 from geometry_msgs.msg import Twist, Vector3
-import tools
+from std_msgs.msg import Bool
 import subprocess
 
 from action_manager import start_action_manager
-from gtd import GTD
-from greedy_gq import GreedyGQ
-from gvf import GVF
-from learning_foreground import start_learning_foreground
 from auto_docking_policies import *
+from learning_foreground import start_learning_foreground
+from greedy_gq import GreedyGQ
+from gtd import GTD
+from gvf import GVF
 from state_representation import StateConstants
-from std_msgs.msg import Bool
+import tools
+
 
 if __name__ == "__main__":
     """
-        Change the 'task_to_learn' parameter to learn any task for auto-docking
-        For every task only 'action_space', 'reward_function' and 'behaviour polices are different'
+    Change the ``task_to_learn`` parameter to learn any sub-task for 
+    auto-docking.
+    For every sub-task only ``action_space``, ``reward_function``, and
+    ``behaviour_policy`` are different.
     """
     try:
 
