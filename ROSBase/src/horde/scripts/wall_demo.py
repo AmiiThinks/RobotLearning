@@ -485,7 +485,7 @@ if __name__ == "__main__":
             #                 }
 
             # prediction GVF
-            dtb_policy = GoForward(action_space=action_space)
+            dtb_policy = GoForward(action_space=action_space, fwd_action_index=1)
             dtb_learner = GTD(**dtb_hp)
 
             threshold_policy = DeterministicForwardIfClear(action_space=action_space,

@@ -316,7 +316,6 @@ class LearningForeground:
             # make prediction
             self.preds = {g:g.predict(phi_prime, action) for g in self.gvfs}
             
-            print([self.preds[g] for g in self.preds])
             # learn
             if self.last_observation is not None:
                 self.update_gvfs(phi_prime, observation)
