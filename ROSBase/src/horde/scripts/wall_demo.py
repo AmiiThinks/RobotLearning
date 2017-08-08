@@ -199,6 +199,30 @@ class ForwardIfClear(Policy):
         self.pi = np.zeros(self.action_space.size)
         self.pi[self.last_index] = 1
 
+class DeterministicForwardIfClear(Policy):
+    def __init__(self, *args, **kwargs):
+        # where the last action is recorded according
+        # to its respective constants
+        self.TURN = 1
+        self.FORWARD = 0
+        # self.STOP = 0
+
+        Policy.__init__(self, *args, **kwargs)
+
+    def update(self, phi, observation, *args, **kwargs):
+        phi = phi[self.feature_indices]
+
+        if sum(observation['bump']):
+            self.last_index = self.TURN
+        else:
+            # if self.last_index == self.TURN:
+            #     self.last_index = self.STOP
+            # else:
+            self.last_index = self.FORWARD
+
+        self.pi = np.zeros(self.action_space.size)
+        self.pi[self.last_index] = 1
+
 class Switch:
     def __init__(self, explorer, exploiter, num_timesteps_explore):
         self.explorer = explorer
@@ -309,7 +333,7 @@ if __name__ == "__main__":
             dtb_policy = GoForward(action_space=action_space)
             dtb_learner = GTD(**dtb_hp)
 
-            threshold_policy = PavlovSoftmax(action_space=action_space,
+            threshold_policy = DeterministicForwardIfClear(action_space=action_space,
                                         feature_indices=dtb_hp['feature_indices'],
                                         value_function=dtb_learner.predict,
                                         time_scale=time_scale)

@@ -21,7 +21,6 @@ class Evaluator:
         self.td_error = 0.0
         self.avg_td_error = 0.0
         
-
         # See Adam White's PhD Thesis, section 8.4.2
         self.alpha_rupee = alpha_rupee
         self.beta0_rupee = beta0_rupee

@@ -47,12 +47,15 @@ class LearningForeground:
         # set up ros
         rospy.init_node('agent', anonymous=True)
 
+        self.COLLECT_DATA_FLAG = True
+
         # counts the total cumulant for the session
         self.cumulant_counter = cumulant_counter or mp.Value('d', 0)
 
         # capture this session's data and actions
-        self.history = rosbag.Bag('results.bag', 'w')
-        self.current_time = rospy.Time().now()
+        if self.COLLECT_DATA_FLAG:
+            self.history = rosbag.Bag('results.bag', 'w')
+            self.current_time = rospy.Time().now()
 
         self.vis = False
 
@@ -185,14 +188,15 @@ class LearningForeground:
             data['bump'] = np.sum([[bool(x & bump) for x in bump_codes] for bump in bumps], axis=0).tolist()
             data['charging'] = bool(data['core'][-1].charger & 2)
 
-             # enter the data into rosbag
-            for bindex in range(len(data['bump'])):
-                bump_bool = std_msg.Bool()
-                bump_bool.data = data['bump'][bindex]
-                self.history.write('bump' + str(bindex), bump_bool, t=self.current_time)
-            charge_bool = std_msg.Bool()
-            charge_bool.data = data['charging']
-            self.history.write('charging', charge_bool, t=self.current_time)
+            # enter the data into rosbag
+            if self.COLLECT_DATA_FLAG:
+                for bindex in range(len(data['bump'])):
+                    bump_bool = std_msg.Bool()
+                    bump_bool.data = data['bump'][bindex] if data['bump'][bindex] else False
+                    self.history.write('bump' + str(bindex), bump_bool, t=self.current_time)
+                charge_bool = std_msg.Bool()
+                charge_bool.data = data['charging']
+                self.history.write('charging', charge_bool, t=self.current_time)
 
         if data['ir']:
             ir = [[0]*6]*3
@@ -204,15 +208,17 @@ class LearningForeground:
             data['ir'] = [int(''.join([str(i) for i in ir_temp]),2) for ir_temp in ir] 
 
             # enter the data into rosbag
-            ir_array = std_msg.Int32MultiArray()
-            ir_array.data = data['ir']
-            self.history.write('ir', ir_array, t= self.current_time)
+            if self.COLLECT_DATA_FLAG:
+                ir_array = std_msg.Int32MultiArray()
+                ir_array.data = data['ir']
+                self.history.write('ir', ir_array, t= self.current_time)
 
         if data['image'] is not None:
             # enter the data into rosbag
             # image_array = std_msg.Int32MultiArray()
             # image_array.data = data['image']
-            self.history.write('image', data['image'], t=self.current_time)
+            if self.COLLECT_DATA_FLAG:
+                self.history.write('image', data['image'], t=self.current_time)
             
             # uncompressing image
             data['image'] = np.asarray(self.img_to_cv2(data['image']))
@@ -223,13 +229,14 @@ class LearningForeground:
             data['odom'] = np.array([pos.x, pos.y])
 
             # enter the data into rosbag
-            odom_x = std_msg.Float64()
-            odom_x.data = pos.x
-            odom_y = std_msg.Float64()
-            odom_y.data = pos.y
+            if self.COLLECT_DATA_FLAG:
+                odom_x = std_msg.Float64()
+                odom_x.data = pos.x
+                odom_y = std_msg.Float64()
+                odom_y.data = pos.y
 
-            self.history.write('odom_x', odom_x, t=self.current_time)
-            self.history.write('odom_y', odom_y, t=self.current_time)
+                self.history.write('odom_x', odom_x, t=self.current_time)
+                self.history.write('odom_y', odom_y, t=self.current_time)
 
         if data['imu'] is not None:
             data['imu'] = data['imu'].orientation.z
@@ -299,12 +306,17 @@ class LearningForeground:
             self.behavior_policy.update(phi_prime, observation)
             action = self.behavior_policy.choose_action()
             mu = self.behavior_policy.get_probability(action)
+            
+            if self.COLLECT_DATA_FLAG:
+                self.history.write('action', action, t=self.current_time)
+            
             self.take_action(action)
 
-            self.history.write('action', action, t=self.current_time)
 
             # make prediction
             self.preds = {g:g.predict(phi_prime, action) for g in self.gvfs}
+            
+            print([self.preds[g] for g in self.preds])
             # learn
             if self.last_observation is not None:
                 self.update_gvfs(phi_prime, observation)
@@ -336,7 +348,8 @@ class LearningForeground:
 
             # sleep until next time step
             self.r.sleep()
-        self.history.close()
+        if self.COLLECT_DATA_FLAG:
+            self.history.close()
 
 def start_learning_foreground(time_scale,
                               GVFs,
