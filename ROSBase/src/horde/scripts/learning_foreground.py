@@ -57,7 +57,7 @@ class LearningForeground:
             self.history = rosbag.Bag('results.bag', 'w')
             self.current_time = rospy.Time().now()
 
-        self.vis = False
+        self.vis = True
 
         self.features_to_use = set(features_to_use + ['core', 'ir'])
         topics = filter(lambda x: x, 
@@ -128,7 +128,7 @@ class LearningForeground:
                            'pause': pause_publisher,
                            'termination': termination_publisher
                           }
-        labels = ['prediction', 'td_error', 'avg_td_error', 'rupee', 
+        labels = ['prediction', 'td_error', 'avg_td_error', 'rupee', 'MSRE',
                   'cumulant']
         label_pubs = {g:{l:pub(g.name, l) for l in labels} for g in self.gvfs}
         self.publishers.update(label_pubs)
@@ -152,6 +152,7 @@ class LearningForeground:
             self.publishers[gvf]['td_error'].publish(gvf.evaluator.td_error)
             self.publishers[gvf]['avg_td_error'].publish(gvf.evaluator.avg_td_error)
             self.publishers[gvf]['rupee'].publish(gvf.evaluator.rupee)
+            self.publishers[gvf]['MSRE'].publish(gvf.evaluator.MSRE)
 
     def read_source(self, source, history=False):
         temp = [] if history else None

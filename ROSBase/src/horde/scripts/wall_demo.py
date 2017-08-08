@@ -248,9 +248,9 @@ class PavlovSoftmax(Policy):
             self.pi[self.TURN] = 1
         else:
             # Joseph Modayil's constants
-            T = 1/self.time_scale/3
+            T = 1/self.time_scale/1
             k1 = np.log((T-1)*(self.action_space.size-1))
-            k2 = k1 * 5
+            k2 = k1 * 6.0
 
             # make preferences for each action
             prefs = np.zeros(2)
@@ -463,7 +463,8 @@ if __name__ == "__main__":
 
             turn_sec_to_bump = 2
             # discount = math.pow(0.75, time_scale / turn_sec_to_bump)
-            discount = 1 - time_scale
+            # discount = 1 - time_scale
+            discount = 0.9
             discount_if_bump = lambda obs: 0 if sum(obs["bump"]) else discount
             one_if_bump = lambda obs: int(any(obs['bump'])) if obs is not None else 0
             dtb_hp = {'alpha': alpha0 / num_active_features,

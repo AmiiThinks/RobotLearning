@@ -30,13 +30,13 @@ class Evaluator:
         self.rupee = 0.0
 
     def compute_MSRE(self, theta, time_step):
-        self.MSRE = 0.0
+        return_error = 0.0
         for i, phi in enumerate(self.samples_phi):
             estimated_value = np.dot(theta, phi)
-            self.MSRE = self.MSRE + (estimated_value - self.samples_G[i]) * (estimated_value - self.samples_G[i])
-        self.MSRE = self.MSRE / self.sample_size
-        self.MSRE = np.sqrt(self.MSRE)
-        self.MSRE_over_time[time_step] = self.MSRE
+            return_error = return_error + (estimated_value - self.samples_G[i]) * (estimated_value - self.samples_G[i])
+        MSRE = np.sqrt(return_error / self.sample_size)
+        self.MSRE = MSRE
+        self.MSRE_over_time[time_step] = MSRE
         if (time_step % 10 == 0.0):
             np.savez("MSRE_over_time.npz", MSRE = self.MSRE_over_time, time_step = time_step) 
 
