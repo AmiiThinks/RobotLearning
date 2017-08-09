@@ -5,15 +5,21 @@ Author: Banafsheh Rafiee, Niko Yasui
 import numpy as np
 
 class Evaluator:
-    def __init__(self, gvf_name, num_features, alpha_rupee, beta0_rupee):
+    def __init__(self,
+                 gvf_name,
+                 num_features,
+                 alpha_rupee,
+                 beta0_rupee,
+                 use_MSRE):
 
         MAX_TIME_STEPS = 1000000
 
         # load the state representation and actual return for sample states
-        data = np.load("actual_return_" + gvf_name + ".npz")
-        self.samples_phi = data["samples"]
-        self.samples_G   = data["_return"]
-        self.sample_size = data["sample_size"]
+        if use_MSRE:
+            data = np.load("actual_return_" + gvf_name + ".npz")
+            self.samples_phi = data["samples"]
+            self.samples_G   = data["_return"]
+            self.sample_size = data["sample_size"]
 
         # # initialize the preformance measures
         self.MSRE = 0.0
