@@ -7,11 +7,12 @@ from cv_bridge.core import CvBridge
 from gtd import GTD
 from gvf import GVF
 from state_representation import StateConstants, StateManager
-from wall_demo import PavlovSoftmax, GoForward
+from wall_demo import DeterministicForwardIfClear, GoForward
 
 def action_twist_to_binary(twist_action):
     action = np.zeros(action_space.size)
-    if (action is not None):
+
+    if (twist_action is not None):
         if (twist_action.angular.x > 0.0001):
             # accounts for turn
             action[1] = 1
@@ -31,10 +32,13 @@ def get_state(entry, prev_entry):
     
     if entry.get('image') is not None:
         data['image'] = np.asarray(CvBridge().compressed_imgmsg_to_cv2(entry['image']))
+    else:
+        data['image'] = None
 
     phi = offwd_state_manager.get_phi(**data)
 
-    phi = np.concatenate([phi, action_twist_to_binary(last_twist)])
+    if (prev_entry):
+        phi = np.concatenate([phi, action_twist_to_binary(prev_entry['action'])])
     observations = offwd_state_manager.get_observations(**data)
 
     return phi, observations
@@ -71,7 +75,7 @@ if __name__ == "__main__":
     dtb_policy = GoForward(action_space=action_space)
     dtb_learner = GTD(**dtb_hp)
 
-    threshold_policy = PavlovSoftmax(action_space=action_space,
+    threshold_policy = DeterministicForwardIfClear(action_space=action_space,
                                      feature_indices=dtb_hp['feature_indices'],
                                      value_function=dtb_learner.predict,
                                      time_scale=time_scale)
@@ -89,7 +93,6 @@ if __name__ == "__main__":
 
     bag = rosbag.Bag('results.bag')
 
-
     # organize the bag data by clumping all data from a single timestep
     # in a dictionary
     last_t = None
@@ -100,22 +103,35 @@ if __name__ == "__main__":
                                                    'action']):
         if t != last_t and last_t is not None:
             collected_history.append(time_step_info)
-        else:
-            time_step_info[topic] = msg
+            time_step_info = {}
+        
+        time_step_info[topic] = msg
 
         last_t = t
 
     # process and update data for the given learning algorithm
     offwd_state_manager = StateManager(features_to_use)
     prev_entry = None
-    prev_phi = None
+    prev_phi = np.zeros(StateConstants.TOTAL_FEATURE_LENGTH)
     prev_obs = None
     prev_mu = 1
 
     for entry in collected_history:
         phi, observations = get_state(entry, prev_entry)
 
-        print phi
+        threshold_policy.update(phi, observations)
+        prev_action = threshold_policy.choose_action()
+        prev_action = entry["action"] if entry and entry["action"] else action_space[0]
+
+        distance_to_bump.update(
+            prev_obs,
+            prev_phi,
+            prev_action,
+            observations,
+            phi,
+            prev_mu)
+
+        print(distance_to_bump.predict(phi))
 
         prev_phi = phi
         prev_obs = observations

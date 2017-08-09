@@ -19,7 +19,7 @@ class GTD:
         self.delta = cumulant + gamma * np.dot(phi_prime, self.theta) - np.dot(phi, self.theta)
         self.e = rho * (self.lmbda * self.old_gamma * self.e + phi)
         self.tderr_elig = self.delta * self.e
-        
+
         self.theta += self.alpha * (self.tderr_elig - gamma * (1 - self.lmbda) * np.dot(self.e, self.w) * phi_prime)
         self.w += self.beta * (self.tderr_elig - np.dot(phi, self.w) * phi)
 

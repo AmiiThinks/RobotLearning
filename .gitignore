@@ -107,4 +107,5 @@ ENV/
 *~
 
 # Experiment data
-ROSBase/src/horde/scripts/observations.txt
+ROSBase/src/horde/scripts/results.bag
+ROSBase/src/horde/scripts/MSRE_over_time.npz

@@ -190,9 +190,9 @@ class PavlovSoftmax(Policy):
             self.pi[self.TURN] = 1
         else:
             # Joseph Modayil's constants
-            T = 1/self.time_scale/3
+            T = 1/self.time_scale/1
             k1 = np.log((T-1)*(self.action_space.size-1))
-            k2 = k1 * 4
+            k2 = k1 * 6.0
 
             # make preferences for each action
             prefs = np.zeros(2)
@@ -246,6 +246,30 @@ class ForwardIfClear(Policy):
             self.last_index = self.FORWARD
 
         self.pi *= 0
+        self.pi[self.last_index] = 1
+
+class DeterministicForwardIfClear(Policy):
+    def __init__(self, *args, **kwargs):
+        # where the last action is recorded according
+        # to its respective constants
+        self.TURN = 1
+        self.FORWARD = 0
+        # self.STOP = 0
+
+        Policy.__init__(self, *args, **kwargs)
+
+    def update(self, phi, observation, *args, **kwargs):
+        phi = phi[self.feature_indices]
+
+        if sum(observation['bump']):
+            self.last_index = self.TURN
+        else:
+            # if self.last_index == self.TURN:
+            #     self.last_index = self.STOP
+            # else:
+            self.last_index = self.FORWARD
+
+        self.pi = np.zeros(self.action_space.size)
         self.pi[self.last_index] = 1
 
 class Switch:
@@ -358,7 +382,8 @@ if __name__ == "__main__":
 
             turn_sec_to_bump = 2
             # discount = math.pow(0.75, time_scale / turn_sec_to_bump)
-            discount = 1 - time_scale
+            # discount = 1 - time_scale
+            discount = 0.9
             discount_if_bump = lambda obs: 0 if sum(obs["bump"]) else discount
             one_if_bump = lambda obs: int(any(obs['bump'])) if obs is not None else 0
             dtb_hp = {'alpha': alpha0 / num_active_features,
@@ -380,10 +405,10 @@ if __name__ == "__main__":
             #                 }
 
             # prediction GVF
-            dtb_policy = GoForward(action_space=action_space)
+            dtb_policy = GoForward(action_space=action_space, fwd_action_index=1)
             dtb_learner = GTD(**dtb_hp)
 
-            threshold_policy = PavlovSoftmax(action_space=action_space,
+            threshold_policy = DeterministicForwardIfClear(action_space=action_space,
                                         feature_indices=dtb_hp['feature_indices'],
                                         value_function=dtb_learner.predict,
                                         time_scale=time_scale)
