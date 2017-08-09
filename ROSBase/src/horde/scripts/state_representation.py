@@ -40,8 +40,8 @@ class StateConstants:
     IMAGE_CO = 640 # columns
 
     # IMU tiles
-    NUM_IMU_TILINGS = 1
-    NUM_IMU_TILES = 6
+    NUM_IMU_TILINGS = 4
+    NUM_IMU_TILES = 4
     SCALE_IMU = (NUM_IMU_TILES)/2.0 # range is [-1, 1]
     IMU_IHT_SIZE = get_next_pow2((NUM_IMU_TILES + 1) * NUM_IMU_TILINGS)
     IMU_START_INDEX = IMAGE_START_INDEX + TOTAL_IMAGE_FEATURE_LENGTH
@@ -124,7 +124,7 @@ class StateManager(object):
     @timing
     def get_phi(self, image, bump, ir, imu, odom, bias, weights = None,*args, **kwargs):
 
-        phi = np.zeros(StateConstants.TOTAL_FEATURE_LENGTH)
+        phi = np.zeros(StateConstants.TOTAL_FEATURE_LENGTH, dtype=bool)
 
         valid_image = lambda image: image is not None and len(image) > 0 and len(image[0]) > 0
 
@@ -150,7 +150,7 @@ class StateManager(object):
                 rgb_inds *= StateConstants.IMAGE_IHT_SIZE
 
                 indices = (tile_inds + rgb_inds[:, np.newaxis]).ravel()
-                phi[indices] = True
+                phi[indices] = 1
 
         if 'image_pairs' in self.features_to_use:
             # check if there is an image
@@ -194,7 +194,7 @@ class StateManager(object):
                 # offset all indices to correspond to the Pixel pairs
                 # section of the feature array
                 indices += StateConstants.PP_START_INDEX
-                phi[indices] = True
+                phi[indices] = 1
 
         if 'imu' in self.features_to_use:
             if imu is None:
@@ -209,7 +209,7 @@ class StateManager(object):
                                                 self.imu_iht, 
                                                 [imu*StateConstants.SCALE_IMU]))
 
-                phi[indices + StateConstants.IMU_START_INDEX] = True
+                phi[indices + StateConstants.IMU_START_INDEX] = 1
 
         if 'odom' in self.features_to_use:
             if odom is None:
@@ -225,7 +225,7 @@ class StateManager(object):
                                                 (odom * StateConstants.SCALE_ODOM).tolist(),
                                                 []))
 
-                phi[indices + StateConstants.ODOM_START_INDEX] = True
+                phi[indices + StateConstants.ODOM_START_INDEX] = 1
 
         if 'ir' in self.features_to_use:
             if ir is None:
@@ -256,7 +256,7 @@ class StateManager(object):
                 value = ir_2
                 indices = np.nonzero(value)[0]
 
-                phi[np.asarray(indices) + StateConstants.IR_START_INDEX] = True
+                phi[np.asarray(indices) + StateConstants.IR_START_INDEX] = 1
 
         # bump
         if 'bump' in self.features_to_use and bump is not None:
@@ -264,14 +264,16 @@ class StateManager(object):
 
         # bias unit
         if 'bias' in self.features_to_use:
-            phi[StateConstants.indices_in_phi['bias']] = True
+            phi[StateConstants.indices_in_phi['bias']] = 1
 
         return phi
 
-    def get_observations(self, bump, ir, charging, **kwargs):
+    def get_observations(self, bump, ir, charging, odom, imu, **kwargs):
         observations = {'bump': bump if bump else (0,0,0),
-                          'ir': ir if ir else (0,0,0),
-                          'charging': charging if charging else False,
+                        'ir': ir if ir else (0,0,0),
+                        'charging': charging if charging else False,
+                        'speed': odom[3] if odom is not None else 0,
+                        'imu': imu if imu is not None else 0,
                        }
 
         return observations
