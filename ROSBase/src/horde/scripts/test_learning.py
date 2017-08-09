@@ -92,7 +92,7 @@ class RotateBounce(Policy):
         self.pi[self.direction] += 1
 
 class EpsilonRotateBounce(Policy):
-    """Bounces between 0.5 and -0.5 on IMU.
+    """Epsilon greedily bounces between 0.5 and -0.5 on IMU.
 
     Attributes:
         action_space (numpy array of action): Numpy array containing
@@ -125,6 +125,8 @@ class EpsilonRotateBounce(Policy):
 
 
 class Cumulant:
+    """Implements cumulant = next_imu - current_imu
+    """
     def __init__(self):
         self.last_imu = 0
 
