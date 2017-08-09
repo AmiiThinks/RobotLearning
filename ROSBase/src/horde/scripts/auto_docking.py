@@ -164,7 +164,8 @@ if __name__ == "__main__":
 
         learner = GreedyGQ(**learner_parameters)
 
-        target_policy = Greedy(feature_indices=feature_indices,
+        target_policy = eGreedy(epsilon=0,
+                       feature_indices=feature_indices,
                        action_space=action_space,
                        value_function=learner.predict)
 

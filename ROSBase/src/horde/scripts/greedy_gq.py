@@ -142,8 +142,6 @@ class GreedyGQ:
             self.num_experiences += 1
 
         self.action_phi = self.get_state_action(phi, last_action)
- 
-        self.tderr_elig = self.delta * self.e
 
         action_phi_primes = {temp_action: self.get_state_action(phi_prime, temp_action) for temp_action in self.action_space}
 
@@ -188,6 +186,7 @@ class GreedyGQ:
 
         # for calculating RUPEE
         self.delta = self.td_error
+        self.tderr_elig = self.delta * self.e
 
         # save gamma
         self.last_gamma = gamma

@@ -33,61 +33,47 @@ from state_representation import StateConstants
 import tools
 
 class MaximumEntropyMellowmax(Policy):
-    """Adaptive softmax policy. Inherits from the Policy class.
+    """Adaptive softmax policy.
 
-    Action selection is based on maintaining a ``pi`` array which holds
-    action selection probabilities. See "An Alternative Softmax Operator
-    for Reinforcement Learning", by Asadi and Littman at
+    Action selection is based on maintaining a 
+    :py:attr:`~policy.Policy.pi` array which holds action selection
+    probabilities. See "An Alternative Softmax Operator for
+    Reinforcement Learning" by Asadi and Littman at
     https://arxiv.org/abs/1612.05628. 
 
-    Attributes:
+    Args:
         omega (float): Hyperparameter for mellowmax.
-        value_function: A function used by the policy to 
-            update values of pi. This is usually a value function 
-            learned by a GVF.
-        feature_indices (numpy array of bool): The indices 
-            of the feature vector corresponding to the indices used by 
-            the ``value_function``.
+        value_function: A function used by the policy to update values 
+            of :py:attr:`~policy.Policy.pi`. This is usually a value 
+            function learned by a GVF.
+        feature_indices (numpy array of bool): Indices of the feature
+            vector corresponding to indices used by the
+            :py:obj:`value_function`.
         action_space (numpy array of action): Numpy array containing
             all actions available to any agent.
-        action_equality (optional): The function used to compare two 
-            action objects to determine whether they are equivalent. 
-            Returns True if the actions are equivalent and False 
-            otherwise.
-        pi (numpy array of float): Numpy array containing probabilities
-            corresponding to the actions at the corresponding index in
-            ``action_space``. Not passed to init.
-        last_index (int): The index of the last action chosen by the
-            policy. Not passed to init.
-        mellowmax: Variant of softmax; takes a numpy array and returns a
-            value between the minimal and maximal values in the array.
-            Not passed to init.
     """
 
     def __init__(self, 
                  omega,
                  value_function,
                  feature_indices,
+                 action_space,
                  *args, **kwargs):
         kwargs['value_function'] = value_function
         kwargs['feature_indices'] = feature_indices
+        kwargs['action_space'] = action_space
         Policy.__init__(self, *args, **kwargs)        
 
         self.mellowmax = lambda x: np.log(np.mean(np.exp(omega * x))) / omega
 
     def update(self, phi, *args, **kwargs):
-        """Updates ``pi`` based on the new feature vector.
+        """Updates :py:attr:`~policy.Policy.pi`.
 
-        Uses ``mellowmax`` to specify a root-finding problem that 
-        solves for a value of ``beta``, the softmax hyperparameter. 
-        Beta is bounded between -10 and 10 for performance reasons. If
-        beta is consistently on the boundary then the boundary should be
-        changed.
-
-        Args:
-            phi (numpy array of bool): Binary feature vector.
-            *args: Ignored.
-            **kwargs: Ignored.
+        Uses ``mellowmax`` to specify a root-finding problem that solves
+        for a value of ``beta``, the softmax hyperparameter. For
+        performance reasons, ``beta`` is bounded between -10 and 10. If
+        ``beta`` is consistently on the boundary then the boundary 
+        should be changed.
         """
         phi = phi[self.feature_indices]
 
@@ -111,29 +97,17 @@ class MaximumEntropyMellowmax(Policy):
         return optimize_this
 
 class Softmax(Policy):
-    """Softmax policy. Inherits from the Policy class. 
-    
-    Action selection is based on maintaining a ``pi`` array which holds
-    action selection probabilities.
+    """Softmax policy.
 
     Attributes:
         action_space (numpy array of action): Numpy array containing
             all actions available to any agent.
-        value_function: A function used by the policy to 
+        value_function (fun): A function used by the policy to 
             update values of pi. This is usually a value function 
             learned by a GVF.
-        feature_indices (numpy array of bool): The indices 
-            of the feature vector corresponding to the indices used by 
-            the ``value_function``.
-        action_equality (optional): The function used to compare two 
-            action objects to determine whether they are equivalent. 
-            Returns True if the actions are equivalent and False 
-            otherwise.
-        pi (numpy array of float): Numpy array containing probabilities
-            corresponding to the actions at the corresponding index in
-            ``action_space``. Not passed to init.
-        last_index (int): The index of the last action chosen by the
-            policy. Not passed to init.
+        feature_indices (numpy array of bool): Indices of the feature
+            vector corresponding to indices used by the
+            :py:obj:`value_function`.
     """
 
     def __init__(self, 
@@ -147,13 +121,8 @@ class Softmax(Policy):
         Policy.__init__(self, *args, **kwargs)
 
     def update(self, phi, *args, **kwargs):
-        """Updates ``pi`` based on the new feature vector.
+        """Updates :py:attr:`~policy.Policy.pi`."""
 
-        Args:
-            phi (numpy array of bool): Binary feature vector.
-            *args: Ignored.
-            **kwargs: Ignored.
-        """
         phi = phi[self.feature_indices]
 
         q_fun = np.vectorize(lambda action: self.value_function(phi, action))
@@ -168,11 +137,6 @@ class GoForward(Policy):
             all actions available to any agent.
         fwd_action_index (int): Index of ``action_space`` containing the
             forward action.
-        pi (numpy array of float): Numpy array containing probabilities
-            corresponding to the actions at the corresponding index in
-            ``action_space``. Not passed to init.
-        last_index (int): The index of the last action chosen by the
-            policy. Not passed to init.
     """
     def __init__(self, action_space, fwd_action_index, *args, **kwargs):
         kwargs['action_space'] = action_space
@@ -184,7 +148,7 @@ class GoForward(Policy):
         pass
 
 class PavlovSoftmax(Policy):
-    """Softmax policy with forced turns. Inherits from the Policy class. 
+    """Softmax policy with forced turns.
     
     Action selection is based on maintaining a ``pi`` array which holds
     action selection probabilities. Forces the agent to select a "turn"
@@ -196,20 +160,9 @@ class PavlovSoftmax(Policy):
             all actions available to any agent.
         value_function: A function used by the policy to update values
             of pi. This is usually a value function learned by a GVF.
-        feature_indices (numpy array of bool, optional): The indices 
-            of the feature vector corresponding to the indices used by 
-            the ``value_function``.
-        action_equality (optional): The function used to compare two 
-            action objects to determine whether they are equivalent. 
-            Returns True if the actions are equivalent and False
-            otherwise.
-        pi (numpy array of float): Numpy array containing probabilities
-            corresponding to the actions at the corresponding index in
-            ``action_space``. Not passed to init.
-        last_index (int): The index of the last action chosen by the
-            policy. Not passed to init.
-        TURN (int): Index of the turn action. Not passed to init.
-        FORWARD (int): Index of the forward action. Not passed to init. 
+        feature_indices (numpy array of bool): Indices of the feature
+            vector corresponding to indices used by the
+            :py:obj:`value_function`.
     """
     def __init__(self, 
                  time_scale,
@@ -228,18 +181,7 @@ class PavlovSoftmax(Policy):
         Policy.__init__(self, *args, **kwargs)
 
     def update(self, phi, observation, *args, **kwargs):
-        """Updates the values of ``pi`` based on the current state.
-        
-        Assigns turn action probability 1 if bumping and otherwise uses
-        a set of tuned constants that change the preference for taking
-        each action based on the last action taken and the value
-        prediction from ``value_function``.
-
-        Args:
-            phi (numpy array of bool): Binary feature vector.
-            *args: Ignored.
-            **kwargs: Ignored.
-        """
+        """Updates :py:attr:`~policy.Policy.pi`."""
         phi = phi[self.feature_indices]
         p = self.value_function(phi)
 
@@ -250,7 +192,7 @@ class PavlovSoftmax(Policy):
             # Joseph Modayil's constants
             T = 1/self.time_scale/3
             k1 = np.log((T-1)*(self.action_space.size-1))
-            k2 = k1 * 5
+            k2 = k1 * 4
 
             # make preferences for each action
             prefs = np.zeros(2)
@@ -269,23 +211,17 @@ class ForwardIfClear(Policy):
     prediction from ``value_function`` is high or the bump observation
     is active. 
 
-    Attributes:
+    Args:
         action_space (numpy array of action): Numpy array containing
             all actions available to any agent. The forward action must
             be at the 0th index and the turn action must be at the 1st
             index.
-        value_function: A function used by the policy to update values 
-            of pi. This is usually a value function learned by a GVF.
-        feature_indices (numpy array of bool): The indices of the 
-            feature vector corresponding to the indices used by the
-            ``value_function``.
-        pi (numpy array of float): Numpy array containing probabilities
-            corresponding to the actions at the corresponding index in
-            ``action_space``. Not passed to init.
-        last_index (int): The index of the last action chosen by the
-            policy. Not passed to init.
-        TURN (int): Index of the turn action. Not passed to init.
-        FORWARD (int): Index of the forward action. Not passed to init. 
+        value_function (fun): A function used by the policy to update
+            values of pi. This is usually a value function learned by a
+            GVF.
+        feature_indices (numpy array of bool): Indices of the feature
+            vector corresponding to indices used by the
+            :py:obj:`value_function`.
     """
     def __init__(self,
                  action_space,
@@ -301,16 +237,7 @@ class ForwardIfClear(Policy):
         self.FORWARD = 0
 
     def update(self, phi, observation, *args, **kwargs):
-        """Updates ``pi`` based on the current state.
-        
-        Forces 'forward' actions unless the prediction from 
-        ``value_function`` is high or the bump observation is active.
-
-        Args:
-            phi (numpy array of bool): Binary feature vector.
-            *args: Ignored.
-            **kwargs: Ignored.
-        """
+        """Updates :py:attr:`~policy.Policy.pi` based on phi."""
         phi = phi[self.feature_indices]
 
         if self.value_function(phi) > 0.5 or sum(observation['bump']):
@@ -325,15 +252,9 @@ class Switch:
     """Class that switches between two policies.
 
     Args:
-        num_timesteps_explore (int): The number of timesteps to follow
-            the ``explorer`` policy.
-        explorer (Policy): Policy for exploring.
+        num_timesteps_explore (int): How long to explore.
+        explorer (Policy): Policy to follow while exploring.
         exploiter (Policy): Policy to follow after exploring.
-        action_space (numpy array of actions): The ``action_space`` of
-            ``explorer``. Should be the same as the ``action_space`` of
-            ``exploiter``. Not passed to init.
-        last_index (int): Index of last action taken. Not passed to init.
-        t (int): Current timestep. Not passed to init.
     """
     def __init__(self, explorer, exploiter, num_timesteps_explore):
         self.explorer = explorer
@@ -352,7 +273,6 @@ class Switch:
             self.explorer.update(*args, **kwargs)
 
     def get_probability(self, action, *args, **kwargs):
-        """Updates the relevant ``pi`` according to the timestep."""
         if self.t > self.num_timesteps_explore:
             policy = self.exploiter
         else:
@@ -364,7 +284,6 @@ class Switch:
         return prob
 
     def choose_action(self, *args, **kwargs):
-        """Chooses an action according to the timestep"""
         if self.t > self.num_timesteps_explore:
             policy = self.exploiter
             msg = "Calling exploitative policy."
