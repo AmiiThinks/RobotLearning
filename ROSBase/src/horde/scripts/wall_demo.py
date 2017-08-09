@@ -142,17 +142,15 @@ class GoForward(Policy):
         kwargs['action_space'] = action_space
         Policy.__init__(self, *args, **kwargs)
 
+        self.pi *= 0
         self.pi[fwd_action_index] = 1
 
     def update(self, phi, observation, *args, **kwargs):
         pass
 
 class PavlovSoftmax(Policy):
-    """Softmax policy with forced turns.
-    
-    Action selection is based on maintaining a ``pi`` array which holds
-    action selection probabilities. Forces the agent to select a "turn"
-    action if the bump sensor is on. This policy is fairly specific.
+    """Softmax policy that forces the agent to select a "turn"
+    action if the bump sensor is on.
 
     Attributes:
         time_scale (float): Number of seconds in a learning timestep.
@@ -206,11 +204,6 @@ class PavlovSoftmax(Policy):
 class ForwardIfClear(Policy):
     """Policy that goes forward unless the prediction is high or bumping.
 
-    Action selection is based on maintaining a ``pi`` array which holds
-    action selection probabilities. Forces 'forward' actions unless the
-    prediction from ``value_function`` is high or the bump observation
-    is active. 
-
     Args:
         action_space (numpy array of action): Numpy array containing
             all actions available to any agent. The forward action must
@@ -249,6 +242,12 @@ class ForwardIfClear(Policy):
         self.pi[self.last_index] = 1
 
 class DeterministicForwardIfClear(Policy):
+    """Policy that goes forward unless bumping.
+
+    Args:
+        action_space (numpy array of action): Numpy array containing
+            all actions available to any agent.
+    """
     def __init__(self, *args, **kwargs):
         # where the last action is recorded according
         # to its respective constants
@@ -442,7 +441,7 @@ if __name__ == "__main__":
             #                          num_timesteps_explore=60/time_scale)
 
             # start processes
-            cumulant_counter = mp.Value('d', 0)
+            cumulant_counter = 0
             foreground_process = mp.Process(target=start_learning_foreground,
                                             name="foreground",
                                             args=(time_scale,
