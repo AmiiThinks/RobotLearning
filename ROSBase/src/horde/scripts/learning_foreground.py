@@ -47,7 +47,7 @@ class LearningForeground:
         # set up ros
         rospy.init_node('agent', anonymous=True)
 
-        self.COLLECT_DATA_FLAG = True
+        self.COLLECT_DATA_FLAG = False
 
         # counts the total cumulant for the session
         self.cumulant_counter = cumulant_counter or mp.Value('d', 0)
@@ -221,8 +221,7 @@ class LearningForeground:
                 self.history.write('image', data['image'], t=self.current_time)
             
             # uncompressing image
-            data['image'] = np.asarray(self.img_to_cv2(data['image']))
-
+            data['image'] = np.fromstring(data['image'].data, np.uint8).reshape(480,640,3)#np.asarray(self.img_to_cv2(data['image']))
 
         if data['odom'] is not None:
             pos = data['odom'].pose.pose.position

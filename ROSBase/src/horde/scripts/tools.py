@@ -30,7 +30,7 @@ topic_format = {
 features = {'core': "/mobile_base/sensors/core",
             'ir': "/mobile_base/sensors/dock_ir",
             'imu': "/mobile_base/sensors/imu_data",
-            'image': "/camera/rgb/image_rect_color/compressed",
+            'image': "/camera/rgb/image_rect_color",
             'odom': "/odom",
             'bias': None,
             'bump': None,
@@ -74,7 +74,7 @@ def timing(f):
         te = time()
         # print 'func:%r args:[%r, %r] took: %2.4f sec' % \
         # (f.__name__, args, kw, te-ts)
-        rospy.logdebug('func:%r took: %2.4f sec' % (f.__name__, te-ts))
+        rospy.loginfo('func:%r took: %2.4f sec' % (f.__name__, te-ts))
         return result
     return wrap
 
