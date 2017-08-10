@@ -21,6 +21,7 @@ class GVF:
                  learner,
                  logger,
                  feature_indices,
+                 use_MSRE=False,
                  **kwargs):
 
         self.cumulant = cumulant
@@ -32,6 +33,7 @@ class GVF:
         self.feature_indices = feature_indices
         self.learner = learner
         self.uses_action_state = feature_indices.size < num_features
+        self.use_MSRE = use_MSRE
 
         self.time_step = 0
 
@@ -41,7 +43,8 @@ class GVF:
         self.evaluator = Evaluator(gvf_name = name, 
                                    num_features = num_features, 
                                    alpha_rupee = self.alpha_rupee, 
-                                   beta0_rupee = self.beta0_rupee)
+                                   beta0_rupee = self.beta0_rupee,
+                                   use_MSRE = use_MSRE)
     
     def predict(self, phi, action=None, **kwargs):
         if self.uses_action_state:
@@ -83,7 +86,8 @@ class GVF:
                                      delta = self.learner.delta,
                                      phi = phi)
         # update MSRE
-        self.evaluator.compute_MSRE(self.learner.theta, self.time_step)
+        if self.use_MSRE:
+            self.evaluator.compute_MSRE(self.learner.theta, self.time_step)
 
         # update avg TD error
         self.evaluator.compute_avg_td_error(delta = self.learner.delta, 

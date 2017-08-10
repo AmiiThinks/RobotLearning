@@ -50,7 +50,7 @@ class LearningForeground:
         self.COLLECT_DATA_FLAG = False
 
         # counts the total cumulant for the session
-        self.cumulant_counter = cumulant_counter or mp.Value('d', 0)
+        self.cumulant_counter = cumulant_counter if cumulant_counter else 0
 
         # capture this session's data and actions
         if self.COLLECT_DATA_FLAG:
@@ -59,7 +59,7 @@ class LearningForeground:
 
         self.vis = False
 
-        self.features_to_use = set(features_to_use + ['core', 'ir'])
+        self.features_to_use = set(features_to_use + ['core', 'ir', 'odom'])
         topics = filter(lambda x: x, 
                         [tools.features[f] for f in self.features_to_use])
 
@@ -128,7 +128,7 @@ class LearningForeground:
                            'pause': pause_publisher,
                            'termination': termination_publisher
                           }
-        labels = ['prediction', 'td_error', 'avg_td_error', 'rupee', 
+        labels = ['prediction', 'td_error', 'avg_td_error', 'rupee', 'MSRE',
                   'cumulant']
         label_pubs = {g:{l:pub(g.name, l) for l in labels} for g in self.gvfs}
         self.publishers.update(label_pubs)
@@ -152,6 +152,7 @@ class LearningForeground:
             self.publishers[gvf]['td_error'].publish(gvf.evaluator.td_error)
             self.publishers[gvf]['avg_td_error'].publish(gvf.evaluator.avg_td_error)
             self.publishers[gvf]['rupee'].publish(gvf.evaluator.rupee)
+            self.publishers[gvf]['MSRE'].publish(gvf.evaluator.MSRE)
 
     def read_source(self, source, history=False):
         temp = [] if history else None
@@ -225,7 +226,9 @@ class LearningForeground:
 
         if data['odom'] is not None:
             pos = data['odom'].pose.pose.position
-            data['odom'] = np.array([pos.x, pos.y])
+            lin_vel = data['odom'].twist.twist.linear.x
+            ang_vel = data['odom'].twist.twist.angular.z
+            data['odom'] = np.array([pos.x, pos.y, lin_vel, ang_vel])
 
             # enter the data into rosbag
             if self.COLLECT_DATA_FLAG:
@@ -233,9 +236,15 @@ class LearningForeground:
                 odom_x.data = pos.x
                 odom_y = std_msg.Float64()
                 odom_y.data = pos.y
+                odom_lin = std_msg.Float64()
+                odom_lin.data = lin_vel
+                odom_ang = std_msg.Float64()
+                odom_ang.data = ang_vel
 
                 self.history.write('odom_x', odom_x, t=self.current_time)
                 self.history.write('odom_y', odom_y, t=self.current_time)
+                self.history.write('odom_lin', odom_lin, t=self.current_time)
+                self.history.write('odom_ang', odom_ang, t=self.current_time)
 
         if data['imu'] is not None:
             data['imu'] = data['imu'].orientation.z
@@ -248,7 +257,7 @@ class LearningForeground:
 
         if 'last_action' in self.features_to_use:
             last_action = np.zeros(self.behavior_policy.action_space.size)
-            last_action[self.behavior_policy.last_index] = 1
+            last_action[self.behavior_policy.last_index] = True
             phi = np.concatenate([phi, last_action])            
 
         # update the visualization of the image data
@@ -258,6 +267,9 @@ class LearningForeground:
         observation = self.state_manager.get_observations(**data)
         observation['action'] = self.last_action
 
+        if (observation['bump']):
+            # adds a tally for the added cumulant
+            self.cumulant_counter += 1
 
         return phi, observation
 
@@ -297,20 +309,14 @@ class LearningForeground:
             # get new state
             phi_prime, observation = self.create_state()
 
-            if (observation['bump']):
-                # adds a tally for the added cumulant
-                self.cumulant_counter.value += 1
-
             # select and take an action
             self.behavior_policy.update(phi_prime, observation)
             action = self.behavior_policy.choose_action()
             mu = self.behavior_policy.get_probability(action)
-            
-            if self.COLLECT_DATA_FLAG:
-                self.history.write('action', action, t=self.current_time)
-            
             self.take_action(action)
 
+            if self.COLLECT_DATA_FLAG:
+                self.history.write('action', action, t=self.current_time)
 
             # make prediction
             self.preds = {g:g.predict(phi_prime, action) for g in self.gvfs}
@@ -330,7 +336,7 @@ class LearningForeground:
             # save values
             self.last_phi = phi_prime if len(phi_prime) else None
             self.last_action = action
-            self.last_mu = self.behavior_policy.get_probability(action)
+            self.last_mu = mu
             self.last_observation = observation
 
             # timestep logging

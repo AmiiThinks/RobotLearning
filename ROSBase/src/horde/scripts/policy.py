@@ -14,24 +14,38 @@ class Policy:
     maintaining a ``pi`` array which holds action selection
     probabilities.
 
+    Args: 
+        action_space (numpy array of action): Numpy array containing
+            all actions available to any agent.
+        value_function (fun, optional): A function used by the Policy to 
+            update values of pi. This is usually a value function 
+            learned by a GVF.
+        action_equality (fun, optional): The function used to compare
+            two action objects to determine whether they are equivalent. 
+            Returns True if the actions are equivalent and False 
+            otherwise.
+        feature_indices (numpy array of bool, optional): Indices of the
+            feature vector corresponding to indices used by the
+            :py:obj:`value_function`.
+
     Attributes:
         action_space (numpy array of action): Numpy array containing
             all actions available to any agent.
-        value_function (optional): A function used by the Policy to 
+        value_function (fun): A function used by the Policy to 
             update values of pi. This is usually a value function 
             learned by a GVF.
-        action_equality (optional): The function used to compare two 
+        action_equality (fun): The function used to compare two 
             action objects to determine whether they are equivalent. 
             Returns True if the actions are equivalent and False 
             otherwise.
-        feature_indices (numpy array of bool, optional): The indices 
-            of the feature vector corresponding to the indices used by 
-            the ``value_function``.
+        feature_indices (numpy array of bool): The indices of the
+            feature vector corresponding to the indices used by the
+            :py:obj:`value_function`.
         pi (numpy array of float): Numpy array containing probabilities
             corresponding to the actions at the corresponding index in
-            ``action_space``. Not passed to init.
+            ``action_space``.
         last_index (int): The index of the last action chosen by the
-            policy. Not passed to init.
+            policy.
     """
     def __init__(self, 
                  action_space, 
