@@ -30,6 +30,7 @@ from cv_bridge.core import CvBridge
 from gentest_state_representation import GenTestStateManager
 from geometry_msgs.msg import Twist, Vector3
 from gvf import GVF
+from multiprocessing import Value
 from Queue import Queue
 from state_representation import StateManager
 from tools import timing
@@ -50,7 +51,7 @@ class LearningForeground:
         self.COLLECT_DATA_FLAG = False
 
         # counts the total cumulant for the session
-        self.cumulant_counter = cumulant_counter if cumulant_counter else 0
+        self.cumulant_counter = cumulant_counter if cumulant_counter else Value('d', 0)
 
         # capture this session's data and actions
         if self.COLLECT_DATA_FLAG:
@@ -221,8 +222,11 @@ class LearningForeground:
             if self.COLLECT_DATA_FLAG:
                 self.history.write('image', data['image'], t=self.current_time)
             
-            # uncompressing image
+            # uncompressed image
             data['image'] = np.fromstring(data['image'].data, np.uint8).reshape(480,640,3)#np.asarray(self.img_to_cv2(data['image']))
+            
+            # compressing image
+            #data['image'] = np.asarray(self.img_to_cv2(data['image']))
 
         if data['odom'] is not None:
             pos = data['odom'].pose.pose.position
@@ -269,7 +273,7 @@ class LearningForeground:
 
         if (observation['bump']):
             # adds a tally for the added cumulant
-            self.cumulant_counter += 1
+            self.cumulant_counter.value += 1
 
         return phi, observation
 

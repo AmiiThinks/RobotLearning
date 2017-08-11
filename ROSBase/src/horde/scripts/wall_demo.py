@@ -27,6 +27,7 @@ from greedy_gq import GreedyGQ
 from gtd import GTD
 from gvf import GVF
 from learning_foreground import start_learning_foreground
+from multiprocessing import Value
 from policy import Policy
 from Queue import Queue
 from state_representation import StateConstants
@@ -339,7 +340,7 @@ def control_cumulant(self, observation):
 
 if __name__ == "__main__":
     try:
-        # random.seed(20170823)
+        random.seed(20170823)
 
         # turns on and off the hyperparameter search
         hyperparameter_experiment_mode = False
@@ -363,16 +364,19 @@ if __name__ == "__main__":
         # either cycles through hyperparameter possibilities or 
         # runs wall demo once with default hyperparameters
         if (hyperparameter_experiment_mode):
-            hyperparameters = [{"alpha0":0.1, "lmbda":0.87}, 
-                               {"alpha0":0.1, "lmbda":0.9},
-                             {"alpha0":0.1, "lmbda":0.93}]
+            hyperparameters = [{"alpha0":0.05, "lmbda":0.9, 'discount':0.9, 'beta0':0.05/1000},
+                               {"alpha0":0.1, "lmbda":0.9, 'discount':0.97, 'beta0':0.1/1000}]
+            result_file = open('results.txt', 'ab+')
+            result_file.write('RESULTS\n')
+            result_file.close()
         else:
-            hyperparameters = [{'alpha0': 0.05, "lmbda":0.9}]
+            hyperparameters = [{'alpha0': 0.05, "lmbda":0.9, 'discount':0.9, 'beta0':0.05/1000}]
 
         for hps in hyperparameters:
             # learning parameters
             alpha0 = hps['alpha0']
             lmbda = hps['lmbda']
+            discount = hps['discount']
 
             features_to_use = ['image', 'bias']
             feature_indices = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use])
@@ -382,11 +386,10 @@ if __name__ == "__main__":
             turn_sec_to_bump = 2
             # discount = math.pow(0.75, time_scale / turn_sec_to_bump)
             # discount = 1 - time_scale
-            discount = 0.9
             discount_if_bump = lambda obs: 0 if sum(obs["bump"]) else discount
             one_if_bump = lambda obs: int(any(obs['bump'])) if obs is not None else 0
             dtb_hp = {'alpha': alpha0 / num_active_features,
-                      'beta': 0.001 * alpha0 / num_active_features,
+                      'beta': hps['beta0'] / num_active_features,
                       'lmbda': lmbda,
                       'alpha0': alpha0,
                       'num_features': num_features,
@@ -407,7 +410,7 @@ if __name__ == "__main__":
             dtb_policy = GoForward(action_space=action_space, fwd_action_index=1)
             dtb_learner = GTD(**dtb_hp)
 
-            threshold_policy = DeterministicForwardIfClear(action_space=action_space,
+            threshold_policy = PavlovSoftmax(action_space=action_space,
                                         feature_indices=dtb_hp['feature_indices'],
                                         value_function=dtb_learner.predict,
                                         time_scale=time_scale)
@@ -441,7 +444,7 @@ if __name__ == "__main__":
             #                          num_timesteps_explore=60/time_scale)
 
             # start processes
-            cumulant_counter = 0
+            cumulant_counter = Value('d', 0)
             foreground_process = mp.Process(target=start_learning_foreground,
                                             name="foreground",
                                             args=(time_scale,
@@ -456,10 +459,12 @@ if __name__ == "__main__":
                 break
             else:
                 # start and stop wall demo if hyper parameter search is on
-                rospy.sleep(5)
+                rospy.sleep(180)
                 foreground_process.terminate()
-                print("CUMULANTS: " + str(cumulant_counter.value))
-
+                result_file = open('results.txt', 'ab+')
+                result_file.write("CUMULANTS: " + str(cumulant_counter.value) + "\n")
+                result_file.close()
+                raw_input("Press enter to continue: ")
         if (hyperparameter_experiment_mode is True):
             action_manager_process.terminate()
 

@@ -73,6 +73,7 @@ class StateConstants:
     TOTAL_FEATURE_LENGTH = TOTAL_IMAGE_FEATURE_LENGTH + IMU_IHT_SIZE + ODOM_IHT_SIZE + IR_ITH_SIZE + 3 + 1 + PP_IHT_SIZE
 
     indices_in_phi = {'image':np.arange(0,TOTAL_IMAGE_FEATURE_LENGTH),
+                        'cimage':np.arange(0,TOTAL_IMAGE_FEATURE_LENGTH),
                         'imu':np.arange(IMU_START_INDEX,IMU_START_INDEX + IMU_IHT_SIZE),
                         'odom':np.arange(ODOM_START_INDEX,ODOM_START_INDEX + ODOM_IHT_SIZE),
                         'ir':np.arange(IR_START_INDEX,IR_START_INDEX+IR_ITH_SIZE),
@@ -82,6 +83,7 @@ class StateConstants:
                         'last_action': np.array([], dtype=int)}
 
     num_active_features = {'image':NUM_RANDOM_POINTS*CHANNELS*NUM_IMAGE_TILINGS,
+                        'cimage':NUM_RANDOM_POINTS*CHANNELS*NUM_IMAGE_TILINGS,
                         'imu':NUM_IMU_TILINGS,
                         'odom':NUM_ODOM_TILINGS,
                         'ir':3,
