@@ -144,7 +144,7 @@ if __name__ == "__main__":
         
         # robotic parameters
         time_scale = 0.05
-        turn_speed = 0.5
+        turn_speed = 1
 
         # all available actions
         action_space = np.array([Twist(Vector3(0, 0, 0),
@@ -156,19 +156,21 @@ if __name__ == "__main__":
 
         # either cycles through hyperparameter possibilities or 
         # runs wall demo once with default hyperparameters
-        hps = {'alpha0': 0.05, "lmbda":0.9}
+        hps = {'alpha0': 0.1, "lmbda":0.9}
 
         # learning parameters
         alpha0 = hps['alpha0']
         lmbda = hps['lmbda']
 
         features_to_use = ['bias', 'imu']
-        feature_indices = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use])
-        num_active_features = sum(StateConstants.num_active_features[f] for f in features_to_use)
+        # feature_indices = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use])
+        feature_indices = np.array([0,1])
+        # num_active_features = sum(StateConstants.num_active_features[f] for f in features_to_use)
+        num_active_features = 2
         num_features = feature_indices.size
 
         gamma = lambda obs: 0 if abs(obs['imu']) < 0.1 else 1
-        cumulant = lambda obs: 1
+        # cumulant = lambda obs: 1
         test_hp = {'alpha': alpha0 / num_active_features,
                    'beta': 0.001 * alpha0 / num_active_features,
                    'lmbda': lmbda,
@@ -181,7 +183,7 @@ if __name__ == "__main__":
                                    turn_action_index=1)
         test_learner = GTD(**test_hp)
 
-        behavior_policy = EpsilonRotateBounce(action_space=action_space,
+        behavior_policy = RotateBounce(action_space=action_space,
                                       turn_action_index=1,
                                       epsilon=0.1)
 

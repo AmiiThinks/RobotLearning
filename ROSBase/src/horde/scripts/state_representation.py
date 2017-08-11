@@ -116,10 +116,13 @@ class StateManager(object):
         self.pixel_mask = self.pixel_mask.reshape(StateConstants.IMAGE_LI, 
                                                   StateConstants.IMAGE_CO)
 
-        self.last_image_raw = None
-        self.last_imu_raw = None
-        self.last_odom_raw = None
-        self.last_ir_raw = None
+        self.last_image_raw = np.zeros((StateConstants.IMAGE_LI,
+                                        StateConstants.IMAGE_CO))
+        self.last_imu_raw = float()
+        self.last_odom_raw = np.zeros(4)
+        self.last_ir_raw = (0,0,0)
+        self.last_charging_raw = False
+        self.last_bump_raw = False
 
         self.features_to_use = features_to_use
 
@@ -127,141 +130,136 @@ class StateManager(object):
     def get_phi(self, image, bump, ir, imu, odom, bias, weights = None,*args, **kwargs):
 
         phi = np.zeros(StateConstants.TOTAL_FEATURE_LENGTH, dtype=bool)
+        # phi = np.zeros(2)
+        # self.features_to_use = set()
+        # phi[0] = imu if imu is not None else 0
+        # phi[1] = 1
 
         valid_image = lambda image: image is not None and len(image) > 0 and len(image[0]) > 0
 
-        if 'image' in self.features_to_use:
-            # adding image data to state
-            if not valid_image(image):
+        if not valid_image(image):
+            image = self.last_image_raw
+            if 'image' in self.features_to_use:
                 rospy.logwarn("Image is empty.")
-                if self.last_image_raw is not None:
-                    image = self.last_image_raw
+        
+        self.last_image_raw = image
 
-            if valid_image(image):
-                self.last_image_raw = image 
-                rgb_points = image[self.pixel_mask].flatten().astype(float)
-                rgb_points *= StateConstants.SCALE_RGB
-                rgb_inds = np.arange(StateConstants.NUM_RANDOM_POINTS * 3)
+        if 'image' in self.features_to_use:
+            rgb_points = image[self.pixel_mask].flatten().astype(float)
+            rgb_points *= StateConstants.SCALE_RGB
+            rgb_inds = np.arange(StateConstants.NUM_RANDOM_POINTS * 3)
 
-                tile_inds = [tiles.tiles(StateConstants.NUM_IMAGE_TILINGS,
-                                         self.img_ihts[i],
-                                         [rgb_points[i]]) for i in rgb_inds]
+            tile_inds = [tiles.tiles(StateConstants.NUM_IMAGE_TILINGS,
+                                     self.img_ihts[i],
+                                     [rgb_points[i]]) for i in rgb_inds]
 
-                # tile_inds = np.ones((900,4), dtype=int)
+            # tile_inds = np.ones((900,4), dtype=int)
 
-                rgb_inds *= StateConstants.IMAGE_IHT_SIZE
+            rgb_inds *= StateConstants.IMAGE_IHT_SIZE
 
-                indices = (tile_inds + rgb_inds[:, np.newaxis]).ravel()
-                phi[indices] = 1
+            indices = (tile_inds + rgb_inds[:, np.newaxis]).ravel()
+            phi[indices] = 1
 
         if 'image_pairs' in self.features_to_use:
-            # check if there is an image
-            if valid_image(image):
+            # get vector of pixels with each pixel=(Channel1,Channel2,...)
+            num_channels = StateConstants.CHANNELS
+            pixels = image[self.pixel_mask].reshape(-1, num_channels)
 
-                # save the valid image
-                self.last_image_raw = image 
+            # get vector of L2 norms of above pixels
+            norms = np.linalg.norm(pixels, axis=1)
 
-                # get vector of pixels with each pixel=(Channel1,Channel2,...)
-                num_channels = StateConstants.CHANNELS
-                pixels = image[self.pixel_mask].reshape(-1, num_channels)
+            # find indices to multiply to get upper triangle
+            # of the outer product of the arrays
+            row, col = np.triu_indices(num_channels, 1)
 
-                # get vector of L2 norms of above pixels
-                norms = np.linalg.norm(pixels, axis=1)
+            # calculate upper triangle of outer product: pixels, pixels
+            dots = np.einsum('ij,ij->i', pixels[row], pixels[col])
 
-                # find indices to multiply to get upper triangle
-                # of the outer product of the arrays
-                row, col = np.triu_indices(num_channels, 1)
+            # calculate upper triangle of outer product: norms, norms
+            norm_product = np.einsum('i,i->i', norms[row], norms[col])
 
-                # calculate upper triangle of outer product: pixels, pixels
-                dots = np.einsum('ij,ij->i', pixels[row], pixels[col])
+            # find cosine similarity
+            cos_sim = dots/norm * StateConstants.SCALE_PP
+            assert cos_sim.size == StateConstants.NUM_PP
 
-                # calculate upper triangle of outer product: norms, norms
-                norm_product = np.einsum('i,i->i', norms[row], norms[col])
+            # get indices form tile coding
+            pp_inds = np.arange(StateConstants.NUM_PP)
+            tile_inds = [tiles.tiles(StateConstants.NUM_PP_TILINGS,
+                                     self.pp_ihts[i],
+                                     [cos_sim[i]]) for i in pp_inds]
 
-                # find cosine similarity
-                cos_sim = dots/norm * StateConstants.SCALE_PP
-                assert cos_sim.size == StateConstants.NUM_PP
+            # offset tilecoding for each pixel by the IHT size to map
+            # each pixel to a different set of PP_IHT_SIZE indices
+            pp_inds *= StateConstants.PP_IHT_SIZE
+            indices = (tile_inds + pp_inds[:, np.newaxis]).ravel()
 
-                # get indices form tile coding
-                pp_inds = np.arange(StateConstants.NUM_PP)
-                tile_inds = [tiles.tiles(StateConstants.NUM_PP_TILINGS,
-                                         self.pp_ihts[i],
-                                         [cos_sim[i]]) for i in pp_inds]
+            # offset all indices to correspond to the Pixel pairs
+            # section of the feature array
+            indices += StateConstants.PP_START_INDEX
+            phi[indices] = 1
 
-                # offset tilecoding for each pixel by the IHT size to map
-                # each pixel to a different set of PP_IHT_SIZE indices
-                pp_inds *= StateConstants.PP_IHT_SIZE
-                indices = (tile_inds + pp_inds[:, np.newaxis]).ravel()
 
-                # offset all indices to correspond to the Pixel pairs
-                # section of the feature array
-                indices += StateConstants.PP_START_INDEX
-                phi[indices] = 1
+        if imu is None:
+            imu = self.last_imu_raw
+            if 'imu' in self.features_to_use:
+                rospy.logwarn("No imu value.")
 
         if 'imu' in self.features_to_use:
-            if imu is None:
-                rospy.logwarn("No imu value.")
-                if self.last_imu_raw is not None:
-                    imu = self.last_imu_raw
+            indices = np.array(tiles.tiles(StateConstants.NUM_IMU_TILINGS,
+                                            self.imu_iht, 
+                                            [imu*StateConstants.SCALE_IMU]))
 
-            if imu is not None:
-                self.last_imu_raw = imu
+            phi[indices + StateConstants.IMU_START_INDEX] = 1
 
-                indices = np.array(tiles.tiles(StateConstants.NUM_IMU_TILINGS,
-                                                self.imu_iht, 
-                                                [imu*StateConstants.SCALE_IMU]))
-
-                phi[indices + StateConstants.IMU_START_INDEX] = 1
+        if odom is None:
+            odom = self.last_odom_raw
+            if 'odom' in self.features_to_use:
+                rospy.logwarn("No odom value.")                
 
         if 'odom' in self.features_to_use:
-            if odom is None:
-                rospy.logwarn("No odom value.")
-                if self.last_odom_raw is not None:
-                    odom = self.last_odom_raw
+            indices = np.array(tiles.tiles(StateConstants.NUM_ODOM_TILINGS,
+                                           self.odom_iht,
+                                           (odom * StateConstants.SCALE_ODOM).tolist(),
+                                           []))
 
-            if odom is not None:
-                self.last_odom_raw = odom
+            phi[indices + StateConstants.ODOM_START_INDEX] = 1
 
-                indices = np.array(tiles.tiles(StateConstants.NUM_ODOM_TILINGS,
-                                                self.odom_iht,
-                                                (odom * StateConstants.SCALE_ODOM).tolist(),
-                                                []))
-
-                phi[indices + StateConstants.ODOM_START_INDEX] = 1
+        if ir is None:
+            ir = self.last_ir_raw
+            if 'ir' in self.features_to_use:
+                rospy.logwarn("No ir value.")
 
         if 'ir' in self.features_to_use:
-            if ir is None:
-                rospy.logwarn("No ir value.")
-                if self.last_ir_raw is not None:
-                    ir = self.last_ir_raw
+            # indices = np.asarray(ir)
+            # indices += np.array([0,64,128])
 
-            if ir is not None:
-                self.last_ir_raw = ir
-                # indices = np.asarray(ir)
-                # indices += np.array([0,64,128])
+            ir_1 = [int(x) for x in format(ir[0], '#08b')[2:]]
+            ir_2 = [int(x) for x in format(ir[1], '#08b')[2:]]
+            ir_3 = [int(x) for x in format(ir[2], '#08b')[2:]]
+            value = ir_1 + ir_2 + ir_3
 
-                ir_1 = [int(x) for x in format(ir[0], '#08b')[2:]]
-                ir_2 = [int(x) for x in format(ir[1], '#08b')[2:]]
-                ir_3 = [int(x) for x in format(ir[2], '#08b')[2:]]
-                value = ir_1 + ir_2 + ir_3
+            # # if only need the information about the region the robot is (left,center,right)
+            # in_right = ir_1[3] | ir_1[0] | ir_2[3] | ir_2[0] | ir_3[3] | ir_3[0]
+            # in_left = ir_1[5] | ir_1[1] | ir_2[5] | ir_2[1] | ir_3[5] | ir_3[1]
+            # in_center = ir_1[4] | ir_1[2] | ir_2[4] | ir_2[2] | ir_3[4] | ir_3[2]
+            # if in_center:
+            #     in_left = 0
+            #     in_right = 0
+            # value = [in_left, in_center, in_right]
 
-                # # if only need the information about the region the robot is (left,center,right)
-                # in_right = ir_1[3] | ir_1[0] | ir_2[3] | ir_2[0] | ir_3[3] | ir_3[0]
-                # in_left = ir_1[5] | ir_1[1] | ir_2[5] | ir_2[1] | ir_3[5] | ir_3[1]
-                # in_center = ir_1[4] | ir_1[2] | ir_2[4] | ir_2[2] | ir_3[4] | ir_3[2]
-                # if in_center:
-                #     in_left = 0
-                #     in_right = 0
-                # value = [in_left, in_center, in_right]
+            # if only want to use the data from the center IR of the robot
+            value = ir_2
+            indices = np.nonzero(value)[0]
 
-                # if only want to use the data from the center IR of the robot
-                value = ir_2
-                indices = np.nonzero(value)[0]
-
-                phi[np.asarray(indices) + StateConstants.IR_START_INDEX] = 1
+            phi[np.asarray(indices) + StateConstants.IR_START_INDEX] = 1
 
         # bump
-        if 'bump' in self.features_to_use and bump is not None:
+        if bump is None:
+            bump = self.last_bump_raw
+            if 'bump' in self.features_to_use:
+                rospy.logwarn("No bump value")
+
+        if 'bump' in self.features_to_use:
             phi[StateConstants.indices_in_phi['bump']] = bump
 
         # bias unit
@@ -271,11 +269,11 @@ class StateManager(object):
         return phi
 
     def get_observations(self, bump, ir, charging, odom, imu, **kwargs):
-        observations = {'bump': bump if bump else (0,0,0),
-                        'ir': ir if ir else (0,0,0),
-                        'charging': charging if charging else False,
-                        'speed': odom[3] if odom is not None else 0,
-                        'imu': imu if imu is not None else 0,
+        observations = {'bump': bump if bump else self.last_bump_raw,
+                        'ir': ir if ir else self.last_ir_raw,
+                        'charging': charging if charging else self.last_charging_raw,
+                        'speed': odom[3] if odom is not None else self.last_odom_raw[3],
+                        'imu': imu if imu is not None else self.last_imu_raw,
                        }
 
         return observations

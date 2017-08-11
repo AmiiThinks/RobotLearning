@@ -352,8 +352,8 @@ if __name__ == "__main__":
         
         # robotic parameters
         time_scale = 0.1
-        forward_speed = 0.2
-        turn_speed = 1
+        forward_speed = 0.12
+        turn_speed = 5/3
 
         # all available actions
         action_space = np.array([Twist(Vector3(forward_speed, 0, 0),
