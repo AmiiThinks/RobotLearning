@@ -117,7 +117,8 @@ class StateManager(object):
                                                   StateConstants.IMAGE_CO)
 
         self.last_image_raw = np.zeros((StateConstants.IMAGE_LI,
-                                        StateConstants.IMAGE_CO))
+                                        StateConstants.IMAGE_CO,
+                                        3))
         self.last_imu_raw = float()
         self.last_odom_raw = np.zeros(4)
         self.last_ir_raw = (0,0,0)
@@ -269,9 +270,9 @@ class StateManager(object):
         return phi
 
     def get_observations(self, bump, ir, charging, odom, imu, **kwargs):
-        observations = {'bump': bump if bump else self.last_bump_raw,
-                        'ir': ir if ir else self.last_ir_raw,
-                        'charging': charging if charging else self.last_charging_raw,
+        observations = {'bump': any(bump) if bump is not None else self.last_bump_raw,
+                        'ir': ir if ir is not None else self.last_ir_raw,
+                        'charging': charging if charging is not None else self.last_charging_raw,
                         'speed': odom[3] if odom is not None else self.last_odom_raw[3],
                         'imu': imu if imu is not None else self.last_imu_raw,
                        }

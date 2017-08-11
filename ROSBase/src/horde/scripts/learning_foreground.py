@@ -187,7 +187,7 @@ class LearningForeground:
 
         if data['core']:
             bumps = [dat.bumper for dat in data['core']]
-            data['bump'] = np.sum([[bool(x & bump) for x in bump_codes] for bump in bumps], axis=0).tolist()
+            data['bump'] = np.sum([[bool(x & bump) for x in bump_codes] for bump in bumps], axis=0, dtype=bool).tolist()
             data['charging'] = bool(data['core'][-1].charger & 2)
 
             # enter the data into rosbag
@@ -342,6 +342,8 @@ class LearningForeground:
             self.last_action = action
             self.last_mu = mu
             self.last_observation = observation
+
+            print(observation['bump'])
 
             # timestep logging
             total_time = time.time() - start_time

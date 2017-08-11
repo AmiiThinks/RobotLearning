@@ -2,7 +2,7 @@ import numpy as np
 import rospy
 
 class GTD:
-    """Implements GTD(λ) with linear function approximation.
+    """Implements GTD(lambda) with linear function approximation.
 
     Args:
         num_features (int): Length of weight vectors.

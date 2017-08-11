@@ -184,7 +184,7 @@ class PavlovSoftmax(Policy):
         phi = phi[self.feature_indices]
         p = self.value_function(phi)
 
-        if sum(observation['bump']):
+        if observation['bump']:
             self.pi *= 0
             self.pi[self.TURN] = 1
         else:
@@ -234,7 +234,7 @@ class ForwardIfClear(Policy):
         """Updates :py:attr:`~policy.Policy.pi` based on phi."""
         phi = phi[self.feature_indices]
 
-        if self.value_function(phi) > 0.5 or sum(observation['bump']):
+        if self.value_function(phi) > 0.5 or observation['bump']:
             self.last_index = self.TURN
         else:
             self.last_index = self.FORWARD
@@ -261,7 +261,7 @@ class DeterministicForwardIfClear(Policy):
     def update(self, phi, observation, *args, **kwargs):
         phi = phi[self.feature_indices]
 
-        if sum(observation['bump']):
+        if observation['bump']:
             self.last_index = self.TURN
         else:
             # if self.last_index == self.TURN:
@@ -353,7 +353,7 @@ if __name__ == "__main__":
         # robotic parameters
         time_scale = 0.1
         forward_speed = 0.12
-        turn_speed = 5/3
+        turn_speed = 5.0/3
 
         # all available actions
         action_space = np.array([Twist(Vector3(forward_speed, 0, 0),
@@ -386,8 +386,8 @@ if __name__ == "__main__":
             turn_sec_to_bump = 2
             # discount = math.pow(0.75, time_scale / turn_sec_to_bump)
             # discount = 1 - time_scale
-            discount_if_bump = lambda obs: 0 if sum(obs["bump"]) else discount
-            one_if_bump = lambda obs: int(any(obs['bump'])) if obs is not None else 0
+            discount_if_bump = lambda obs: 0 if obs["bump"] else discount
+            one_if_bump = lambda obs: int(obs['bump']) if obs is not None else 0
             dtb_hp = {'alpha': alpha0 / num_active_features,
                       'beta': hps['beta0'] / num_active_features,
                       'lmbda': lmbda,
@@ -461,9 +461,13 @@ if __name__ == "__main__":
                 # start and stop wall demo if hyper parameter search is on
                 rospy.sleep(180)
                 foreground_process.terminate()
+
+                # record results of experiment
                 result_file = open('results.txt', 'ab+')
                 result_file.write("CUMULANTS: " + str(cumulant_counter.value) + "\n")
                 result_file.close()
+
+                # wait for user to continue/reset experiment
                 raw_input("Press enter to continue: ")
         if (hyperparameter_experiment_mode is True):
             action_manager_process.terminate()

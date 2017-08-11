@@ -119,7 +119,7 @@ class ForwardIfClear(Policy):
     def update(self, phi, observation, *args, **kwargs):
         """Updates ``pi`` depending on if there is a bump or not."""
         self.pi *= 0
-        if sum(observation['bump']):
+        if observation['bump']:
             self.pi[self.TURN_LEFT] += 0.5
             self.pi[self.TURN_RIGHT] += 0.5
         else:

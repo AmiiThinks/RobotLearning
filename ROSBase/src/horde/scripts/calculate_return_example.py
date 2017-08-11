@@ -32,7 +32,7 @@ from policy import Policy
         
 #         self.pi = np.zeros(self.action_space.size)
 
-#         if bool(sum(observation["bump"])):
+#         if observation['bump']:
 #             self.pi[self.TURN] = 1
 #         else:
 #             self.pi[self.FORWARD] = self.forward_percentage
@@ -57,7 +57,7 @@ class GoForwardWithRandomness(Policy):
         
         self.pi = np.zeros(self.action_space.size)
 
-        if bool(sum(observation["bump"])):
+        if observation['bump']:
             self.pi[self.TURN] = 1
         else:
             if self.last_index == self.FORWARD:
@@ -85,7 +85,7 @@ class TurnIfBump(Policy):
         
         self.pi = np.zeros(self.action_space.size)
 
-        if bool(sum(observation["bump"])):
+        if observation['bump']:
             self.pi[self.TURN] = 1.0
         else:
             self.pi[self.FORWARD] = 1.0
@@ -107,7 +107,7 @@ class GoForwardIfNotBump(Policy):
         Policy.__init__(self, *args, **kwargs)
 
     def update(self, phi, observation, *args, **kwargs):
-        if bool(sum(observation["bump"])):
+        if observation['bump']:
             chosen_index = self.STOP
         else:
             chosen_index = self.FORWARD
