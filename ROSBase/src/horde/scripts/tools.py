@@ -1,30 +1,30 @@
 from __future__ import division
 from functools import wraps
+import math
+
+from cv_bridge.core import CvBridge
 import kobuki_msgs.msg as kob_msg
 import nav_msgs.msg as nav_msg
 import rospy
 import sensor_msgs.msg as sens_msg
 import sensor_msgs.point_cloud2 as pc2
-import std_msgs.msg as std_msg
 from turtlesim.msg import Pose
 import numpy as np
-import math
 
 from time import time
-#from state_representation import StateConstants
 
 topic_format = {
-    "/camera/depth/image":sens_msg.Image,
-    "/camera/depth/points":sens_msg.PointCloud2,
-    "/camera/ir/image":sens_msg.Image,
-    "/camera/rgb/image_raw":sens_msg.Image,
-    "/camera/rgb/image_rect_color":sens_msg.Image,
-    "/mobile_base/sensors/core":kob_msg.SensorState,
-    "/mobile_base/sensors/dock_ir":kob_msg.DockInfraRed,
-    "/mobile_base/sensors/imu_data":sens_msg.Imu,
-    "/turtle1/pose":Pose,
-    "/camera/rgb/image_rect_color/compressed":sens_msg.CompressedImage,
-    "/odom":nav_msg.Odometry,
+    "/camera/depth/image": sens_msg.Image,
+    "/camera/depth/points": sens_msg.PointCloud2,
+    "/camera/ir/image": sens_msg.Image,
+    "/camera/rgb/image_raw": sens_msg.Image,
+    "/camera/rgb/image_rect_color": sens_msg.Image,
+    "/mobile_base/sensors/core": kob_msg.SensorState,
+    "/mobile_base/sensors/dock_ir": kob_msg.DockInfraRed,
+    "/mobile_base/sensors/imu_data": sens_msg.Imu,
+    "/turtle1/pose": Pose,
+    "/camera/rgb/image_rect_color/compressed": sens_msg.CompressedImage,
+    "/odom": nav_msg.Odometry,
     }
 
 features = {'core': "/mobile_base/sensors/core",
@@ -36,12 +36,31 @@ features = {'core': "/mobile_base/sensors/core",
             'bias': None,
             'bump': None,
             'last_action': None,
-            'pixel_pairs': None}
+            'pixel_pairs': None
+            }
+
+
+def decay(base):
+    """Yields the base value divided by t each timestep.
+    """
+    t = 1.0
+    while True:
+        yield base / t
+        t += 1
+
+
+def constant(base):
+    """Yields a constant value.
+    """
+    while True:
+        yield base
+
 
 def softmax(q):
     max_q = np.max(q)
     exp_q = np.exp(q - max_q)
     return exp_q / exp_q.sum()
+
 
 def equal_twists(t1, t2):
     return all([np.isclose(t1.linear.x, t2.linear.x),
@@ -50,6 +69,7 @@ def equal_twists(t1, t2):
                 np.isclose(t1.angular.x, t2.angular.x),
                 np.isclose(t1.angular.y, t2.angular.y),
                 np.isclose(t1.angular.z, t2.angular.z)])
+
 
 def action_state_rep(action_space):
     def action_state_phi(state, action):
@@ -64,10 +84,9 @@ def action_state_rep(action_space):
     return action_state_phi
 
 
-"""
-Decorator that print how long a function takes to execute
-"""
 def timing(f):
+    """Decorator that print how long a function takes to execute.
+    """
     @wraps(f)
     def wrap(*args, **kw):
         ts = time()
@@ -79,18 +98,20 @@ def timing(f):
         return result
     return wrap
 
-"""
-Decorator that ensures overriden methods are valid.
-arguments:
-    interface_class: the respective super class
 
-    e.g.
-        class ConcreteImplementer(MySuperInterface):
-            @overrides(MySuperInterface)
-            def my_method(self):
-                print 'hello kitty!'
-"""
 def overrides(interface_class):
+    """Decorator that ensures overriden methods are valid.
+
+    Args:
+        interface_class: the respective super class
+
+    Example::
+
+            class ConcreteImplementer(MySuperInterface):
+                @overrides(MySuperInterface)
+                def my_method(self):
+                    print 'hello kitty!'
+    """
     def overrider(method):
         assert(method.__name__ in dir(interface_class))
         return method
@@ -99,17 +120,21 @@ def overrides(interface_class):
 """
 Parsers for easy (but maybe heavy) state creation
 """
-def image_parse(img, enc="passthrough"):
+
+
+def image_parse(img, enc='passthrough'):
     # convert ros image to numpy array
     br = CvBridge()
     image = np.asarray(br.imgmsg_to_cv2(img, desired_encoding=enc)) 
-    return {self.topic: image}
+    return image
+
 
 def pc2_parse(data):
     # PointCloud2 parser
     # pc2.read_points returns a generator of (x,y,z) tuples
     gen = pc2.read_points(data, skip_nans=True, field_names=("x","y","z"))
-    return {self.topic: list(gen)}
+    return list(gen)
+
 
 def sensor_state_parse(data):
     return {
@@ -135,6 +160,7 @@ def sensor_state_parse(data):
     "bottom_dist_center": data.bottom[1],
     }
 
+
 def dock_ir_parse(dock_ir):
     return {
     "ir_near_left": bool(dock_ir.NEAR_LEFT),
@@ -144,6 +170,7 @@ def dock_ir_parse(dock_ir):
     "ir_far_center": bool(dock_ir.FAR_CENTER),
     "ir_far_right": bool(dock_ir.FAR_RIGHT),
     }
+
 
 def imu_parse(data):
     covar = [data.orientation_covariance,
@@ -166,6 +193,7 @@ def imu_parse(data):
     "lin_accel_z": data.linear_acceleration.z,
     "lin_accel_covar": covar[2],
     }
+
 
 def get_next_pow2(number):
     return 2**int(math.ceil(math.log(number, 2)))

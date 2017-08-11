@@ -6,17 +6,14 @@ Authors:
     Shibhansh Dohare, Niko Yasui.
 """
 from __future__ import division
-import multiprocessing as mp
+
 import numpy as np
-import random
-from geometry_msgs.msg import Twist, Vector3
 import rospy
 
 from policy import Policy
-from state_representation import StateConstants
-import tools
 
-class eGreedy(Policy):
+
+class EGreedy(Policy):
     """An epsilon-greedy policy.
 
     Args:
@@ -30,23 +27,24 @@ class eGreedy(Policy):
             vector corresponding to indices used by the
             :py:obj:`value_function`.
     """
-    def __init__(self, 
-                 epsilon = 0,
-                 action_space, 
+
+    def __init__(self,
+                 action_space,
                  value_function,
                  feature_indices,
+                 epsilon=0,
                  *args, **kwargs):
         self.epsilon = epsilon
 
         kwargs['action_space'] = action_space
         kwargs['value_function'] = value_function
-        kwargs['feature_indices'] = feature_indices *args, **kwargs)
+        kwargs['feature_indices'] = feature_indices
         Policy.__init__(self, *args, **kwargs)
 
-    def update(self, phi, *args ,**kwargs):
+    def update(self, phi, *args, **kwargs):
         phi = phi[self.feature_indices]
 
-        q_fun = np.vectorize(lambda action: self.value(phi, action))
+        q_fun = np.vectorize(lambda action: self.value_function(phi, action))
         q_values = q_fun(self.action_space)
 
         best_q = np.max(q_values)
@@ -56,7 +54,8 @@ class eGreedy(Policy):
         self.pi[~max_indices] = 0
         self.pi += self.epsilon / self.action_space.size
 
-class Alternating_Rotation(Policy):
+
+class AlternatingRotation(Policy):
     """A policy for task-3 of auto-docking.
 
     According to the policy, the robot rotates in one direction for some
@@ -71,6 +70,7 @@ class Alternating_Rotation(Policy):
         action_space (numpy array of action): Numpy array containing
             all actions available to any agent.
     """
+
     def __init__(self, action_space, *args, **kwargs):
         self.time_steps = 0
         self.num_time_steps = 100
@@ -81,19 +81,20 @@ class Alternating_Rotation(Policy):
         self.LEFT = 0
         self.RIGHT = 1
 
-    def update(self, *args ,**kwargs):
+    def update(self, *args, **kwargs):
         """Deterministically sets ``pi`` based on the timestep.
         """
         if self.time_steps > self.num_time_steps:
             self.last_index = self.LEFT
-        else: 
+        else:
             self.last_index = self.RIGHT
 
         self.pi *= 0
         self.pi[self.last_index] = 1
 
         self.time_steps += 1
-        self.time_steps %= 2*self.num_time_steps
+        self.time_steps %= 2 * self.num_time_steps
+
 
 class ForwardIfClear(Policy):
     """An implementation of ForwardIfClear for task-2 of auto-docking.
@@ -106,13 +107,14 @@ class ForwardIfClear(Policy):
     It is designed to improve exploration comapred to Greedy or eGreedy
     for task-2 (taking the robot to the center IR region).
     """
+
     def __init__(self, action_space, *args, **kwargs):
         # The last action is recorded according to its respective constants
         # these indices should be in order of action space
         self.FORWARD = 0
         self.TURN_RIGHT = 2
         self.TURN_LEFT = 1
-        
+
         kwargs['action_space'] = action_space
         Policy.__init__(self, *args, **kwargs)
 
@@ -125,6 +127,7 @@ class ForwardIfClear(Policy):
         else:
             self.pi += 0.05
             self.pi[self.FORWARD] += 0.9
+
 
 class Switch:
     """Switches between two policies.
@@ -145,6 +148,7 @@ class Switch:
             reaches ``num_timesteps_explore``. 
 
     """
+
     def __init__(self, explorer, exploiter, num_timesteps_explore):
         self.explorer = explorer
         self.exploiter = exploiter
@@ -156,7 +160,8 @@ class Switch:
         self.t %= self.num_timesteps_explore
         if self.t > self.num_timesteps_explore:
             self.exploiter.update(*args, **kwargs)
-            rospy.loginfo('Greedy policy is the behaviour policy, no learning now')
+            rospy.loginfo(
+                'Greedy policy is the behaviour policy, no learning now')
             to_return = 'target_policy'
         else:
             self.explorer.update(*args, **kwargs)

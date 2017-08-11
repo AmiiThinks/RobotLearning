@@ -1,40 +1,33 @@
 #!/usr/bin/env python
 
 """
-Author: Michele Albach, David Quail, Parash Rahman, Niko Yasui, Shibhansh Dohare, June 1, 2017.
+Author: Michele Albach, David Quail, Parash Rahman, Niko Yasui, Shibhansh
+Dohare, June 1, 2017.
 
 Description:
-LearningForeground contains a collection of GVF's. It accepts new state representations, learns, and then takes action.
+LearningForeground contains a collection of GVF's. It accepts new state
+representations, learns, and then takes action.
 
 """
 from __future__ import division
 
+import random
+import time
+from Queue import Queue
+from multiprocessing import Value
+
 import geometry_msgs.msg as geom_msg
 import numpy as np
-import multiprocessing as mp
-import os, sys
-import pickle
 import rosbag
 import rospy
-from rospy.numpy_msg import numpy_msg
-import random
 import std_msgs.msg as std_msg
-import subprocess
-import sys
-import tempfile
-import threading
-import time
-import tools
-
 from cv_bridge.core import CvBridge
-from gentest_state_representation import GenTestStateManager
-from geometry_msgs.msg import Twist, Vector3
-from gvf import GVF
-from multiprocessing import Value
-from Queue import Queue
+
+import tools
 from state_representation import StateManager
 from tools import timing
 from visualize_pixels import Visualize
+
 
 class LearningForeground:
     def __init__(self,
@@ -51,7 +44,10 @@ class LearningForeground:
         self.COLLECT_DATA_FLAG = False
 
         # counts the total cumulant for the session
-        self.cumulant_counter = cumulant_counter if cumulant_counter else Value('d', 0)
+        if cumulant_counter:
+            self.cumulant_counter = cumulant_counter
+        else:
+            self.cumulant_counter = Value('d', 0)
 
         # capture this session's data and actions
         if self.COLLECT_DATA_FLAG:
@@ -59,19 +55,18 @@ class LearningForeground:
             self.current_time = rospy.Time().now()
 
         self.vis = False
+        # self.vis = True
 
         self.features_to_use = set(features_to_use + ['core', 'ir', 'odom'])
-        topics = filter(lambda x: x, 
+        topics = filter(lambda x: x,
                         [tools.features[f] for f in self.features_to_use])
 
-
         # set up dictionary to receive sensor info
-        self.recent = {topic:Queue(0) for topic in topics}
-
+        self.recent = {topic: Queue(0) for topic in topics}
 
         # setup sensor parsers
         for topic in topics:
-            rospy.Subscriber(topic, 
+            rospy.Subscriber(topic,
                              tools.topic_format[topic],
                              self.recent[topic].put)
 
@@ -79,7 +74,7 @@ class LearningForeground:
 
         # smooth out the actions
         self.time_scale = time_scale
-        self.r = rospy.Rate(1.0/self.time_scale)
+        self.r = rospy.Rate(int(1.0 / self.time_scale))
 
         # agent info
         self.gvfs = gvfs
@@ -90,48 +85,47 @@ class LearningForeground:
         self.state_manager = StateManager(features_to_use)
         self.img_to_cv2 = CvBridge().compressed_imgmsg_to_cv2
 
-        # currently costs about 0.0275s per timestep
-        rospy.loginfo("Creating visualization.")
-
         if self.vis:
+            rospy.loginfo("Creating visualization.")
             self.visualization = Visualize(self.state_manager.pixel_mask,
                                            imsizex=640,
                                            imsizey=480)
-
-        rospy.loginfo("Done creatiing visualization.")
+            rospy.loginfo("Done creatiing visualization.")
 
         # previous timestep information
         self.last_action = None
         self.last_phi = None
-        self.preds = {g:None for g in self.gvfs}
+        self.preds = {g: None for g in self.gvfs}
         self.last_observation = None
         self.last_mu = 1
 
         # experience replay
         self.to_replay_experience = False
 
-        # Set up publishers
-        pub_name = lambda g, lab: '{}/{}'.format(g, lab) if g else lab
-        pub = lambda g, lab: rospy.Publisher(pub_name(g, lab), 
-                                             std_msg.Float64, 
-                                             queue_size=10)
-        action_publisher = rospy.Publisher('action_cmd', 
+        def publisher_name(gvf, label):
+            return '{}/{}'.format(gvf, label) if gvf else label
+
+        def pub(gvf, label):
+            return rospy.Publisher(publisher_name(gvf, label),
+                                   std_msg.Float64,
+                                   queue_size=10)
+        action_publisher = rospy.Publisher('action_cmd',
                                            geom_msg.Twist,
                                            queue_size=1)
-        pause_publisher = rospy.Publisher('pause', 
+        pause_publisher = rospy.Publisher('pause',
                                           std_msg.Bool,
                                           queue_size=1)
-        termination_publisher = rospy.Publisher('termination', 
+        termination_publisher = rospy.Publisher('termination',
                                                 std_msg.Bool,
                                                 queue_size=1)
 
         self.publishers = {'action': action_publisher,
                            'pause': pause_publisher,
                            'termination': termination_publisher
-                          }
-        labels = ['prediction', 'td_error', 'avg_td_error', 'rupee', 'MSRE',
-                  'cumulant']
-        label_pubs = {g:{l:pub(g.name, l) for l in labels} for g in self.gvfs}
+                           }
+        labs = ['prediction', 'td_error', 'avg_td_error', 'rupee', 'MSRE',
+                'cumulant', 'phi', 'e', 'rho']
+        label_pubs = {g: {l: pub(g.name, l) for l in labs} for g in self.gvfs}
         self.publishers.update(label_pubs)
 
         rospy.loginfo("Done LearningForeground init.")
@@ -141,9 +135,9 @@ class LearningForeground:
         for gvf in self.gvfs:
             gvf.update(self.last_observation,
                        self.last_phi,
-                       self.last_action, 
+                       self.last_action,
                        observation,
-                       phi_prime, 
+                       phi_prime,
                        self.last_mu)
 
         # publishing
@@ -151,9 +145,13 @@ class LearningForeground:
             self.publishers[gvf]['prediction'].publish(self.preds[gvf])
             self.publishers[gvf]['cumulant'].publish(gvf.last_cumulant)
             self.publishers[gvf]['td_error'].publish(gvf.evaluator.td_error)
-            self.publishers[gvf]['avg_td_error'].publish(gvf.evaluator.avg_td_error)
+            self.publishers[gvf]['avg_td_error'].publish(
+                gvf.evaluator.avg_td_error)
             self.publishers[gvf]['rupee'].publish(gvf.evaluator.rupee)
             self.publishers[gvf]['MSRE'].publish(gvf.evaluator.MSRE)
+            self.publishers[gvf]['phi'].publish(gvf.phi.sum())
+            self.publishers[gvf]['e'].publish(gvf.learner.e.sum())
+            self.publishers[gvf]['rho'].publish(gvf.rho)
 
     def read_source(self, source, history=False):
         temp = [] if history else None
@@ -170,7 +168,8 @@ class LearningForeground:
 
     @timing
     def create_state(self):
-        # bumper constants from http://docs.ros.org/hydro/api/kobuki_msgs/html/msg/SensorState.html
+        # bumper constants from
+        # http://docs.ros.org/hydro/api/kobuki_msgs/html/msg/SensorState.html
         bump_codes = [1, 4, 2]
 
         # initialize data
@@ -179,7 +178,7 @@ class LearningForeground:
 
         # build data (used to make phi)
         data = {sensor: None for sensor in sensors}
-        for source in sensors - set(['ir', 'core']):
+        for source in sensors - {'ir', 'core'}:
             data[source] = self.read_source(source)
 
         data['ir'] = self.read_source('ir', history=True)[-10:]
@@ -187,33 +186,40 @@ class LearningForeground:
 
         if data['core']:
             bumps = [dat.bumper for dat in data['core']]
-            data['bump'] = np.sum([[bool(x & bump) for x in bump_codes] for bump in bumps], axis=0, dtype=bool).tolist()
+            data['bump'] = np.sum(
+                    [[bool(x & bump) for x in bump_codes] for bump in bumps],
+                    axis=0, dtype=bool).tolist()
             data['charging'] = bool(data['core'][-1].charger & 2)
 
             # enter the data into rosbag
             if self.COLLECT_DATA_FLAG:
                 for bindex in range(len(data['bump'])):
                     bump_bool = std_msg.Bool()
-                    bump_bool.data = data['bump'][bindex] if data['bump'][bindex] else False
-                    self.history.write('bump' + str(bindex), bump_bool, t=self.current_time)
+                    bump_bool.data = data['bump'][bindex] if data['bump'][
+                        bindex] else False
+                    self.history.write('bump' + str(bindex), bump_bool,
+                                       t=self.current_time)
                 charge_bool = std_msg.Bool()
                 charge_bool.data = data['charging']
-                self.history.write('charging', charge_bool, t=self.current_time)
+                self.history.write('charging', charge_bool,
+                                   t=self.current_time)
 
         if data['ir']:
-            ir = [[0]*6]*3
+            ir = [[0] * 6] * 3
             # bitwise 'or' of all the ir data in last time_step
             for temp in data['ir']:
-                a = [[int(x) for x in format(temp, '#08b')[2:]] for temp in [ord(obs) for obs in temp.data]]
+                a = [[int(x) for x in format(temp, '#08b')[2:]] for temp in
+                     [ord(obs) for obs in temp.data]]
                 ir = [[k | l for k, l in zip(i, j)] for i, j in zip(a, ir)]
-            
-            data['ir'] = [int(''.join([str(i) for i in ir_temp]),2) for ir_temp in ir] 
+
+            data['ir'] = [int(''.join([str(i) for i in ir_temp]), 2) for
+                          ir_temp in ir]
 
             # enter the data into rosbag
             if self.COLLECT_DATA_FLAG:
                 ir_array = std_msg.Int32MultiArray()
                 ir_array.data = data['ir']
-                self.history.write('ir', ir_array, t= self.current_time)
+                self.history.write('ir', ir_array, t=self.current_time)
 
         if data['image'] is not None:
             # enter the data into rosbag
@@ -221,12 +227,15 @@ class LearningForeground:
             # image_array.data = data['image']
             if self.COLLECT_DATA_FLAG:
                 self.history.write('image', data['image'], t=self.current_time)
-            
+
             # uncompressed image
-            data['image'] = np.fromstring(data['image'].data, np.uint8).reshape(480,640,3)#np.asarray(self.img_to_cv2(data['image']))
-            
+            data['image'] = np.fromstring(data['image'].data,
+                                          np.uint8).reshape(480, 640,
+                                                            3)  #
+            # np.asarray(self.img_to_cv2(data['image']))
+
             # compressing image
-            #data['image'] = np.asarray(self.img_to_cv2(data['image']))
+            # data['image'] = np.asarray(self.img_to_cv2(data['image']))
 
         if data['odom'] is not None:
             pos = data['odom'].pose.pose.position
@@ -262,16 +271,16 @@ class LearningForeground:
         if 'last_action' in self.features_to_use:
             last_action = np.zeros(self.behavior_policy.action_space.size)
             last_action[self.behavior_policy.last_index] = True
-            phi = np.concatenate([phi, last_action])            
+            phi = np.concatenate([phi, last_action])
 
-        # update the visualization of the image data
+            # update the visualization of the image data
         if self.vis:
             self.visualization.update_colours(data['image'])
 
         observation = self.state_manager.get_observations(**data)
         observation['action'] = self.last_action
 
-        if (observation['bump']):
+        if observation['bump']:
             # adds a tally for the added cumulant
             self.cumulant_counter.value += 1
 
@@ -284,11 +293,14 @@ class LearningForeground:
         # temp = random.randint(0,30)
         # for i in range(temp):
         #     if i < temp:
-        #         self.take_action(Twist(Vector3(-0.1, 0, 0), Vector3(0, 0, 0)))
+        #         self.take_action(Twist(Vector3(-0.1, 0, 0), Vector3(0, 0,
+        # 0)))
         #     # elif i >= 50 and i < 50+temp:
-        #     #     self.take_action(Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.5)))
+        #     #     self.take_action(Twist(Vector3(0, 0, 0), Vector3(0, 0,
+        # 0.5)))
         #     # else:
-        #     #     self.take_action(Twist(Vector3(0.1, 0, 0), Vector3(0, 0, 0)))
+        #     #     self.take_action(Twist(Vector3(0.1, 0, 0), Vector3(0, 0,
+        #  0)))
         #     rospy.loginfo('taking random action number: {}'.format(i))
         #     self.r.sleep()
         # self.publishers["pause"].publish(True)
@@ -297,14 +309,14 @@ class LearningForeground:
         # os.system('python {}'.format(interrupt))
         # self.publishers["pause"].publish(False)
 
-        for i in range(random.randint(0,80)):
-            action, mu = self.gvfs[0].learner.take_random_action()
+        for i in range(random.randint(0, 80)):
+            action = np.random.choice(self.behavior_policy.action_space)
             self.take_action(action)
             rospy.loginfo('taking random action number: {}'.format(i))
             if self.to_replay_experience:
                 self.control_gvf.learner.uniform_experience_replay()
-            self.r.sleep()        
-    
+            self.r.sleep()
+
     def run(self):
         while not rospy.is_shutdown():
             start_time = time.time()
@@ -323,8 +335,8 @@ class LearningForeground:
                 self.history.write('action', action, t=self.current_time)
 
             # make prediction
-            self.preds = {g:g.predict(phi_prime, action) for g in self.gvfs}
-            
+            self.preds = {g: g.predict(phi_prime, action) for g in self.gvfs}
+
             # learn
             if self.last_observation is not None:
                 self.update_gvfs(phi_prime, observation)
@@ -334,7 +346,8 @@ class LearningForeground:
                 if self.control_gvf.learner.episode_finished_last_step:
                     self.reset_episode()
                 elif self.to_replay_experience:
-                    # not to replay when the episode resets at it will also include the experience at the start of new episode
+                    # not to replay when the episode resets at it will also
+                    # include the experience at the start of new episode
                     self.control_gvf.learner.uniform_experience_replay()
 
             # save values
@@ -342,8 +355,6 @@ class LearningForeground:
             self.last_action = action
             self.last_mu = mu
             self.last_observation = observation
-
-            print(observation['bump'])
 
             # timestep logging
             total_time = time.time() - start_time
@@ -361,13 +372,13 @@ class LearningForeground:
         if self.COLLECT_DATA_FLAG:
             self.history.close()
 
+
 def start_learning_foreground(time_scale,
                               GVFs,
                               topics,
                               policy,
                               control_gvf=None,
                               cumulant_counter=None):
-
     try:
         foreground = LearningForeground(time_scale,
                                         GVFs,
@@ -379,5 +390,3 @@ def start_learning_foreground(time_scale,
         foreground.run()
     except rospy.ROSInterruptException as detail:
         rospy.loginfo("Handling: {}".format(detail))
-
-

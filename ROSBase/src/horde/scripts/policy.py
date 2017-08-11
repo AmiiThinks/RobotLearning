@@ -7,6 +7,7 @@ import numpy as np
 
 import tools
 
+
 class Policy:
     """Parent class for policies.
 
@@ -47,8 +48,9 @@ class Policy:
         last_index (int): The index of the last action chosen by the
             policy.
     """
-    def __init__(self, 
-                 action_space, 
+
+    def __init__(self,
+                 action_space,
                  feature_indices=None,
                  value_function=None,
                  action_equality=tools.equal_twists,
@@ -101,9 +103,9 @@ class Policy:
         Returns:
             Float from ``pi`` corresponding to ``action``. 
         """
-        equal_action = lambda i: self.action_equality(action, 
+        equal_action = lambda i: self.action_equality(action,
                                                       self.action_space[i])
-        indices  = list(filter(equal_action, range(self.action_space.size)))
+        indices = list(filter(equal_action, range(self.action_space.size)))
         assert len(indices) > 0
 
         index = indices[0]
