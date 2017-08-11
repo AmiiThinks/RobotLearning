@@ -413,7 +413,7 @@ if __name__ == "__main__":
             discount = hps['discount']
 
             features_to_use = ['image', 'bias']
-            # features_to_use = ['image', 'bias', 'pixel_pairs']
+
             feature_indices = np.concatenate(
                     [StateConstants.indices_in_phi[f] for f in
                      features_to_use])

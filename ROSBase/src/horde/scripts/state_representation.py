@@ -26,7 +26,7 @@ values to obtain the state representation
 
 class StateConstants:
     # image tiles
-    NUM_RANDOM_POINTS = 50
+    NUM_RANDOM_POINTS = 100
     CHANNELS = 3
     NUM_IMAGE_TILINGS = 4
     NUM_IMAGE_INTERVALS = 4
@@ -138,7 +138,7 @@ class StateManager(object):
 
         self.last_image_raw = np.zeros((StateConstants.IMAGE_LI,
                                         StateConstants.IMAGE_CO,
-                                        3))
+                                        3), dtype=int)
         self.last_imu_raw = float()
         self.last_odom_raw = np.zeros(4)
         self.last_ir_raw = (0, 0, 0)
@@ -192,7 +192,8 @@ class StateManager(object):
         if 'pixel_pairs' in self.features_to_use:
             # get vector of pixels with each pixel=(Channel1,Channel2,...)
             num_channels = StateConstants.CHANNELS
-            pixels = image[self.pixel_mask].reshape(-1, num_channels)
+            pixels = image[self.pixel_mask].reshape(-1,
+                                                    num_channels).astype(float)
 
             # get vector of L2 norms of above pixels
             norms = np.linalg.norm(pixels, axis=1)
@@ -202,17 +203,23 @@ class StateManager(object):
             # of the outer product of the arrays
             row, col = np.triu_indices(norms.size, 1)
 
-            # calculate upper triangle of outer product: pixels, pixels
+            # calculate upper triangle of inner product: pixels, pixels
             dots = np.einsum('ij,ij->i', pixels[row], pixels[col])
 
-            # calculate upper triangle of outer product: norms, norms
+            # calculate upper triangle of inner product: norms, norms
             norm_product = np.einsum('i,i->i', norms[row], norms[col])
 
-            # find cosine similarity
-            cos_sim = dots / norm_product
-            print(np.min(cos_sim), np.max(cos_sim))
+            # find cosine similarity and avoid making nans
+            div_by_zero = norm_product == 0
+            cos_sim = dots
+            cos_sim[div_by_zero] = 0
+            cos_sim[~div_by_zero] /= norm_product[~div_by_zero]
+            assert (np.abs(cos_sim) <= 1.1).all()
+
+            # fix rounding errors
+            cos_sim[cos_sim < -1] = -1
+            cos_sim[cos_sim > 1] = 1
             assert cos_sim.size == StateConstants.NUM_PP
-            assert (cos_sim <= 1.0).all() and (cos_sim >= -1.0).all()
 
             cos_sim *= StateConstants.SCALE_PP
 

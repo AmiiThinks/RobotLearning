@@ -36,7 +36,7 @@ features = {'core': "/mobile_base/sensors/core",
             'bias': None,
             'bump': None,
             'last_action': None,
-            'pixel_pairs': None
+            'pixel_pairs': "/camera/rgb/image_rect_color",
             }
 
 
