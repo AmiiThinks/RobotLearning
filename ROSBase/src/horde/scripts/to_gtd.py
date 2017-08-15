@@ -17,6 +17,8 @@ class TOGTD:
         theta: Primary weight vector.
         w: Secondary weight vector.
         e: Eligibility trace vector.
+        e_grad: Gradient correction trace vector.
+        e_w: Secondary eligibility trace vector.
         alpha: Primary learning rate.
         beta: Secondary learning rate.
         lmbda: Trace decay rate.
@@ -50,6 +52,7 @@ class TOGTD:
     def update(self, phi, phi_prime, cumulant, gamma, rho, **kwargs):
         alpha = self.alpha.next()
         beta = self.beta.next()
+        temp = self.theta
 
         self.delta = (cumulant + gamma * np.dot(phi_prime, self.theta) -
                       np.dot(phi, self.theta))
@@ -78,7 +81,7 @@ class TOGTD:
 
         self.old_gamma = gamma
         self.old_rho = rho
-        self.old_theta = self.theta
+        self.old_theta = temp
 
         # for compatibility with calculating RUPEE for control gvfs
         return phi
