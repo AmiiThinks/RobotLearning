@@ -33,7 +33,6 @@ class TOGTD:
                  decay=False,
                  **kwargs):
         self.theta = np.zeros(num_features)
-        self.old_theta = np.zeros(num_features)
         self.w = np.zeros(num_features)
         self.e = np.zeros(num_features)
         self.e_grad = np.zeros(num_features)
@@ -68,8 +67,8 @@ class TOGTD:
 
         self.theta += (self.tderr_elig +
                        (self.e - alpha * rho * phi) *
-                       np.dot(self.theta - self.old_theta,
-                              phi) -
+                        np.dot(self.theta - self.old_theta,
+                               phi) -
                        alpha * gamma * (1 - self.lmbda) *
                        np.dot(self.w, self.e_grad) *
                        phi_prime)
@@ -78,7 +77,6 @@ class TOGTD:
 
         self.old_gamma = gamma
         self.old_rho = rho
-        self.old_theta = self.theta
 
         # for compatibility with calculating RUPEE for control gvfs
         return phi
