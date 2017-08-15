@@ -3,23 +3,22 @@
 All parameters are set in ``if __name__ == "__main__"``
 
 Authors:
-    Niko Yasui.
+    Banafshe Rafiee, Niko Yasui.
 """
 from __future__ import division
-import math
+
 import multiprocessing as mp
 
-from geometry_msgs.msg import Twist, Vector3
 import numpy as np
 import rospy
+from geometry_msgs.msg import Twist, Vector3
 
 from action_manager import start_action_manager
 from gtd import GTD
 from gvf import GVF
 from learning_foreground import start_learning_foreground
 from policy import Policy
-from state_representation import StateConstants
-import tools
+
 
 class Spin(Policy):
     """Constant policy that only spins.
@@ -30,6 +29,7 @@ class Spin(Policy):
         turn_action_index (int): Index of ``action_space`` containing the
             turn action.
     """
+
     def __init__(self, action_space, turn_action_index, *args, **kwargs):
         kwargs['action_space'] = action_space
         Policy.__init__(self, *args, **kwargs)
@@ -40,6 +40,7 @@ class Spin(Policy):
     def update(self, phi, observation, *args, **kwargs):
         pass
 
+
 class EpsilonSpin(Policy):
     """Spins except epsilon of the time it randomly choses an action.
 
@@ -49,6 +50,7 @@ class EpsilonSpin(Policy):
         turn_action_index (int): Index of ``action_space`` containing the
             turn action.
     """
+
     def __init__(self,
                  epsilon,
                  action_space,
@@ -64,6 +66,7 @@ class EpsilonSpin(Policy):
     def update(self, phi, observation, *args, **kwargs):
         pass
 
+
 class RotateBounce(Policy):
     """Bounces between 0.5 and -0.5 on IMU.
 
@@ -71,12 +74,12 @@ class RotateBounce(Policy):
         action_space (numpy array of action): Numpy array containing
             all actions available to any agent.
     """
+
     def __init__(self,
                  action_space,
                  *args, **kwargs):
         kwargs['action_space'] = action_space
         Policy.__init__(self, *args, **kwargs)
-
 
         self.LEFT = 1
         self.RIGHT = 2
@@ -91,6 +94,7 @@ class RotateBounce(Policy):
         self.pi *= 0
         self.pi[self.direction] += 1
 
+
 class EpsilonRotateBounce(Policy):
     """Epsilon greedily bounces between 0.5 and -0.5 on IMU.
 
@@ -98,13 +102,13 @@ class EpsilonRotateBounce(Policy):
         action_space (numpy array of action): Numpy array containing
             all actions available to any agent.
     """
+
     def __init__(self,
                  epsilon,
                  action_space,
                  *args, **kwargs):
         kwargs['action_space'] = action_space
         Policy.__init__(self, *args, **kwargs)
-
 
         self.epsilon = epsilon
         self.LEFT = 1
@@ -122,11 +126,10 @@ class EpsilonRotateBounce(Policy):
         self.pi[self.direction] += 1 - self.epsilon
 
 
-
-
 class Cumulant:
     """Implements cumulant = next_imu - current_imu
     """
+
     def __init__(self):
         self.last_imu = 0
 
@@ -135,13 +138,14 @@ class Cumulant:
         self.last_imu = obs['imu']
         return c
 
+
 if __name__ == "__main__":
     try:
         action_manager_process = mp.Process(target=start_action_manager,
                                             name="action_manager",
                                             args=())
         action_manager_process.start()
-        
+
         # robotic parameters
         time_scale = 0.05
         turn_speed = 1
@@ -156,16 +160,18 @@ if __name__ == "__main__":
 
         # either cycles through hyperparameter possibilities or 
         # runs wall demo once with default hyperparameters
-        hps = {'alpha0': 0.1, "lmbda":0.9}
+        hps = {'alpha0': 0.1, "lmbda": 0.9}
 
         # learning parameters
         alpha0 = hps['alpha0']
         lmbda = hps['lmbda']
 
         features_to_use = ['bias', 'imu']
-        # feature_indices = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use])
-        feature_indices = np.array([0,1])
-        # num_active_features = sum(StateConstants.num_active_features[f] for f in features_to_use)
+        # feature_indices = np.concatenate([StateConstants.indices_in_phi[f]
+        #  for f in features_to_use])
+        feature_indices = np.array([0, 1])
+        # num_active_features = sum(StateConstants.num_active_features[f]
+        # for f in features_to_use)
         num_active_features = 2
         num_features = feature_indices.size
 
@@ -177,15 +183,13 @@ if __name__ == "__main__":
                    'alpha0': alpha0,
                    'num_features': num_features,
                    'feature_indices': feature_indices,
-                  }
+                   }
 
-        test_policy = RotateBounce(action_space=action_space,
-                                   turn_action_index=1)
+        test_policy = RotateBounce(action_space=action_space)
         test_learner = GTD(**test_hp)
 
         behavior_policy = RotateBounce(action_space=action_space,
-                                      turn_action_index=1,
-                                      epsilon=0.1)
+                                       epsilon=0.1)
 
         # spin_speed = GVF(cumulant      = cumulant,
         #                  gamma         = gamma,
@@ -196,15 +200,13 @@ if __name__ == "__main__":
         #                  **test_hp)
 
         cumulant = Cumulant()
-        steps_to_0 = GVF(cumulant      = cumulant.cumulant,
-                         gamma         = gamma,
-                         target_policy = test_policy,
-                         learner       = test_learner,
-                         name          = 'SpinSpeed',
-                         logger        = rospy.loginfo,
+        steps_to_0 = GVF(cumulant=cumulant.cumulant,
+                         gamma=gamma,
+                         target_policy=test_policy,
+                         learner=test_learner,
+                         name='SpinSpeed',
+                         logger=rospy.loginfo,
                          **test_hp)
-
-
 
         cumulant_counter = 0
         foreground_process = mp.Process(target=start_learning_foreground,
@@ -224,6 +226,6 @@ if __name__ == "__main__":
     finally:
         try:
             foreground_process.join()
-            action_manager_process.join()  
+            action_manager_process.join()
         except NameError:
-            pass    
+            pass

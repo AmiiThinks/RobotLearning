@@ -17,14 +17,14 @@ import cv2
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import rospy
 
 from tools import timing
 
 # turn off toolbar
 matplotlib.rcParams['toolbar'] = 'None'
 
-class Visualize():
+
+class Visualize:
     def __init__(self, mask, imsizex, imsizey, dpi=100):
 
         # convert mask to x,y points
@@ -37,7 +37,7 @@ class Visualize():
 
         # initialize figure
         self.fig = plt.figure("Image Stream",
-                              figsize=(imsizex/dpi, imsizey/dpi),
+                              figsize=(imsizex / dpi, imsizey / dpi),
                               dpi=dpi)
 
         # initialize ax
@@ -46,7 +46,7 @@ class Visualize():
         self.ax.yaxis.set_visible(False)
 
         # initialize image
-        self.im = self.ax.imshow(np.zeros((imsizey,imsizex)),
+        self.im = self.ax.imshow(np.zeros((imsizey, imsizex)),
                                  interpolation='none',
                                  animated=True)
 
@@ -54,10 +54,10 @@ class Visualize():
         self.fig.show()
         self.fig.canvas.draw()
 
-
     @timing
     def update_colours(self, image):
-        if image is None: return None
+        if image is None:
+            return None
 
         (facets, centers) = self.subdiv.getVoronoiFacetList([])
         img = np.zeros(image.shape, dtype=image.dtype)

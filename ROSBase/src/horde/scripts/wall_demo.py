@@ -13,25 +13,24 @@ Authors:
     Parash Rahman, Niko Yasui.
 """
 from __future__ import division
-import math
+
 import multiprocessing as mp
 import random
+from multiprocessing import Value
 
-from geometry_msgs.msg import Twist, Vector3
 import numpy as np
 import rospy
+from geometry_msgs.msg import Twist, Vector3
 from scipy import optimize
 
+import tools
 from action_manager import start_action_manager
-from greedy_gq import GreedyGQ
 from gtd import GTD
 from gvf import GVF
 from learning_foreground import start_learning_foreground
-from multiprocessing import Value
 from policy import Policy
-from Queue import Queue
 from state_representation import StateConstants
-import tools
+
 
 class MaximumEntropyMellowmax(Policy):
     """Adaptive softmax policy.
@@ -54,7 +53,7 @@ class MaximumEntropyMellowmax(Policy):
             all actions available to any agent.
     """
 
-    def __init__(self, 
+    def __init__(self,
                  omega,
                  value_function,
                  feature_indices,
@@ -63,7 +62,7 @@ class MaximumEntropyMellowmax(Policy):
         kwargs['value_function'] = value_function
         kwargs['feature_indices'] = feature_indices
         kwargs['action_space'] = action_space
-        Policy.__init__(self, *args, **kwargs)        
+        Policy.__init__(self, *args, **kwargs)
 
         self.mellowmax = lambda x: np.log(np.mean(np.exp(omega * x))) / omega
 
@@ -83,19 +82,23 @@ class MaximumEntropyMellowmax(Policy):
 
         mm = self.mellowmax(q_values)
         diff = q_values - mm
-        
+
         beta = optimize.brentq(self.find_beta(diff), -10, 10)
         if beta == 10 or beta == -10:
             rospy.logwarn("Beta = {}".format(beta))
         beta_q = beta * q_values
         self.pi = tools.softmax(beta_q)
 
-    def find_beta(self, diff):
+    @staticmethod
+    def find_beta(diff):
         """Returns the root-finding problem for the softmax parameter."""
-        def optimize_this(beta, *args):
+
+        def optimize_this(beta):
             """Equals zero at the desired value of ``beta``"""
             return np.sum(np.exp(beta * diff) * diff)
+
         return optimize_this
+
 
 class Softmax(Policy):
     """Softmax policy.
@@ -111,8 +114,8 @@ class Softmax(Policy):
             :py:obj:`value_function`.
     """
 
-    def __init__(self, 
-                 action_space, 
+    def __init__(self,
+                 action_space,
                  value_function,
                  feature_indices,
                  *args, **kwargs):
@@ -130,6 +133,7 @@ class Softmax(Policy):
         q_values = q_fun(self.action_space)
         self.pi = tools.softmax(q_values)
 
+
 class GoForward(Policy):
     """Constant policy that only goes forward.
 
@@ -139,15 +143,17 @@ class GoForward(Policy):
         fwd_action_index (int): Index of ``action_space`` containing the
             forward action.
     """
+
     def __init__(self, action_space, fwd_action_index, *args, **kwargs):
         kwargs['action_space'] = action_space
         Policy.__init__(self, *args, **kwargs)
 
-        self.pi *= 0
-        self.pi[fwd_action_index] = 1
+        self.pi *= 0.0
+        self.pi[fwd_action_index] += 1.0
 
     def update(self, phi, observation, *args, **kwargs):
         pass
+
 
 class PavlovSoftmax(Policy):
     """Softmax policy that forces the agent to select a "turn"
@@ -163,9 +169,10 @@ class PavlovSoftmax(Policy):
             vector corresponding to indices used by the
             :py:obj:`value_function`.
     """
-    def __init__(self, 
+
+    def __init__(self,
                  time_scale,
-                 action_space, 
+                 action_space,
                  value_function,
                  feature_indices,
                  *args, **kwargs):
@@ -189,15 +196,18 @@ class PavlovSoftmax(Policy):
             self.pi[self.TURN] = 1
         else:
             # Joseph Modayil's constants
-            T = 1/self.time_scale/1
-            k1 = np.log((T-1)*(self.action_space.size-1))
-            k2 = k1 * 6.0
+            # T = 1 / self.time_scale / 1
+            T = 6.0
+            k1 = np.log((T - 1) * (self.action_space.size - 1))
+            k2 = k1 * 4.0
 
             # make preferences for each action
             prefs = np.zeros(2)
-            last = lambda x: self.last_index == x
+
+            def last(index):
+                return self.last_index == index
             prefs[self.TURN] = k1 * last(self.TURN)
-            prefs[self.FORWARD] = k2*(0.5-p) + k1*last(self.FORWARD)
+            prefs[self.FORWARD] = k2 * (0.5 - p) + k1 * last(self.FORWARD)
 
             self.pi = tools.softmax(prefs)
 
@@ -217,6 +227,7 @@ class ForwardIfClear(Policy):
             vector corresponding to indices used by the
             :py:obj:`value_function`.
     """
+
     def __init__(self,
                  action_space,
                  value_function,
@@ -242,6 +253,7 @@ class ForwardIfClear(Policy):
         self.pi *= 0
         self.pi[self.last_index] = 1
 
+
 class DeterministicForwardIfClear(Policy):
     """Policy that goes forward unless bumping.
 
@@ -249,6 +261,7 @@ class DeterministicForwardIfClear(Policy):
         action_space (numpy array of action): Numpy array containing
             all actions available to any agent.
     """
+
     def __init__(self, *args, **kwargs):
         # where the last action is recorded according
         # to its respective constants
@@ -272,6 +285,7 @@ class DeterministicForwardIfClear(Policy):
         self.pi = np.zeros(self.action_space.size)
         self.pi[self.last_index] = 1
 
+
 class Switch:
     """Class that switches between two policies.
 
@@ -280,6 +294,7 @@ class Switch:
         explorer (Policy): Policy to follow while exploring.
         exploiter (Policy): Policy to follow after exploring.
     """
+
     def __init__(self, explorer, exploiter, num_timesteps_explore):
         self.explorer = explorer
         self.exploiter = exploiter
@@ -321,22 +336,25 @@ class Switch:
         rospy.loginfo(msg)
         return action
 
-def control_cumulant(self, observation):
-    """Cumulant to encourage going forward but avoiding bumping.
 
-    Args:
-        observation (dictionary): Dictionary containing a ``bump`` key.
+# def control_cumulant(self, observation):
+#     """Cumulant to encourage going forward but avoiding bumping.
+#
+#     Args:
+#         observation (dictionary): Dictionary containing a ``bump`` key.
+#
+#     Returns:
+#         Float representing the cumulant.
+#     """
+#     c = 0.0
+#     if observation is not None and int(any(observation['bump'])):
+#         c = -1.0
+#     elif self.last_index == self.TURN:
+#         c = 0.0
+#     elif self.last_index == self.FORWARD:
+#         c = 0.5
+#     return c
 
-    Returns:
-        Float representing the cumulant.
-    """
-    if observation is not None and int(any(observation['bump'])):
-        c = -1.0
-    elif self.last_index == self.TURN:
-        c = 0.0
-    elif self.last_index == self.FORWARD:
-        c = 0.5
-    return c
 
 if __name__ == "__main__":
     try:
@@ -349,11 +367,19 @@ if __name__ == "__main__":
                                             name="action_manager",
                                             args=())
         action_manager_process.start()
-        
+
         # robotic parameters
         time_scale = 0.1
         forward_speed = 0.12
-        turn_speed = 5.0/3
+        turn_speed = 5. / 3
+
+        time_scale = 0.06
+        forward_speed = 0.2
+        turn_speed = 25. / 9
+
+        # time_scale = 0.03
+        # forward_speed = 0.4
+        # turn_speed = 50. / 9
 
         # all available actions
         action_space = np.array([Twist(Vector3(forward_speed, 0, 0),
@@ -363,14 +389,22 @@ if __name__ == "__main__":
 
         # either cycles through hyperparameter possibilities or 
         # runs wall demo once with default hyperparameters
-        if (hyperparameter_experiment_mode):
-            hyperparameters = [{"alpha0":0.05, "lmbda":0.9, 'discount':0.9, 'beta0':0.05/1000},
-                               {"alpha0":0.1, "lmbda":0.9, 'discount':0.97, 'beta0':0.1/1000}]
+        if hyperparameter_experiment_mode:
+            hyperparameters = [{"alpha0": 0.05, "lmbda": 0.9, 'discount': 0.9,
+                                'beta0': 0.05 / 1000
+                                },
+                               {"alpha0": 0.1, "lmbda": 0.9, 'discount': 0.97,
+                                'beta0': 0.1 / 1000
+                                }]
             result_file = open('results.txt', 'ab+')
             result_file.write('RESULTS\n')
             result_file.close()
         else:
-            hyperparameters = [{'alpha0': 0.05, "lmbda":0.9, 'discount':0.9, 'beta0':0.05/1000}]
+            hyperparameters = [{'alpha0': 0.05,
+                                "lmbda": 0.9,
+                                'discount': 0.97,
+                                'beta0': 0.05 / 1000,
+                                }]
 
         for hps in hyperparameters:
             # learning parameters
@@ -379,8 +413,13 @@ if __name__ == "__main__":
             discount = hps['discount']
 
             features_to_use = ['image', 'bias']
-            feature_indices = np.concatenate([StateConstants.indices_in_phi[f] for f in features_to_use])
-            num_active_features = sum(StateConstants.num_active_features[f] for f in features_to_use)
+
+            feature_indices = np.concatenate(
+                    [StateConstants.indices_in_phi[f] for f in
+                     features_to_use])
+            num_active_features = sum(
+                    StateConstants.num_active_features[f] for f in
+                    features_to_use)
             num_features = feature_indices.size
 
             turn_sec_to_bump = 2
@@ -394,7 +433,8 @@ if __name__ == "__main__":
                       'alpha0': alpha0,
                       'num_features': num_features,
                       'feature_indices': feature_indices,
-                     }
+                      # 'decay': True,
+                      }
 
             # avoid_wall_omega = 10
             # alpha0 = 0.01
@@ -402,24 +442,27 @@ if __name__ == "__main__":
             #                  'beta': 0.001 * alpha0 / num_active_features,
             #                  'lmbda': 0.1,
             #                  'alpha0': alpha0,
-            #                  'num_features': num_features * action_space.size,
+            #                  'num_features': num_features *
+            # action_space.size,
             #                  'feature_indices': feature_indices,
             #                 }
 
             # prediction GVF
-            dtb_policy = GoForward(action_space=action_space, fwd_action_index=1)
+            dtb_policy = GoForward(action_space=action_space,
+                                   fwd_action_index=0)
             dtb_learner = GTD(**dtb_hp)
 
             threshold_policy = PavlovSoftmax(action_space=action_space,
-                                        feature_indices=dtb_hp['feature_indices'],
-                                        value_function=dtb_learner.predict,
-                                        time_scale=time_scale)
-            distance_to_bump = GVF(cumulant = one_if_bump,
-                                   gamma    = discount_if_bump,
-                                   target_policy = dtb_policy,
-                                   learner = dtb_learner,
-                                   name = 'DistanceToBump',
-                                   logger = rospy.loginfo,
+                                             feature_indices=dtb_hp[
+                                                 'feature_indices'],
+                                             value_function=dtb_learner.predict,
+                                             time_scale=time_scale)
+            distance_to_bump = GVF(cumulant=one_if_bump,
+                                   gamma=discount_if_bump,
+                                   target_policy=dtb_policy,
+                                   learner=dtb_learner,
+                                   name='DistanceToBump',
+                                   logger=rospy.loginfo,
                                    **dtb_hp)
 
             # # softmax control GVF
@@ -429,7 +472,8 @@ if __name__ == "__main__":
             # avoid_wall_policy = Softmax(#omega=avoid_wall_omega,
             #                     value_function=avoid_wall_learner.predict,
             #                     action_space=action_space,
-            #                     feature_indices=avoid_wall_hp['feature_indices'])
+            #                     feature_indices=avoid_wall_hp[
+            # 'feature_indices'])
             # avoid_wall_memm = GVF(cumulant = control_cumulant,
             #                       gamma    = discount_if_bump,
             #                       target_policy = avoid_wall_policy,
@@ -464,12 +508,13 @@ if __name__ == "__main__":
 
                 # record results of experiment
                 result_file = open('results.txt', 'ab+')
-                result_file.write("CUMULANTS: " + str(cumulant_counter.value) + "\n")
+                result_file.write(
+                    "CUMULANTS: " + str(cumulant_counter.value) + "\n")
                 result_file.close()
 
                 # wait for user to continue/reset experiment
                 raw_input("Press enter to continue: ")
-        if (hyperparameter_experiment_mode is True):
+        if hyperparameter_experiment_mode is True:
             action_manager_process.terminate()
 
     except rospy.ROSInterruptException as detail:
@@ -477,6 +522,6 @@ if __name__ == "__main__":
     finally:
         try:
             foreground_process.join()
-            action_manager_process.join()  
+            action_manager_process.join()
         except NameError:
-            pass    
+            pass

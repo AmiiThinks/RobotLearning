@@ -4,11 +4,12 @@ Authors:
     Shibhansh Dohare, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
 """
 
+import rospy
 from geometry_msgs.msg import Twist, Vector3
 from std_msgs.msg import Bool
-import rospy
 
 from tools import topic_format
+
 
 class ActionManager():
     """Class that communicates directly with the turtlebot.
@@ -22,6 +23,7 @@ class ActionManager():
         stop_once (bool): Send one stop action and resume sending
             ``action``.
     """
+
     def __init__(self):
         self.STOP_ACTION = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0))
 
@@ -58,7 +60,6 @@ class ActionManager():
         else:
             self.action = action_cmd
 
-
     def run(self):
         """Send an action at a 40Hz cycle."""
         rospy.init_node('action_manager', anonymous=True)
@@ -66,12 +67,12 @@ class ActionManager():
         rospy.Subscriber('termination', Bool, self.set_termination_flag)
         rospy.Subscriber('pause', Bool, self.set_pause_flag)
 
-        action_publisher = rospy.Publisher('cmd_vel_mux/input/teleop', 
+        action_publisher = rospy.Publisher('cmd_vel_mux/input/teleop',
                                            Twist,
                                            queue_size=1)
 
         action_pub_rate = rospy.Rate(40)
-        
+
         while not rospy.is_shutdown():
             if self.termination_flag:
                 break
@@ -88,6 +89,7 @@ class ActionManager():
                 else:
                     action_publisher.publish(self.action)
             action_pub_rate.sleep()
+
 
 def start_action_manager():
     """Runs the action manager"""
