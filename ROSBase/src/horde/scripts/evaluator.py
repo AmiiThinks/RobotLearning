@@ -27,6 +27,10 @@ class Evaluator:
         self.MSRE_over_time = np.zeros(MAX_TIME_STEPS)
         self.td_error = 0.0
         self.avg_td_error = 0.0
+        self.mean_rho = 0.0
+        self.mean_squared_rho = 0.0
+        self.ESS = 0.0
+        self.use_MSRE = use_MSRE
 
         # See Adam White's PhD Thesis, section 8.4.2
         self.alpha_rupee = alpha_rupee
@@ -36,7 +40,14 @@ class Evaluator:
         self.td_elig_avg = np.zeros(num_features)
         self.rupee = 0.0
 
-    def compute_MSRE(self, theta, time_step):
+    def update(self, *args, **kwargs):
+        if self.use_MSRE:
+            self.compute_MSRE(**kwargs)
+        self.compute_avg_td_error(**kwargs)
+        self.compute_rupee(**kwargs)
+        self.compute_IS_ess(**kwargs)
+
+    def compute_MSRE(self, theta, time_step, *args, **kwargs):
         return_error = 0.0
         for i, phi in enumerate(self.samples_phi):
             estimated_value = np.dot(theta, phi)
@@ -50,7 +61,7 @@ class Evaluator:
                      MSRE=self.MSRE_over_time,
                      time_step=time_step)
 
-    def compute_rupee(self, tderr_elig, phi):
+    def compute_rupee(self, tderr_elig, phi, *args, **kwargs):
 
         # update RUPEE
         # add condition to change for control gvf
@@ -65,6 +76,13 @@ class Evaluator:
         self.rupee = np.sqrt(
             np.absolute(np.inner(self.hhat, self.td_elig_avg)))
 
-    def compute_avg_td_error(self, delta, time_step):
+    def compute_avg_td_error(self, delta, time_step, *args, **kwargs):
         self.avg_td_error += (delta - self.avg_td_error) / (time_step + 1)
         self.td_error = delta
+
+    def compute_IS_ess(self, rho, time_step, *args, **kwargs):
+        if time_step != 0:
+            self.mean_rho += (rho - self.mean_rho) / time_step
+            self.mean_squared_rho += ((rho**2 - self.mean_squared_rho) /
+                                      time_step)
+            self.ESS = time_step * self.mean_rho**2 / self.mean_squared_rho

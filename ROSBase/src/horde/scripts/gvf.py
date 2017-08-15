@@ -81,25 +81,12 @@ class GVF:
 
         phi = self.learner.update(**kwargs)
 
-        # update RUPEE
-        # add condition to change for control gvf
-        self.evaluator.compute_rupee(tderr_elig=self.learner.tderr_elig,
-                                     phi=phi)
-        # update MSRE
-        if self.use_MSRE:
-            self.evaluator.compute_MSRE(self.learner.theta, self.time_step)
+        self.evaluator.update(theta=self.learner.theta,
+                              time_step=self.time_step,
+                              tderr_elig=self.learner.tderr_elig,
+                              delta=self.learner.delta,
+                              phi=phi,
+                              rho=self.rho)
 
-        # update avg TD error
-        self.evaluator.compute_avg_td_error(delta=self.learner.delta,
-                                            time_step=self.time_step)
         self.phi = phi_prime
         self.time_step += 1
-
-        # def save(self, filename):
-        #     data = {'theta': self.learner.theta.tolist()}
-        #             # 'elig': self.learner.e}
-        #     json.dump(data, open(filename, 'w'))
-
-        # def load(self, filename):
-        #     data = json.load(open(filename, 'r'))
-        #     self.learner.theta = np.asarray(data['theta'])

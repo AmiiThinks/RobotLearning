@@ -124,7 +124,7 @@ class LearningForeground:
                            'termination': termination_publisher
                            }
         labs = ['prediction', 'td_error', 'avg_td_error', 'rupee', 'MSRE',
-                'cumulant', 'phi', 'e', 'rho']
+                'cumulant', 'phi', 'e', 'rho', 'ESS']
         label_pubs = {g: {l: pub(g.name, l) for l in labs} for g in self.gvfs}
         self.publishers.update(label_pubs)
 
@@ -152,6 +152,7 @@ class LearningForeground:
             self.publishers[gvf]['phi'].publish(gvf.phi.sum())
             self.publishers[gvf]['e'].publish(gvf.learner.e.sum())
             self.publishers[gvf]['rho'].publish(gvf.rho)
+            self.publishers[gvf]['ESS'].publish(gvf.evaluator.ESS)
 
     def read_source(self, source, history=False):
         temp = [] if history else None
