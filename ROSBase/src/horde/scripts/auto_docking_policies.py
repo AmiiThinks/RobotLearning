@@ -31,21 +31,24 @@ class eGreedy(Policy):
             :py:obj:`value_function`.
     """
     def __init__(self, 
-                 epsilon = 0,
+                 epsilon,
                  action_space, 
                  value_function,
                  feature_indices,
                  *args, **kwargs):
         self.epsilon = epsilon
 
+        self.value = value_function
+
         kwargs['action_space'] = action_space
         kwargs['value_function'] = value_function
-        kwargs['feature_indices'] = feature_indices *args, **kwargs)
+        kwargs['feature_indices'] = feature_indices
         Policy.__init__(self, *args, **kwargs)
 
     def update(self, phi, *args ,**kwargs):
         phi = phi[self.feature_indices]
 
+        print (self.action_space)
         q_fun = np.vectorize(lambda action: self.value(phi, action))
         q_values = q_fun(self.action_space)
 
