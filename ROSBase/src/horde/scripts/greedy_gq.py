@@ -54,8 +54,8 @@ class GreedyGQ:
                  **kwargs):
 
         self.lmbda = lmbda
-        self.alpha = tools.decay(alpha) if decay else tools.constant(alpha)
-        self.beta = tools.decay(beta) if decay else tools.constant(beta)
+        self.alpha = alpha
+        self.beta = beta
         self.num_features = num_features
         self.action_space = action_space
         self.finished_episode = finished_episode

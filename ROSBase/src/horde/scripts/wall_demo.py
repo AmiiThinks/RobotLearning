@@ -25,11 +25,15 @@ from scipy import optimize
 
 import tools
 from action_manager import start_action_manager
+from greedy_gq import GreedyGQ
 from gtd import GTD
+from to_gtd import TOGTD
 from gvf import GVF
 from learning_foreground import start_learning_foreground
 from policy import Policy
 from state_representation import StateConstants
+from wis_gtd import WISGTD
+from wis_to_gtd import WISTOGTD
 
 
 class MaximumEntropyMellowmax(Policy):
@@ -133,6 +137,56 @@ class Softmax(Policy):
         q_values = q_fun(self.action_space)
         self.pi = tools.softmax(q_values)
 
+class Control(Softmax):
+    """Softmax policy.
+
+    Attributes:
+        action_space (numpy array of action): Numpy array containing
+            all actions available to any agent.
+        value_function (fun): A function used by the policy to
+            update values of pi. This is usually a value function
+            learned by a GVF.
+        feature_indices (numpy array of bool): Indices of the feature
+            vector corresponding to indices used by the
+            :py:obj:`value_function`.
+        turn_index (int): Index in :py:attr:`~policy.Policy.action_space`
+            of turn action.
+        fwd_index (int): Index in :py:attr:`~policy.Policy.action_space`
+            of forward action.
+    """
+
+    def __init__(self,
+                 action_space,
+                 value_function,
+                 feature_indices,
+                 turn_index,
+                 fwd_index,
+                 *args, **kwargs):
+        kwargs['action_space'] = action_space
+        kwargs['value_function'] = value_function
+        kwargs['feature_indices'] = feature_indices
+        Policy.__init__(self, *args, **kwargs)
+
+        self.TURN = turn_index
+        self.FORWARD = fwd_index
+
+    def control_cumulant(self, observation):
+        """Cumulant to encourage going forward but avoiding bumping.
+
+        Args:
+            observation (dictionary): Dictionary containing a ``bump`` key.
+
+        Returns:
+            Float representing the cumulant.
+        """
+        c = 0.0
+        if observation is not None and observation['bump']:
+            c = -1.0
+        elif self.last_index == self.TURN:
+            c = 0.0
+        elif self.last_index == self.FORWARD:
+            c = 0.1
+        return c
 
 class GoForward(Policy):
     """Constant policy that only goes forward.
@@ -336,26 +390,6 @@ class Switch:
         rospy.loginfo(msg)
         return action
 
-
-# def control_cumulant(self, observation):
-#     """Cumulant to encourage going forward but avoiding bumping.
-#
-#     Args:
-#         observation (dictionary): Dictionary containing a ``bump`` key.
-#
-#     Returns:
-#         Float representing the cumulant.
-#     """
-#     c = 0.0
-#     if observation is not None and int(any(observation['bump'])):
-#         c = -1.0
-#     elif self.last_index == self.TURN:
-#         c = 0.0
-#     elif self.last_index == self.FORWARD:
-#         c = 0.5
-#     return c
-
-
 if __name__ == "__main__":
     try:
         random.seed(20170823)
@@ -433,24 +467,29 @@ if __name__ == "__main__":
                       'alpha0': alpha0,
                       'num_features': num_features,
                       'feature_indices': feature_indices,
+                      'eta': 0.001 / num_active_features,
+                      'u': 1 / (alpha0 / num_active_features),
                       # 'decay': True,
                       }
 
             # avoid_wall_omega = 10
             # alpha0 = 0.01
-            # avoid_wall_hp = {'alpha': alpha0 / num_active_features,
-            #                  'beta': 0.001 * alpha0 / num_active_features,
-            #                  'lmbda': 0.1,
-            #                  'alpha0': alpha0,
-            #                  'num_features': num_features *
-            # action_space.size,
-            #                  'feature_indices': feature_indices,
-            #                 }
+            avoid_wall_hp = {
+                        'alpha': alpha0 / num_active_features,
+                        'beta': hps['beta0'] / num_active_features,
+                        'lmbda': lmbda,
+                        'alpha0': alpha0,
+                        'num_features': num_features * action_space.size,
+                        'feature_indices': feature_indices,
+                        }
 
             # prediction GVF
             dtb_policy = GoForward(action_space=action_space,
                                    fwd_action_index=0)
             dtb_learner = GTD(**dtb_hp)
+            # dtb_learner = TOGTD(**dtb_hp)
+            # dtb_learner = WISGTD(**dtb_hp)
+            # dtb_learner = WISTOGTD(**dtb_hp)
 
             threshold_policy = PavlovSoftmax(action_space=action_space,
                                              feature_indices=dtb_hp[
@@ -465,22 +504,23 @@ if __name__ == "__main__":
                                    logger=rospy.loginfo,
                                    **dtb_hp)
 
-            # # softmax control GVF
-            # avoid_wall_learner = GreedyGQ(action_space,
-            #                               finished_episode=lambda x: False,
-            #                               **avoid_wall_hp)
-            # avoid_wall_policy = Softmax(#omega=avoid_wall_omega,
-            #                     value_function=avoid_wall_learner.predict,
-            #                     action_space=action_space,
-            #                     feature_indices=avoid_wall_hp[
-            # 'feature_indices'])
-            # avoid_wall_memm = GVF(cumulant = control_cumulant,
-            #                       gamma    = discount_if_bump,
-            #                       target_policy = avoid_wall_policy,
-            #                       learner = avoid_wall_learner,
-            #                       name = 'AvoidWall',
-            #                       logger = rospy.loginfo,
-            #                       **avoid_wall_hp)
+            # softmax control GVF
+            avoid_wall_learner = GreedyGQ(action_space,
+                                          finished_episode=lambda x: False,
+                                          **avoid_wall_hp)
+            avoid_wall_policy = Control(#omega=avoid_wall_omega,
+                            value_function=avoid_wall_learner.predict,
+                            action_space=action_space,
+                            feature_indices=avoid_wall_hp['feature_indices'],
+                            fwd_index=0,
+                            turn_index=1)
+            avoid_wall = GVF(cumulant=avoid_wall_policy.control_cumulant,
+                             gamma=discount_if_bump,
+                             target_policy= avoid_wall_policy,
+                             learner= avoid_wall_learner,
+                             name='AvoidWall',
+                             logger=rospy.loginfo,
+                             **avoid_wall_hp)
 
             # # behavior_policy
             # behavior_policy = Switch(explorer=threshold_policy,
