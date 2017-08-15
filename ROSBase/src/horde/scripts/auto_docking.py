@@ -212,7 +212,7 @@ if __name__ == "__main__":
                         **parameters)
 
         # for testing any task with e-greedy learning
-        behavior_policy = EGreedy(epsilon = epsilon,
+        behavior_policy = EGreedy(epsilon=epsilon,
                                   value_function=auto_docking.learner.predict,
                                   action_space=action_space,
                                   feature_indices=feature_indices)
