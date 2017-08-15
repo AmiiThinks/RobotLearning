@@ -310,8 +310,8 @@ class LearningForeground:
         # os.system('python {}'.format(interrupt))
         # self.publishers["pause"].publish(False)
 
+        action = np.random.choice(self.behavior_policy.action_space)
         for i in range(random.randint(0, 80)):
-            action = np.random.choice(self.behavior_policy.action_space)
             self.take_action(action)
             rospy.loginfo('taking random action number: {}'.format(i))
             if self.to_replay_experience:

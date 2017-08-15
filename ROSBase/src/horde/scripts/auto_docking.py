@@ -197,41 +197,37 @@ if __name__ == "__main__":
         learner = GreedyGQ(**learner_parameters)
 
         target_policy = EGreedy(epsilon=0,
-                                feature_indices=feature_indices,
-                                action_space=action_space,
-                                value_function=learner.predict)
+                       feature_indices=feature_indices,
+                       action_space=action_space,
+                       value_function=learner.predict)
 
-        auto_docking = GVF(num_features=num_features * len(action_space),
-                           gamma=lambda observation: 0.9,
-                           cumulant=reward_function(action_space),
-                           learner=learner,
-                           target_policy=target_policy,
-                           name='auto_docking',
-                           logger=rospy.loginfo,
-                           feature_indices=feature_indices,
-                           **parameters)
+        auto_docking = GVF(num_features=num_features*len(action_space),
+                        gamma=lambda observation: 0.9,
+                        cumulant=reward_function(action_space),
+                        learner=learner,
+                        target_policy=target_policy,
+                        name='auto_docking',
+                        logger=rospy.loginfo,
+                        feature_indices=feature_indices,
+                        **parameters)
 
-        # # for testing any task with e-greedy learning
-        # behavior_policy = eGreedy(epsilon = epsilon,
-        #
-        # value_function=auto_docking.learner.predict,
-        #                           action_space=action_space,
-        #                           feature_indices=feature_indices)
+        # for testing any task with e-greedy learning
+        behavior_policy = EGreedy(epsilon=epsilon,
+                                  value_function=auto_docking.learner.predict,
+                                  action_space=action_space,
+                                  feature_indices=feature_indices)
 
-        # for testing task-3 i.e. aligning robot
-        exploring_policy = AlternatingRotation(
-                epsilon=epsilon,
-                value_function=auto_docking.learner.predict,
-                action_space=action_space,
-                feature_indices=feature_indices)
+        #for testing task-3 i.e. aligning robot
+        #exploring_policy = Alternating_Rotation(epsilon = epsilon,
+        #                          value_function=auto_docking.learner.predict,
+        #                          action_space=action_space,
+        #                          feature_indices=feature_indices)
 
         # # for testing task-2 i.e. reaching the center region
         # exploring_policy = ForwardIfClear(action_space=action_space,
         # feature_indices=feature_indices)
 
-        behavior_policy = Switch(explorer=exploring_policy,
-                                 exploiter=target_policy,
-                                 num_timesteps_explore=1200)
+        #behavior_policy = Switch(explorer=exploring_policy, exploiter=target_policy, num_timesteps_explore=1200)
 
         foreground_process = mp.Process(target=start_learning_foreground,
                                         name="foreground",

@@ -27,14 +27,15 @@ class EGreedy(Policy):
             vector corresponding to indices used by the
             :py:obj:`value_function`.
     """
-
-    def __init__(self,
-                 action_space,
+    def __init__(self, 
+                 epsilon,
+                 action_space, 
                  value_function,
                  feature_indices,
-                 epsilon=0,
                  *args, **kwargs):
         self.epsilon = epsilon
+
+        self.value = value_function
 
         kwargs['action_space'] = action_space
         kwargs['value_function'] = value_function

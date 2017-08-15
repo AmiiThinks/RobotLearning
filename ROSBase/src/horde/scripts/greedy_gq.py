@@ -198,13 +198,13 @@ class GreedyGQ:
             rospy.logwarn('self.e in greedy_gq is zero')
 
         # theta_t update
-        self.theta += self.alpha * (self.delta * self.e - self.last_gamma *
+        self.theta += self.alpha.next() * (self.delta * self.e - self.last_gamma *
                                     (1 - self.lmbda) *
                                     np.dot(self.sec_weights, self.action_phi) *
                                     action_phi_bar)
 
         # w_t update
-        self.sec_weights += self.beta * \
+        self.sec_weights += self.beta.next() * \
                             (self.delta * self.e - np.dot(self.sec_weights,
                                                           self.action_phi) *
                              self.action_phi)
