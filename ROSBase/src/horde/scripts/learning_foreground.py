@@ -28,7 +28,6 @@ from state_representation import StateManager
 from tools import timing
 from visualize_pixels import Visualize
 
-
 class LearningForeground:
     def __init__(self,
                  time_scale,
@@ -36,7 +35,11 @@ class LearningForeground:
                  features_to_use,
                  behavior_policy,
                  control_gvf=None,
-                 cumulant_counter=None):
+                 cumulant_counter=None,
+                 reset_episode=None):
+
+        # function that generates a list of actions to perform to reset episode
+        self.reset_episode = reset_episode 
 
         # set up ros
         rospy.init_node('agent', anonymous=True)
@@ -289,34 +292,6 @@ class LearningForeground:
     def take_action(self, action):
         self.publishers['action'].publish(action)
 
-    def reset_episode(self):
-        # temp = random.randint(0,30)
-        # for i in range(temp):
-        #     if i < temp:
-        #         self.take_action(Twist(Vector3(-0.1, 0, 0), Vector3(0, 0,
-        # 0)))
-        #     # elif i >= 50 and i < 50+temp:
-        #     #     self.take_action(Twist(Vector3(0, 0, 0), Vector3(0, 0,
-        # 0.5)))
-        #     # else:
-        #     #     self.take_action(Twist(Vector3(0.1, 0, 0), Vector3(0, 0,
-        #  0)))
-        #     rospy.loginfo('taking random action number: {}'.format(i))
-        #     self.r.sleep()
-        # self.publishers["pause"].publish(True)
-        # dir_path = os.path.dirname(os.path.realpath(__file__))
-        # interrupt = os.path.join(dir_path, 'interrupt_auto_docking.py')
-        # os.system('python {}'.format(interrupt))
-        # self.publishers["pause"].publish(False)
-
-        action = np.random.choice(self.behavior_policy.action_space)
-        for i in range(random.randint(0, 80)):
-            self.take_action(action)
-            rospy.loginfo('taking random action number: {}'.format(i))
-            if self.to_replay_experience:
-                self.control_gvf.learner.uniform_experience_replay()
-            self.r.sleep()
-
     def run(self):
         while not rospy.is_shutdown():
             start_time = time.time()
@@ -341,10 +316,16 @@ class LearningForeground:
             if self.last_observation is not None:
                 self.update_gvfs(phi_prime, observation)
 
-            # check if episode is over
+            # check if episode is over and reset accordingly [episodic]
             if self.control_gvf is not None:
                 if self.control_gvf.learner.episode_finished_last_step:
-                    self.reset_episode()
+                    reset_actions = self.reset_episode()
+                    for action in reset_actions:
+                        self.take_action(action)
+                        rospy.loginfo('taking random action number: {}'.format(action))
+                        if self.to_replay_experience:
+                            self.control_gvf.learner.uniform_experience_replay()
+                        self.r.sleep()
                 elif self.to_replay_experience:
                     # not to replay when the episode resets at it will also
                     # include the experience at the start of new episode
@@ -378,14 +359,16 @@ def start_learning_foreground(time_scale,
                               topics,
                               policy,
                               control_gvf=None,
-                              cumulant_counter=None):
+                              cumulant_counter=None,
+                              reset_episode=None):
     try:
         foreground = LearningForeground(time_scale,
                                         GVFs,
                                         topics,
                                         policy,
                                         control_gvf,
-                                        cumulant_counter)
+                                        cumulant_counter,
+                                        reset_episode)
 
         foreground.run()
     except rospy.ROSInterruptException as detail:

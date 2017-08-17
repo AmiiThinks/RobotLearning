@@ -337,7 +337,7 @@ class Switch:
         return action
 
 
-# def control_cumulant(self, observation):
+# def control_cumulant(self, observation, phi):
 #     """Cumulant to encourage going forward but avoiding bumping.
 #
 #     Args:
@@ -426,7 +426,7 @@ if __name__ == "__main__":
             # discount = math.pow(0.75, time_scale / turn_sec_to_bump)
             # discount = 1 - time_scale
             discount_if_bump = lambda obs: 0 if obs["bump"] else discount
-            one_if_bump = lambda obs: int(obs['bump']) if obs is not None else 0
+            one_if_bump = lambda obs, phi: int(obs['bump']) if obs is not None else 0
             dtb_hp = {'alpha': alpha0 / num_active_features,
                       'beta': hps['beta0'] / num_active_features,
                       'lmbda': lmbda,

@@ -72,7 +72,7 @@ class StateConstants:
     PP_FEATURE_LENGTH = NUM_PP * PP_IHT_SIZE
     PP_START_INDEX = IR_START_INDEX + IR_ITH_SIZE
 
-    # the 1 represents the bias unit, 3 for bump
+    # the 1 represents the bias unit, 3 for bump, 
     TOTAL_FEATURE_LENGTH = (TOTAL_IMAGE_FEATURE_LENGTH + IMU_IHT_SIZE +
                             ODOM_IHT_SIZE + IR_ITH_SIZE + 3 + 1 +
                             PP_FEATURE_LENGTH)

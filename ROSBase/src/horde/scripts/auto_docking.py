@@ -9,6 +9,7 @@ Authors:
 from __future__ import division
 
 import multiprocessing as mp
+import random
 
 from geometry_msgs.msg import Twist, Vector3
 
@@ -33,7 +34,7 @@ if __name__ == "__main__":
 
         alpha0 = 0.1
         lmbda = 0.9
-        features_to_use = ['imu', 'bias', 'ir']
+        features_to_use = ['imu', 'bias', 'ir', 'last_action']
         feature_indices = np.concatenate(
                 [StateConstants.indices_in_phi[f] for f in features_to_use])
         num_features = feature_indices.size
@@ -49,24 +50,22 @@ if __name__ == "__main__":
         learningRate = alpha
         secondaryLearningRate = learningRate / 10
 
-
         def finished_episode(x):
             return x > 0 or x < -100
-
 
         epsilon = 0.1
 
         action_space = []
-
+        def reset_episode():
+            return []
 
         def reward_function(x):
             return lambda y: 0
 
-
         task_to_learn = 3
         if task_to_learn == 1:  # reach the IR region
             def reward_function(action_space):
-                def award(observation):
+                def award(observation, phi):
                     return int(any(observation[
                                        'ir'])) if observation is not None \
                         else 0
@@ -84,7 +83,7 @@ if __name__ == "__main__":
 
         if task_to_learn == 2:  # reach the center IR region
             def reward_function(action_space):
-                def award(observation):
+                def award(observation, phi):
                     # if not in IR region it will get 0 reward
                     # if not any(observation['ir']):
                     #     return -1
@@ -103,18 +102,10 @@ if __name__ == "__main__":
                 Twist(Vector3(0, 0, 0), Vector3(0, 0, 1.0)),  # turn acw/cw
                 # Twist(Vector3(0, 0, 0), Vector3(0, 0, -1.0)) # turn cw/acw
             ]
+            
 
         if task_to_learn == 3:  # align center IR reciever and sender
-            def reward_function(action_space):
-                def award(observation):
-                    ir_data_center = observation['ir'][1]
-                    reward = int((ir_data_center % 16) / 8 or (
-                        ir_data_center % 4) / 2) if observation is not None \
-                        else 0
-                    return reward
-
-                return award
-
+            global phi_index_counter
 
             action_space = [
                 # Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
@@ -123,6 +114,38 @@ if __name__ == "__main__":
                 Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.3)),  # turn acw/cw
                 Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.3))  # turn cw/acw
             ]
+            def reset_episode():
+                random_action = random.choice(action_space)
+                return [random_action for i in range(random.randint(1, 80))]
+            
+            # counter to add reward to discourage wiggling
+            phi_index_counter = np.zeros(StateConstants.TOTAL_FEATURE_LENGTH + len(action_space))
+
+            def reward_function(action_space):
+                def award(observation, phi):
+                    global phi_index_counter
+
+                    ir_data_center = observation['ir'][1]
+
+                    print(observation['ir'])
+
+                    old_variance = np.var(phi_index_counter)
+                    phi_index_counter += phi
+                    new_variance = np.var(phi_index_counter)
+
+                    reward = (1 if ir_data_center & 2 or ir_data_center & 8 else 0) + old_variance - new_variance
+                    """
+                    int((ir_data_center % 16) / 8 or (
+                    ir_data_center % 4) / 2) if observation is not None \
+                    else 0
+                    """
+                    print("reward " + str(reward))
+
+                    return reward
+
+                return award
+
+
 
         if task_to_learn == 4:  # reach docking station while staying in the
             #  center region
@@ -131,7 +154,7 @@ if __name__ == "__main__":
 
 
             def reward_function(action_space):
-                def award(observation):
+                def award(observation, phi):
                     global times_field_reward_is_zero
 
                     aligned_near = int((observation['ir'][1] % 4) / 2)
@@ -235,7 +258,9 @@ if __name__ == "__main__":
                                               [auto_docking],
                                               features_to_use,
                                               behavior_policy,
-                                              auto_docking))
+                                              auto_docking,
+                                              None,
+                                              reset_episode))
 
         action_manager_process = mp.Process(target=start_action_manager,
                                             name="action_manager",

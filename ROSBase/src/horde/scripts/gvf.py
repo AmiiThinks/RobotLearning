@@ -64,7 +64,7 @@ class GVF:
         self.target_policy.update(phi, last_observation)
         pi = self.target_policy.get_probability(last_action)
 
-        self.last_cumulant = self.cumulant(observation)
+        self.last_cumulant = self.cumulant(last_observation, phi)
 
         # get relevant indices in phi
         phi = phi[self.feature_indices]
@@ -94,12 +94,3 @@ class GVF:
                                             time_step=self.time_step)
         self.phi = phi_prime
         self.time_step += 1
-
-        # def save(self, filename):
-        #     data = {'theta': self.learner.theta.tolist()}
-        #             # 'elig': self.learner.e}
-        #     json.dump(data, open(filename, 'w'))
-
-        # def load(self, filename):
-        #     data = json.load(open(filename, 'r'))
-        #     self.learner.theta = np.asarray(data['theta'])
