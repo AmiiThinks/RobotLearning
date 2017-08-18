@@ -16,15 +16,15 @@ import time
 from Queue import Queue
 from multiprocessing import Value
 
+import cv2
 import geometry_msgs.msg as geom_msg
 import numpy as np
 import rosbag
 import rospy
 import std_msgs.msg as std_msg
-from cv_bridge.core import CvBridge
 
-import tools
 from state_representation import StateManager
+import tools
 from tools import timing
 from visualize_pixels import Visualize
 
@@ -35,6 +35,7 @@ class LearningForeground:
                  gvfs,
                  features_to_use,
                  behavior_policy,
+                 stats,
                  control_gvf=None,
                  cumulant_counter=None):
 
@@ -57,7 +58,9 @@ class LearningForeground:
         self.vis = False
         # self.vis = True
 
-        self.features_to_use = set(features_to_use + ['core', 'ir', 'odom'])
+        extras = {'core', 'ir', 'odom'}
+        self.features_to_use = set(features_to_use).union(extras)
+
         topics = filter(lambda x: x,
                         [tools.features[f] for f in self.features_to_use])
 
@@ -83,7 +86,6 @@ class LearningForeground:
         self.avg_td_err = None
 
         self.state_manager = StateManager(features_to_use)
-        self.img_to_cv2 = CvBridge().compressed_imgmsg_to_cv2
 
         if self.vis:
             rospy.loginfo("Creating visualization.")
@@ -95,20 +97,12 @@ class LearningForeground:
         # previous timestep information
         self.last_action = None
         self.last_phi = None
-        self.preds = {g: None for g in self.gvfs}
         self.last_observation = None
         self.last_mu = 1
 
         # experience replay
         self.to_replay_experience = False
 
-        def publisher_name(gvf, label):
-            return '{}/{}'.format(gvf, label) if gvf else label
-
-        def pub(gvf, label):
-            return rospy.Publisher(publisher_name(gvf, label),
-                                   std_msg.Float64,
-                                   queue_size=10)
         action_publisher = rospy.Publisher('action_cmd',
                                            geom_msg.Twist,
                                            queue_size=1)
@@ -123,38 +117,55 @@ class LearningForeground:
                            'pause': pause_publisher,
                            'termination': termination_publisher
                            }
-        labs = ['prediction', 'td_error', 'avg_td_error', 'rupee', 'MSRE',
-                'cumulant', 'phi', 'e', 'rho', 'ESS']
-        label_pubs = {g: {l: pub(g.name, l) for l in labs} for g in self.gvfs}
-        self.publishers.update(label_pubs)
+
+        valid_stats = ['prediction', 'td_error', 'avg_td_error', 'rupee',
+                       'MSRE', 'cumulant', 'phi', 'e', 'rho', 'ESS']
+
+        self.stat_data = {'prediction': lambda g: g.last_prediction,
+                          'cumulant': lambda g: g.last_cumulant,
+                          'td_error': lambda g: g.evaluator.td_error,
+                          'avg_td_error': lambda g: g.evaluator.avg_td_error,
+                          'rupee': lambda g: g.evaluator.rupee,
+                          'MSRE': lambda g: g.evaluator.MSRE,
+                          'phi': lambda g: g.phi.sum(),
+                          'e': lambda g: g.learner.e.sum(),
+                          'rho': lambda g: g.rho,
+                          'ESS': lambda g: g.evaluator.ESS}
+        self.stats = filter(lambda s: s in valid_stats, stats)
+
+        def publisher_name(gvf, label):
+            return '{}/{}'.format(gvf, label) if gvf else label
+
+        def make_publisher(gvf, label):
+            return rospy.Publisher(publisher_name(gvf, label),
+                                   std_msg.Float64,
+                                   queue_size=10)
+        stat_publishers = {gvf: {stat: make_publisher(gvf.name, stat)
+                                 for stat in self.stats}
+                           for gvf in self.gvfs}
+        self.publishers.update(stat_publishers)
 
         rospy.loginfo("Done LearningForeground init.")
 
     @timing
-    def update_gvfs(self, phi_prime, observation):
+    def update_gvfs(self, phi_prime, observation, action):
         for gvf in self.gvfs:
             gvf.update(self.last_observation,
                        self.last_phi,
                        self.last_action,
                        observation,
                        phi_prime,
-                       self.last_mu)
+                       self.last_mu,
+                       action)
 
         # publishing
         for gvf in self.gvfs:
-            self.publishers[gvf]['prediction'].publish(self.preds[gvf])
-            self.publishers[gvf]['cumulant'].publish(gvf.last_cumulant)
-            self.publishers[gvf]['td_error'].publish(gvf.evaluator.td_error)
-            self.publishers[gvf]['avg_td_error'].publish(
-                gvf.evaluator.avg_td_error)
-            self.publishers[gvf]['rupee'].publish(gvf.evaluator.rupee)
-            self.publishers[gvf]['MSRE'].publish(gvf.evaluator.MSRE)
-            self.publishers[gvf]['phi'].publish(gvf.phi.sum())
-            self.publishers[gvf]['e'].publish(gvf.learner.e.sum())
-            self.publishers[gvf]['rho'].publish(gvf.rho)
-            self.publishers[gvf]['ESS'].publish(gvf.evaluator.ESS)
+            for stat in self.stats:
+                self.publishers[gvf][stat].publish(self.stat_data[stat](gvf))
 
     def read_source(self, source, history=False):
+        """Reads from the topics and returns the most recent value.
+        """
         temp = [] if history else None
         try:
             stream = tools.features[source]
@@ -231,12 +242,14 @@ class LearningForeground:
 
             # uncompressed image
             data['image'] = np.fromstring(data['image'].data,
-                                          np.uint8).reshape(480, 640,
-                                                            3)  #
-            # np.asarray(self.img_to_cv2(data['image']))
+                                          np.uint8).reshape(480, 640, 3)
 
             # compressing image
-            # data['image'] = np.asarray(self.img_to_cv2(data['image']))
+
+        if data['cimage'] is not None:
+            data['image'] = cv2.imdecode(np.fromstring(data['cimage'].data,
+                                                       np.uint8),
+                                         1)
 
         if data['odom'] is not None:
             pos = data['odom'].pose.pose.position
@@ -319,6 +332,9 @@ class LearningForeground:
             self.r.sleep()
 
     def run(self):
+        avg_time = 0
+        time_step = 0
+        max_time = 0
         while not rospy.is_shutdown():
             start_time = time.time()
             self.current_time = rospy.Time().now()
@@ -335,12 +351,9 @@ class LearningForeground:
             if self.COLLECT_DATA_FLAG:
                 self.history.write('action', action, t=self.current_time)
 
-            # make prediction
-            self.preds = {g: g.predict(phi_prime, action) for g in self.gvfs}
-
             # learn
             if self.last_observation is not None:
-                self.update_gvfs(phi_prime, observation)
+                self.update_gvfs(phi_prime, observation, action)
 
             # check if episode is over
             if self.control_gvf is not None:
@@ -359,8 +372,12 @@ class LearningForeground:
 
             # timestep logging
             total_time = time.time() - start_time
+            max_time = max(max_time, total_time)
+            time_step += 1
+            avg_time += (total_time - avg_time) / time_step
             time_msg = "Current timestep took {:.4f} sec.".format(total_time)
             rospy.loginfo(time_msg)
+            rospy.logwarn("{}, {}".format(avg_time, max_time))
             if total_time > self.time_scale:
                 if self.control_gvf is not None:
                     if not self.control_gvf.learner.episode_finished_last_step:
@@ -378,6 +395,7 @@ def start_learning_foreground(time_scale,
                               GVFs,
                               topics,
                               policy,
+                              stats,
                               control_gvf=None,
                               cumulant_counter=None):
     try:
@@ -385,6 +403,7 @@ def start_learning_foreground(time_scale,
                                         GVFs,
                                         topics,
                                         policy,
+                                        stats,
                                         control_gvf,
                                         cumulant_counter)
 

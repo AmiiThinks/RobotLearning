@@ -25,9 +25,10 @@ class GVF:
         self.cumulant = cumulant
         self.gamma = gamma
         self.target_policy = target_policy
-        self.last_cumulant = 0
+        self.last_cumulant = 0.0
         self.phi = np.zeros(num_features)
-        self.rho = 1
+        self.rho = 1.0
+        self.last_prediction = 0.0
 
         self.name = name
         self.feature_indices = feature_indices
@@ -58,7 +59,10 @@ class GVF:
                last_action,
                observation,
                phi_prime,
-               mu):
+               mu,
+               action):
+
+        self.last_prediction = self.predict(phi_prime, action)
 
         # update action probabilities and get probability of last action
         self.target_policy.update(phi, last_observation)

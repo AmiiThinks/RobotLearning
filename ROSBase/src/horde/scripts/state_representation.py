@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
-"""
+"""Uses tilecoding to create state.
+Picks NUM_RANDOM_POINTS random rgb values from an image and tiles those
+values to obtain the state representation
+
 Author: Niko Yasui, Shibhansh Dohare, Parash Rahman, Michele Albach,
 David Quail June 1, 2017.
-
 """
 import random
 
@@ -15,14 +17,6 @@ from CTiles import tiles
 from tools import get_next_pow2, timing
 
 # np.set_printoptions(threshold=np.nan)
-
-"""
-# StateManager:
-
-Picks NUM_RANDOM_POINTS random rgb values from an image and tiles those
-values to obtain the state representation
-"""
-
 
 class StateConstants:
     # image tiles
@@ -168,7 +162,7 @@ class StateManager(object):
 
         self.last_image_raw = image
 
-        if 'image' in self.features_to_use:
+        if 'image' or 'cimage' in self.features_to_use:
             rgb_points = image[self.pixel_mask].flatten().astype(float)
             rgb_points *= StateConstants.SCALE_RGB
             rgb_inds = np.arange(StateConstants.NUM_RANDOM_POINTS * 3)

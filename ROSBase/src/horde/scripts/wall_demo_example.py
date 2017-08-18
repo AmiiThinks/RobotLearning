@@ -411,9 +411,9 @@ if __name__ == "__main__":
         forward_speed = 0.2
         turn_speed = 25. / 9
 
-        # time_scale = 0.03
-        # forward_speed = 0.4
-        # turn_speed = 50. / 9
+        time_scale = 0.03
+        forward_speed = 0.4
+        turn_speed = 50. / 9
 
         # all available actions
         action_space = np.array([Twist(Vector3(forward_speed, 0, 0),
@@ -446,8 +446,7 @@ if __name__ == "__main__":
             lmbda = hps['lmbda']
             discount = hps['discount']
 
-            features_to_use = ['image', 'bias']
-            print_stats = ['cumulant', 'prediction']
+            features_to_use = ['cimage', 'bias']
 
             feature_indices = np.concatenate(
                     [StateConstants.indices_in_phi[f] for f in
@@ -457,12 +456,11 @@ if __name__ == "__main__":
                     features_to_use)
             num_features = feature_indices.size
 
-            def discount_if_bump(obs):
-                return 0 if obs["bump"] else discount
-
-            def one_if_bump(obs):
-                return int(obs['bump']) if obs is not None else 0
-
+            turn_sec_to_bump = 2
+            # discount = math.pow(0.75, time_scale / turn_sec_to_bump)
+            # discount = 1 - time_scale
+            discount_if_bump = lambda obs: 0 if obs["bump"] else discount
+            one_if_bump = lambda obs: int(obs['bump']) if obs is not None else 0
             dtb_hp = {'alpha': alpha0 / num_active_features,
                       'beta': hps['beta0'] / num_active_features,
                       'lmbda': lmbda,
@@ -493,16 +491,17 @@ if __name__ == "__main__":
             # dtb_learner = WISGTD(**dtb_hp)
             # dtb_learner = WISTOGTD(**dtb_hp)
 
-            threshold_policy = PavlovSoftmax(
-                                    action_space=action_space,
-                                    feature_indices=dtb_hp['feature_indices'],
-                                    value_function=dtb_learner.predict,
-                                    time_scale=time_scale)
+            threshold_policy = PavlovSoftmax(action_space=action_space,
+                                             feature_indices=dtb_hp[
+                                                 'feature_indices'],
+                                             value_function=dtb_learner.predict,
+                                             time_scale=time_scale)
             distance_to_bump = GVF(cumulant=one_if_bump,
                                    gamma=discount_if_bump,
                                    target_policy=dtb_policy,
                                    learner=dtb_learner,
                                    name='DistanceToBump',
+                                   logger=rospy.loginfo,
                                    **dtb_hp)
 
             # softmax control GVF
@@ -520,6 +519,7 @@ if __name__ == "__main__":
                              target_policy= avoid_wall_policy,
                              learner= avoid_wall_learner,
                              name='AvoidWall',
+                             logger=rospy.loginfo,
                              **avoid_wall_hp)
 
             # # behavior_policy
@@ -535,7 +535,6 @@ if __name__ == "__main__":
                                                   [distance_to_bump],
                                                   features_to_use,
                                                   threshold_policy,
-                                                  print_stats,
                                                   None,
                                                   cumulant_counter))
 
