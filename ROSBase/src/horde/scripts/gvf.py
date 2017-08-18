@@ -68,7 +68,7 @@ class GVF:
         self.target_policy.update(phi, last_observation)
         pi = self.target_policy.get_probability(last_action)
 
-        self.last_cumulant = self.cumulant(observation)
+        self.last_cumulant = self.cumulant(last_observation, phi)
 
         # get relevant indices in phi
         phi = phi[self.feature_indices]

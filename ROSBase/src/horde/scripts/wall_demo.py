@@ -390,6 +390,7 @@ class Switch:
         rospy.loginfo(msg)
         return action
 
+
 if __name__ == "__main__":
     try:
         random.seed(20170823)
