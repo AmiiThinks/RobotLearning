@@ -1,11 +1,21 @@
-"""
-Author: Banafsheh Rafiee, Niko Yasui
+"""Collects measurements of an agent's performance.
 
+Authors:
+    Banafsheh Rafiee, Niko Yasui
 """
 import numpy as np
 
 
 class Evaluator:
+    """Collects measurements of an agent's performance
+
+    Args:
+        gvf_name (str): Name of the GVF used for plotting.
+        num_features (int): Total number of features in the representation.
+        alpha_rupee (float): Primary learning rate for RUPEE.
+        beta0_rupee (float): Initial averaging weight for RUPEE.
+        use_MSRE (bool): Calculate Mean Squared Return Error.
+    """
     def __init__(self,
                  gvf_name,
                  num_features,
@@ -42,10 +52,10 @@ class Evaluator:
 
     def update(self, *args, **kwargs):
         if self.use_MSRE:
-            self.compute_MSRE(**kwargs)
-        self.compute_avg_td_error(**kwargs)
-        self.compute_rupee(**kwargs)
-        self.compute_IS_ess(**kwargs)
+            self.compute_MSRE(*args, **kwargs)
+        self.compute_avg_td_error(*args, **kwargs)
+        self.compute_rupee(*args, **kwargs)
+        self.compute_IS_ess(*args, **kwargs)
 
     def compute_MSRE(self, theta, time_step, *args, **kwargs):
         return_error = 0.0

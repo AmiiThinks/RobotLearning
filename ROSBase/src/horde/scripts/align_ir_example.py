@@ -28,7 +28,7 @@ from gvf import GVF
 from learning_foreground import start_learning_foreground
 from state_representation import StateConstants
 
-if __name__=='__main__':
+if __name__ == '__main__':
     try:
         time_scale = 0.3 # time step length
         turn_speed = 2   # rad/sec turn speed
