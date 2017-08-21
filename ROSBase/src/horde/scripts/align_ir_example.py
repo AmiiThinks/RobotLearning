@@ -1,3 +1,17 @@
+""" Runs a demo that learns how to align the IR emitters of the TurtleBot 
+to the IR recievers of the charger.
+
+This module describes an agent that learns to avoid walls. It specifies
+the agent's learning algorithm, parameters, policies, features, and
+actions. The module also interfaces with the :doc:`learning_foreground`
+and the :doc:`action_manager` to run the main learning loop and publish
+actions respectively.
+
+Authors:
+    Shibhansh Dohare, Parash Rahman.
+
+"""
+
 import multiprocessing as mp
 import numpy as np
 import random
@@ -37,9 +51,6 @@ if __name__=='__main__':
                       }
 
         action_space = np.array([
-            # Twist(Vector3(0, 0, 0), Vector3(0, 0, 0)), #stop
-            # Twist(Vector3(0.05, 0, 0), Vector3(0, 0, 0)), # forward
-            # Twist(Vector3(-0.05, 0, 0), Vector3(0, 0, 0)), # backward
             Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.3)),  # turn acw/cw
             Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.3))  # turn cw/acw
         ])
@@ -52,6 +63,7 @@ if __name__=='__main__':
         # end episode when agent gets 1 as a cumulant (i.e. aligns center with charging station)
         finished_episode = lambda cum: cum == 1
 
+        # when the episode is finished align the robot in a random direction
         def reset_episode():
             random_action = random.choice(action_space)
             return [random_action for i in range(random.randint(1, 80))]
