@@ -1,3 +1,14 @@
+"""
+NOTE: UNMAINTAINED AND OUTDATED
+
+This is an alternative state representation to StateManager in 
+'state_representation.py'. It is based off of Rupam's paper:
+https://www.aaai.org/ocs/index.php/SARA/SARA13/paper/viewFile/7255/6269
+
+It decides how important a point is based on how much weight is assigned 
+to it. 
+"""
+
 import numpy as np
 
 from state_representation import StateConstants, StateManager

@@ -1,7 +1,9 @@
 """Describes the auto-docking task.
 
+For a simpler example see 'align_ir_example.py'.
+
 Contains various parameters for various steps of auto-docking. Very 
-similar to 'wall_demo.py'.
+similar to 'wall_demo.py'. 
 
 Authors: 
     Shibhansh Dohare, Niko Yasui.
