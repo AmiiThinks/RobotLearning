@@ -358,7 +358,7 @@ class LearningForeground:
             avg_time += (total_time - avg_time) / time_step
             time_msg = "Current timestep took {:.4f} sec.".format(total_time)
             rospy.loginfo(time_msg)
-            rospy.logwarn("{}, {}".format(avg_time, max_time))
+
             if total_time > self.time_scale:
                 if self.control_gvf is not None:
                     if not self.control_gvf.learner.episode_finished_last_step:
