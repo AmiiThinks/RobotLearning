@@ -59,7 +59,7 @@ if __name__=='__main__':
         ])
 
         # cumulant is 1 if center is aligned with charging station, 0 otherwise
-        def cumulant(observation, phi):
+        def cumulant(observation):
             ir_data_center = observation['ir'][1]
             return 1 if ir_data_center & 2 or ir_data_center & 8 else 0
 
@@ -102,6 +102,7 @@ if __name__=='__main__':
                                 action_space=action_space,
                                 feature_indices=feature_indices)
 
+        print_stats = ['cumulant', 'prediction']
 
         foreground_process = mp.Process(target=start_learning_foreground,
                                         name="foreground",
@@ -109,6 +110,7 @@ if __name__=='__main__':
                                               [behavior_GVF],
                                               features_to_use,
                                               behavior_policy,
+                                              print_stats,
                                               behavior_GVF,
                                               None,
                                               reset_episode))

@@ -85,7 +85,7 @@ if __name__ == "__main__":
 
         if task_to_learn == 2:  # reach the center IR region
             def reward_function(action_space):
-                def award(observation, phi):
+                def award(observation):
                     # if not in IR region it will get 0 reward
                     # if not any(observation['ir']):
                     #     return -1
@@ -119,29 +119,12 @@ if __name__ == "__main__":
             def reset_episode():
                 random_action = random.choice(action_space)
                 return [random_action for i in range(random.randint(1, 80))]
-            
-            # counter to add reward to discourage wiggling
-            phi_index_counter = np.zeros(StateConstants.TOTAL_FEATURE_LENGTH + len(action_space))
-
+        
             def reward_function(action_space):
-                def award(observation, phi):
-                    global phi_index_counter
-
+                def award(observation):
                     ir_data_center = observation['ir'][1]
 
-                    print(observation['ir'])
-
-                    old_variance = np.var(phi_index_counter)
-                    phi_index_counter += phi
-                    new_variance = np.var(phi_index_counter)
-
-                    reward = (1 if ir_data_center & 2 or ir_data_center & 8 else 0) + old_variance - new_variance
-                    """
-                    int((ir_data_center % 16) / 8 or (
-                    ir_data_center % 4) / 2) if observation is not None \
-                    else 0
-                    """
-                    print("reward " + str(reward))
+                    reward = (1 if ir_data_center & 2 or ir_data_center & 8 else 0)
 
                     return reward
 
@@ -237,22 +220,24 @@ if __name__ == "__main__":
                         **parameters)
 
         # for testing any task with e-greedy learning
-        behavior_policy = EGreedy(epsilon=epsilon,
+        # behavior_policy = EGreedy(epsilon=epsilon,
+        #                           value_function=auto_docking.learner.predict,
+        #                           action_space=action_space,
+        #                           feature_indices=feature_indices)
+
+        # for testing task-3 i.e. aligning robot
+        exploring_policy = AlternatingRotation(epsilon = epsilon,
                                   value_function=auto_docking.learner.predict,
                                   action_space=action_space,
                                   feature_indices=feature_indices)
 
-        #for testing task-3 i.e. aligning robot
-        #exploring_policy = Alternating_Rotation(epsilon = epsilon,
-        #                          value_function=auto_docking.learner.predict,
-        #                          action_space=action_space,
-        #                          feature_indices=feature_indices)
-
-        # # for testing task-2 i.e. reaching the center region
+        # for testing task-2 i.e. reaching the center region
         # exploring_policy = ForwardIfClear(action_space=action_space,
-        # feature_indices=feature_indices)
+        #                                   feature_indices=feature_indices)
 
-        #behavior_policy = Switch(explorer=exploring_policy, exploiter=target_policy, num_timesteps_explore=1200)
+        behavior_policy = Switch(explorer=exploring_policy, exploiter=target_policy, num_timesteps_explore=1200)
+
+        print_stats = ['cumulant', 'prediction']
 
         foreground_process = mp.Process(target=start_learning_foreground,
                                         name="foreground",
@@ -260,6 +245,7 @@ if __name__ == "__main__":
                                               [auto_docking],
                                               features_to_use,
                                               behavior_policy,
+                                              print_stats,
                                               auto_docking,
                                               None,
                                               reset_episode))

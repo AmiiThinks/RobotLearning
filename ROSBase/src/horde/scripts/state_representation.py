@@ -4,8 +4,9 @@
 Picks NUM_RANDOM_POINTS random rgb values from an image and tiles those
 values to obtain the state representation
 
-Author: Niko Yasui, Shibhansh Dohare, Parash Rahman, Michele Albach,
-David Quail June 1, 2017.
+Author: 
+    Niko Yasui, Shibhansh Dohare, Parash Rahman, Michele Albach,
+    David Quail June 1, 2017.
 """
 import random
 
@@ -271,7 +272,7 @@ class StateManager(object):
             if 'ir' in self.features_to_use:
                 rospy.logwarn("No ir value.")
 
-        if 'ir' in self.features_to_use:
+        if 'ir' in self.features_to_use and len(ir) >= 3:
             # indices = np.asarray(ir)
             # indices += np.array([0,64,128])
 

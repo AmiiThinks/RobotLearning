@@ -197,6 +197,7 @@ class LearningForeground:
             data[source] = self.read_source(source)
 
         data['ir'] = self.read_source('ir', history=True)[-10:]
+
         data['core'] = self.read_source('core', history=True)
 
         if data['core']:
@@ -229,6 +230,7 @@ class LearningForeground:
 
             data['ir'] = [int(''.join([str(i) for i in ir_temp]), 2) for
                           ir_temp in ir]
+
 
             # enter the data into rosbag
             if self.COLLECT_DATA_FLAG:

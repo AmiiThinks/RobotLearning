@@ -156,6 +156,8 @@ class Switch:
         self.num_timesteps_explore = num_timesteps_explore
         self.t = 0
 
+        self.action_space = self.explorer.action_space
+        self.last_index = self.explorer.last_index
     def update(self, *args, **kwargs):
         self.t += 1
         self.t %= self.num_timesteps_explore
@@ -164,10 +166,14 @@ class Switch:
             rospy.loginfo(
                 'Greedy policy is the behaviour policy, no learning now')
             to_return = 'target_policy'
+
+            self.last_index = self.exploiter.last_index
         else:
             self.explorer.update(*args, **kwargs)
             rospy.loginfo('Explorer policy is the behaviour policy')
             to_return = 'behavior_policy'
+
+            self.last_index = self.explorer.last_index
         return to_return
 
     def get_probability(self, *args, **kwargs):
