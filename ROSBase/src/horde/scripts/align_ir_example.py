@@ -1,14 +1,17 @@
 """ Runs a demo that learns how to align the IR emitters of the TurtleBot 
 to the IR recievers of the charger.
 
-This module describes an agent that learns to avoid walls. It specifies
-the agent's learning algorithm, parameters, policies, features, and
-actions. The module also interfaces with the :doc:`learning_foreground`
-and the :doc:`action_manager` to run the main learning loop and publish
-actions respectively.
+This module specifies the agent's learning algorithm, parameters, policies, 
+features, and actions. The module also interfaces with the 
+:doc:`learning_foreground` and the :doc:`action_manager` to run the main 
+learning loop and publish actions respectively.
+
+NOTE: When run, this example will learn very slowly as a result of epsilon-
+    greedy being ineffective at exploring. However one will see notable 
+    progress in 10 minutes.
 
 Authors:
-    Shibhansh Dohare, Parash Rahman.
+    Shibhansh Dohare, Niko Yasui, Parash Rahman.
 
 """
 

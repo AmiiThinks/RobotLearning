@@ -1,3 +1,13 @@
+"""Runs the wall demo in an offline fashion.
+
+LearningForegrounds puts its data in a ROSbag 'results.bag' if the 
+appropriate flag is set. 'results.bag' is unravelled and each timestep is 
+processed by the learning algorithms
+
+Authors:
+    Parash Rahman.
+"""
+
 import os
 
 import numpy as np
@@ -10,8 +20,15 @@ from gvf import GVF
 from state_representation import StateConstants, StateManager
 from wall_demo import DeterministicForwardIfClear, GoForward
 
-
 def action_twist_to_binary(twist_action):
+    """ Converts the Twist type action into a binary array where
+    each action corresponds to a specific index (in this case 
+    left and forward)
+
+    Args:
+        twist_action: The action of Twist type that must be
+            converted into a binary vector
+    """
     action = np.zeros(action_space.size)
 
     if twist_action is not None:
@@ -19,18 +36,29 @@ def action_twist_to_binary(twist_action):
             # accounts for turn
             action[1] = 1
         else:
-            # accoutns for forward movement
+            # accounts for forward movement
             action[0] = 1
     return action
 
 
 def get_state(entry, prev_entry):
+    """
+    Retrieves the features of the state and some extra observations
+    of the state needed for the learner. This is very similar to what
+    :doc:`learning_foreground` does to retrieve the state.
+
+    Args:
+        entry: all the data of the TurtleBot pertinent to the current
+            time step.
+        prev_entry: all the data of the TurtleBot pertinent to the 
+            previous time step.
+    """
     data = {'ir': None, 'imu': None, 'odom': None, 'charging': None}
 
     data['bump'] = [bool(bump) for bump in [entry.get('bump0'),
                                             entry.get('bump1'),
                                             entry.get('bump2')]]
-
+    
     data['bias'] = True
 
     if entry.get('image') is not None:
@@ -50,6 +78,11 @@ def get_state(entry, prev_entry):
 
 
 if __name__ == "__main__":
+    """
+    Unbags and organizes all the data from 'results.bag'. Then, initializes 
+    all the parameters and learning algorithms.
+    """
+
     time_scale = 0.1
     forward_speed = 0.2
     turn_speed = 1
@@ -106,7 +139,7 @@ if __name__ == "__main__":
     bag = rosbag.Bag('results.bag')
 
     # organize the bag data by clumping all data from a single timestep
-    # in a dictionary
+    #   in a dictionary
     last_t = None
     collected_history = []
     time_step_info = {}
@@ -128,6 +161,7 @@ if __name__ == "__main__":
     prev_obs = None
     prev_mu = 1
 
+    # walk through data one timestep at a time
     for entry in collected_history:
         phi, observations = get_state(entry, prev_entry)
 
