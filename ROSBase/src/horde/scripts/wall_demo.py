@@ -27,11 +27,11 @@ import tools
 from action_manager import start_action_manager
 from greedy_gq import GreedyGQ
 from gtd import GTD
-from to_gtd import TOGTD
 from gvf import GVF
 from learning_foreground import start_learning_foreground
 from policy import Policy
 from state_representation import StateConstants
+from to_gtd import TOGTD
 from wis_gtd import WISGTD
 from wis_to_gtd import WISTOGTD
 
@@ -137,6 +137,7 @@ class Softmax(Policy):
         q_values = q_fun(self.action_space)
         self.pi = tools.softmax(q_values)
 
+
 class Control(Softmax):
     """Softmax policy.
 
@@ -187,6 +188,7 @@ class Control(Softmax):
         elif self.last_index == self.FORWARD:
             c = 0.1
         return c
+
 
 class GoForward(Policy):
     """Constant policy that only goes forward.
@@ -260,6 +262,7 @@ class PavlovSoftmax(Policy):
 
             def last(index):
                 return self.last_index == index
+
             prefs[self.TURN] = k1 * last(self.TURN)
             prefs[self.FORWARD] = k2 * (0.5 - p) + k1 * last(self.FORWARD)
 
@@ -447,7 +450,7 @@ if __name__ == "__main__":
             lmbda = hps['lmbda']
             discount = hps['discount']
 
-            features_to_use = ['image', 'bias']
+            features_to_use = {'image', 'bias'}
             print_stats = ['cumulant', 'prediction']
 
             feature_indices = np.concatenate(
@@ -458,11 +461,14 @@ if __name__ == "__main__":
                     features_to_use)
             num_features = feature_indices.size
 
+
             def discount_if_bump(obs):
                 return 0 if obs["bump"] else discount
 
+
             def one_if_bump(obs):
                 return int(obs['bump']) if obs is not None else 0
+
 
             dtb_hp = {'alpha': alpha0 / num_active_features,
                       'beta': hps['beta0'] / num_active_features,
@@ -478,13 +484,13 @@ if __name__ == "__main__":
             # avoid_wall_omega = 10
             # alpha0 = 0.01
             avoid_wall_hp = {
-                        'alpha': alpha0 / num_active_features,
-                        'beta': hps['beta0'] / num_active_features,
-                        'lmbda': lmbda,
-                        'alpha0': alpha0,
-                        'num_features': num_features * action_space.size,
-                        'feature_indices': feature_indices,
-                        }
+                'alpha': alpha0 / num_active_features,
+                'beta': hps['beta0'] / num_active_features,
+                'lmbda': lmbda,
+                'alpha0': alpha0,
+                'num_features': num_features * action_space.size,
+                'feature_indices': feature_indices,
+            }
 
             # prediction GVF
             dtb_policy = GoForward(action_space=action_space,
@@ -495,10 +501,10 @@ if __name__ == "__main__":
             # dtb_learner = WISTOGTD(**dtb_hp)
 
             threshold_policy = PavlovSoftmax(
-                                    action_space=action_space,
-                                    feature_indices=dtb_hp['feature_indices'],
-                                    value_function=dtb_learner.predict,
-                                    time_scale=time_scale)
+                    action_space=action_space,
+                    feature_indices=dtb_hp['feature_indices'],
+                    value_function=dtb_learner.predict,
+                    time_scale=time_scale)
             distance_to_bump = GVF(cumulant=one_if_bump,
                                    gamma=discount_if_bump,
                                    target_policy=dtb_policy,
@@ -510,16 +516,16 @@ if __name__ == "__main__":
             avoid_wall_learner = GreedyGQ(action_space,
                                           finished_episode=lambda x: False,
                                           **avoid_wall_hp)
-            avoid_wall_policy = Control(#omega=avoid_wall_omega,
-                            value_function=avoid_wall_learner.predict,
-                            action_space=action_space,
-                            feature_indices=avoid_wall_hp['feature_indices'],
-                            fwd_index=0,
-                            turn_index=1)
+            avoid_wall_policy = Control(  # omega=avoid_wall_omega,
+                    value_function=avoid_wall_learner.predict,
+                    action_space=action_space,
+                    feature_indices=avoid_wall_hp['feature_indices'],
+                    fwd_index=0,
+                    turn_index=1)
             avoid_wall = GVF(cumulant=avoid_wall_policy.control_cumulant,
                              gamma=discount_if_bump,
-                             target_policy= avoid_wall_policy,
-                             learner= avoid_wall_learner,
+                             target_policy=avoid_wall_policy,
+                             learner=avoid_wall_learner,
                              name='AvoidWall',
                              **avoid_wall_hp)
 
@@ -551,7 +557,7 @@ if __name__ == "__main__":
                 # record results of experiment
                 result_file = open('results.txt', 'ab+')
                 result_file.write(
-                    "CUMULANTS: " + str(cumulant_counter.value) + "\n")
+                        "CUMULANTS: " + str(cumulant_counter.value) + "\n")
                 result_file.close()
 
                 # wait for user to continue/reset experiment

@@ -1,17 +1,12 @@
 #!/usr/bin/env python
 
-"""
-Author: Michele Albach, David Quail, Parash Rahman, Niko Yasui, Shibhansh
-Dohare, June 1, 2017.
+"""Ties together the learning environment and main learning loop.
 
-Description:
-LearningForeground contains a collection of GVF's. It accepts new state
-representations, learns, and then takes action.
-
+Authors:
+    Michele Albach, Shibhansh Dohare, David Quail, Parash Rahman, Niko Yasui.
 """
 from __future__ import division
 
-import random
 import time
 from Queue import Queue
 from multiprocessing import Value
@@ -28,7 +23,33 @@ import tools
 from tools import timing
 from visualize_pixels import Visualize
 
+
 class LearningForeground:
+    """Connects the environment through sensors and ROS with the learning algs.
+
+    Args:
+        time_scale (float): Length of a time step in seconds.
+        gvfs (list of GVF): List of GVFs to learn.
+        features_to_use (set of str): Union of the features that each GVF
+            uses to learn their respective predictions.
+        behavior_policy (Policy): Policy for the robot to follow.
+        stats (list of str): List of statistics to record and publish.
+        control_gvf (GVF): GVF that needs to be reset when the episode
+            restarts.
+        cumulant_counter (multiprocessing Value): Record for the number of
+            times the cumulant is non-zero. Could be incorporated into the
+            Evaluator.
+        reset_episode (fun): Whether the episode should be reset.
+
+    Attributes:
+        COLLECT_DATA_FLAG (bool): Whether or not to save data in bags.
+        vis (bool): Whether or not to use the visualizer.
+        to_replay_experience (bool): Whether or not to use experience replay.
+        recent (dict of queue): Dictionary mapping topic names to the queue
+            of recent values from their respective topics.
+        publishers (dict of ROS publishers): Publishers for each of the
+            data we want to publish.
+    """
     def __init__(self,
                  time_scale,
                  gvfs,
@@ -152,6 +173,15 @@ class LearningForeground:
 
     @timing
     def update_gvfs(self, phi_prime, observation, action):
+        """
+        Calls the GVF update function for each GVF and publishes their updated
+        statistics.
+
+        Args:
+            phi_prime (numpy array): Feature vector for timestep t+1.
+            observation (dict): Ancillary state information.
+            action (action): Action taken at time t+1.
+        """
         for gvf in self.gvfs:
             gvf.update(self.last_observation,
                        self.last_phi,
@@ -183,6 +213,17 @@ class LearningForeground:
 
     @timing
     def create_state(self):
+        """Uses data from :py:attr:`recent` to create the state representation.
+
+        1. Reads data from the :py:attr:`recent` dictionary.
+        2. Process data into a format to pass to :doc:`state_representation`.
+        3. Pass data to :py:func:`~state_representation.StateManager.get_phi`
+            and :py:func:`~state_representation.StateManager.get_observation`.
+
+        Returns:
+            (numpy array, dict): Feature vector and ancillary state
+                information.
+        """
         # bumper constants from
         # http://docs.ros.org/hydro/api/kobuki_msgs/html/msg/SensorState.html
         bump_codes = [1, 4, 2]
@@ -191,7 +232,7 @@ class LearningForeground:
         additional_features = set(tools.features.keys() + ['charging'])
         sensors = self.features_to_use.union(additional_features)
 
-        # build data (used to make phi)
+        # read data (used to make phi)
         data = {sensor: None for sensor in sensors}
         for source in sensors - {'ir', 'core'}:
             data[source] = self.read_source(source)
@@ -199,6 +240,7 @@ class LearningForeground:
         data['ir'] = self.read_source('ir', history=True)[-10:]
         data['core'] = self.read_source('core', history=True)
 
+        # process data
         if data['core']:
             bumps = [dat.bumper for dat in data['core']]
             data['bump'] = np.sum(
@@ -278,8 +320,8 @@ class LearningForeground:
 
         if data['imu'] is not None:
             data['imu'] = data['imu'].orientation.z
-
             # TODO: enter the  data into rosbag
+
         if 'bias' in self.features_to_use:
             data['bias'] = True
         data['weights'] = self.gvfs[0].learner.theta if self.gvfs else None
@@ -307,9 +349,18 @@ class LearningForeground:
         self.publishers['action'].publish(action)
 
     def run(self):
+        """Main learning loop.
+
+        Repeat:
+            1. Get new state.
+            2. Take an action.
+            3. Learn.
+        """
+
         avg_time = 0
         time_step = 0
         max_time = 0
+
         while not rospy.is_shutdown():
             start_time = time.time()
             self.current_time = rospy.Time().now()
@@ -336,7 +387,8 @@ class LearningForeground:
                     reset_actions = self.reset_episode()
                     for action in reset_actions:
                         self.take_action(action)
-                        rospy.loginfo('taking random action number: {}'.format(action))
+                        msg = 'taking random action number: {}'.format(action)
+                        rospy.loginfo(msg)
                         if self.to_replay_experience:
                             self.control_gvf.learner.uniform_experience_replay()
                         self.r.sleep()
@@ -380,6 +432,8 @@ def start_learning_foreground(time_scale,
                               control_gvf=None,
                               cumulant_counter=None,
                               reset_episode=None):
+    """Function to call with multiprocessing or multithreading.
+    """
     try:
         foreground = LearningForeground(time_scale,
                                         GVFs,
