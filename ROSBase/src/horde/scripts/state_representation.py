@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 """Uses tilecoding to create state.
-Picks NUM_RANDOM_POINTS random rgb values from an image and tiles those
-values to obtain the state representation
 
 Author: 
     Niko Yasui, Shibhansh Dohare, Parash Rahman, Michele Albach,
@@ -17,9 +15,10 @@ from scipy.misc import comb
 from CTiles import tiles
 from tools import get_next_pow2, timing
 
-# np.set_printoptions(threshold=np.nan)
-
 class StateConstants:
+    """ Constants useful for the tile coding in StateManager
+    """
+
     # image tiles
     NUM_RANDOM_POINTS = 100
     CHANNELS = 3
@@ -103,7 +102,13 @@ class StateConstants:
 
 class StateManager(object):
     def __init__(self, features_to_use):
+        """ Sets up all the hash tables used for each feature encoding
 
+            Args:
+                features_to_use: strings representing which sensorimotor 
+                    information should actually be incorporated into phi
+                    (see self.get_phi)
+        """
         num_img_ihts = StateConstants.NUM_RANDOM_POINTS * \
                        StateConstants.CHANNELS
         img_iht_size = StateConstants.IMAGE_IHT_SIZE
@@ -145,6 +150,8 @@ class StateManager(object):
     @timing
     def get_phi(self, image, bump, ir, imu, odom, bias, weights=None, *args,
                 **kwargs):
+        """ Gets the binary tile coding of all the pertinent fields
+        """
 
         phi = np.zeros(StateConstants.TOTAL_FEATURE_LENGTH, dtype=bool)
 
@@ -316,30 +323,16 @@ class StateManager(object):
         return phi
 
     def get_observations(self, bump, ir, charging, odom, imu, **kwargs):
+        """ This function is meant to return some non tile coded information
+            that is still part of the state
+        """
+
         observations = {
-    'bump': any(bump) if bump is not None else self.last_bump_raw,
-    'ir': ir if ir is not None else self.last_ir_raw,
-    'charging': charging if charging is not None else self.last_charging_raw,
-    'speed': odom[3] if odom is not None else self.last_odom_raw[3],
-    'imu': imu if imu is not None else self.last_imu_raw,
-    }
+        'bump': any(bump) if bump is not None else self.last_bump_raw,
+        'ir': ir if ir is not None else self.last_ir_raw,
+        'charging': charging if charging is not None else self.last_charging_raw,
+        'speed': odom[3] if odom is not None else self.last_odom_raw[3],
+        'imu': imu if imu is not None else self.last_imu_raw,
+        }
 
         return observations
-
-
-# This is a debugging function. It just generates a random image.
-@timing
-def DEBUG_generate_rand_image():
-    dimensions = [1080, 1080]
-
-    return_matrix = [[0 for _ in range(dimensions[1])] for _ in
-                     range(dimensions[0])]
-
-    for i in range(dimensions[0]):
-        for j in range(dimensions[1]):
-            color = [random.randint(0, 255),
-                     random.randint(0, 255),
-                     random.randint(0, 255)]
-            return_matrix[i][j] = color
-
-    return return_matrix
