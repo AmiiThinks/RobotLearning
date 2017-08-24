@@ -171,7 +171,7 @@ if __name__ == "__main__":
                                fwd_action_index=0)
         dtb_learner = GTD(**dtb_hp)
 
-        dtb_policy = PavlovSoftmax(
+        threshold_behavior_policy = PavlovSoftmax(
                                 action_space=action_space,
                                 feature_indices=dtb_hp['feature_indices'],
                                 value_function=dtb_learner.predict,
@@ -190,7 +190,7 @@ if __name__ == "__main__":
                                         args=(time_scale,
                                               [distance_to_bump],
                                               features_to_use,
-                                              dtb_policy,
+                                              threshold_behavior_policy,
                                               print_stats,
                                               None,
                                               cumulant_counter))
