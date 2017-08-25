@@ -35,6 +35,10 @@ install:
   - pip install --user travis-sphinx recommonmark scipy matplotlib
 
 script:
+  - cd src/CTiles
+  - cmake .
+  - make
+  - cd ../..
   - export PYTHONPATH=$PYTHONPATH:/usr/lib/python2.7/dist-packages:/usr/local/lib/python2.7/dist-packages
   - source /opt/ros/$ROS_DISTRO/setup.bash
   - travis-sphinx --source=sphinx/source build
