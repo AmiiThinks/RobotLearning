@@ -1,7 +1,7 @@
 ### Turtlebot Netbook Setup
 
 #### Dependencies
-```
+```bash
 sudo apt-get install ros-kinetic-kobuki libblas-dev liblapack-dev libatlas-base-dev gfortran
 sudo pip install future scipy
 ```
@@ -9,7 +9,7 @@ sudo pip install future scipy
 #### Bash Environment Setup
 Add the following to your ~/.bashrc file, which will be run when you open a terminal. Make sure to change any paths to match your installation.
 
-```
+```bash
 # ROS setup.bash
 source /opt/ros/kinetic/setup.bash
 # Catkin setup.bash
@@ -24,13 +24,13 @@ export ROS_HOSTNAME=$ROS_IP
 
 #### Astra Camera
 First, clone the `ros_astra_camera` and `ros_astra_launch` repos into `~/catkin_ws/src` as follows: 
-```
+```bash
 cd ~/catkin_ws/src
 git clone https://github.com/orbbec/ros_astra_camera
 git clone https://github.com/orbbec/ros_astra_launch
 ```
 Then make the astra_camera package and create the udev rules.
-```
+```bash
 cd ~/catkin_ws
 catkin_make --pkg astra_camera -DFILTER=OFF
 source devel/setup.bash
@@ -38,12 +38,12 @@ roscd astra_camera && ./scripts/create_udev_rules
 ```
 
 Finally, to use the camera call:
-```
+```bash
 roslaunch astra_launch astra.launch
 ```
 
 To use convert images from the ROS image format and to transport them efficiently between ROS nodes the following plugins are needed:
-```{bash}
+```bash
 sudo apt install ros-kinetic-vision-opencv
 ```
 
@@ -54,7 +54,7 @@ In the top right, click the `power gear icon`. Then go to `System Settings` and 
 
 ##### Edit the login script
 In your favorite text editor, open `~/.profile` or your preffered boot script. Paste into it the following:
-```{bash}
+```bash
 if ! ([ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]); then  
 
   # as per your install
@@ -83,19 +83,19 @@ fi
 
 
 #### Hospot/AP Networking
-Since we don't have a wireless network set up, we use an access point (ap) network originating from the turtlebot netbook. Note: you will not be able to access the internet while connected to this network.
+If you don't have a wireless network set up, you can create a hotspot originating from the turtlebot netbook. Note: you will not be able to access the internet while connected to this network.
 
 We followed the instructions [here](https://askubuntu.com/questions/318973/how-do-i-create-a-wifi-hotspot-sharing-wireless-internet-connection-single-adap/609199#609199) to create a hotspot. Note that you may get an ssh error, in which case [this answer](https://askubuntu.com/questions/30080/how-to-solve-connection-refused-errors-in-ssh-connection) might help you.
 
 Sometimes ROS will not be able to connect your hostname with your IP address. You will need to set the `ROS_IP` variable to your IP address.
-```{bash}
+```bash
 ROS_IP=$(hostname -I | awk '{print $1;}')
 ```
 
 
 #### Save SSH key on turtlebot netbook
 To avoid logging in every time you want to ssh or rsync the netbook, use the following commands:
-```{bash}
+```bash
 # follow prompts to generate your ssh key
 ssh-keygen
 

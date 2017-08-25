@@ -5,7 +5,7 @@ We use Sphinx and ReadtheDocs to document our code. Eventually it will be unifie
 Use Google's code documentation style.
 
 
-```{bash}
+```bash
 pip install sphinx
 mkdir docs
 cd docs
@@ -13,13 +13,13 @@ sphinx-quickstart
 mkdir source/pyrst
 ```
 
-```{python}
+```python
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../../../ROSBase/src/horde/scripts'))
 ```
 
-```{bash}
+```bash
 make clean
 rm source/pyrst/*
 
