@@ -1,0 +1,47 @@
+language: python
+python:
+  - "2.7"
+
+sudo: required
+cache:
+  - apt
+
+env:
+  global:
+    - ROS_DISTRO=indigo
+    - ROS_PARALLEL_JOBS='-j8 -l6'
+
+# before_install will simply setup a conda enviroment for installing python packages, if you
+# have project dependencies it's usually recommended to go this route
+before_install:
+  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - "./miniconda.sh -b"
+  - export PATH=/home/travis/miniconda2/bin:$PATH
+  - conda update --yes conda
+  - sudo rm -rf /dev/shm
+  - sudo ln -s /run/shm /dev/shm
+  - sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+  - sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+  - sudo apt-get update -qq
+  - sudo apt-get install -y ros-$ROS_DISTRO-ros-base ros-$ROS_DISTRO-cv-bridge ros-$ROS_DISTRO-kobuki-msgs ros-$ROS_DISTRO-turtlesim ros-$ROS_DISTRO-kobuki-auto-docking
+  - source /opt/ros/$ROS_DISTRO/setup.bash
+  # Prepare rosdep to install dependencies.
+  - sudo rosdep init
+  - rosdep update
+
+install:
+  - conda install --yes python="2.7" sphinx
+  - pip install --user travis-sphinx recommonmark scipy matplotlib
+
+script:
+  - cd src/CTiles
+  - cmake .
+  - make
+  - cd ../..
+  - export PYTHONPATH=$PYTHONPATH:/usr/lib/python2.7/dist-packages:/usr/local/lib/python2.7/dist-packages
+  - source /opt/ros/$ROS_DISTRO/setup.bash
+  - travis-sphinx --source=sphinx/source build
+
+after_success:
+  - travis-sphinx deploy
