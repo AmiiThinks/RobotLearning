@@ -2,8 +2,8 @@
 This page details the steps needed to get the computer that is attached to your robot set up correctly. 
 
 #### Dependencies
-We use [ROS Indigo Igloo](http://wiki.ros.org/indigo), but any version of ROS after Indigo should work.
-> If your netbook did not come with ROS preinstalled, you will first have to run the following:
+We use [ROS Indigo Igloo](http://wiki.ros.org/indigo), but any version of ROS after Indigo should work. 
+> If your netbook did not come with ROS preinstalled, you will first have to run the following (use the appropriate ROS version for your TurtleBot's Ubuntu distribution):
 > ```bash
 > sudo apt-get install ros-indigo-desktop-full
 > ```

@@ -14,7 +14,11 @@ from tools import get_next_pow2, timing
 
 
 class StateConstants:
-    """ Constants useful for the tile coding in StateManager
+    """ Constants useful for the tile coding in StateManager.
+
+    Note:
+        The constants here are just for reference. You may change them
+        however you wish.
     """
 
     # image tiles

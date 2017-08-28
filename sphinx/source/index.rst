@@ -24,47 +24,49 @@ Getting Started
 ---------------
 To get started, first follow the :doc:`Robot Computer Setup <TurtlebotSetup>` instructions.
 
-You also need to choose the computer that will run the learning code. That computer can be either ``A`` (a computer physically attached to the robot), or ``N``, another computer connected over a network. See :doc:`Running the code <RunningCode>` for pros and cons to each setup. If ``N`` is the learning computer, you will have to install ROS on ``N`` as well::
+You also need to decide if the computer that will run the learning code should be physically attached to the robot. If not, the learning computer will have to communicate with the robot computer over a wireless network. See :doc:`Running the code <RunningCode>` for pros and cons to each setup.
 
-   sudo apt-get install ros-indigo-desktop-full ros-indigo-kobuki libblas-dev liblapack-dev libatlas-base-dev gfortran
-   sudo pip install future scipy
+   Wirelessly learning computer setup::
 
-You will also have to set up your ``~/.bashrc`` file on ``N``. Make sure to change any paths to match your installation. Add the following to your ``~/.bashrc``::
+      sudo apt-get install ros-indigo-desktop-full ros-indigo-kobuki libblas-dev liblapack-dev libatlas-base-dev gfortran
+      sudo pip install future scipy
 
-   # ROS setup.bash
-   source /opt/ros/indigo/setup.bash
-   # Catkin setup.bash
-   source ~/catkin_ws/devel/setup.bash
-   # Find your IP address
-   export ROS_IP=$(hostname -I | awk '{print $1;}')
-   # Replace 10.0.1.20 with your turtlebot netbook's IP address
-   export ROS_MASTER_URI=http://10.0.1.20:11311
-   # ROS needs this sometimes; just in case
-   export ROS_HOSTNAME=$ROS_IP
+   You will also have to set up your ``~/.bashrc`` file on ``N``. Make sure to change any paths to match your installation. Add the following to your ``~/.bashrc``::
 
-and start ROS::
+      # ROS setup.bash
+      source /opt/ros/indigo/setup.bash
+      # Catkin setup.bash
+      source ~/catkin_ws/devel/setup.bash
+      # Find your IP address
+      export ROS_IP=$(hostname -I | awk '{print $1;}')
+      # Replace 10.0.1.20 with your turtlebot netbook's IP address
+      export ROS_MASTER_URI=http://10.0.1.20:11311
+      # ROS needs this sometimes; just in case
+      export ROS_HOSTNAME=$ROS_IP
 
-   # as per your install
-   source /opt/ros/indigo/setup.bash
+   and start ROS::
 
-   # set up networking
-   export ROS_IP=$(hostname -I | awk '{print $1;}')
-   export ROS_HOSTNAME=$ROS_IP
-   export ROS_MASTER_URI=http://$ROS_HOSTNAME:11311
+      # as per your install
+      source /opt/ros/indigo/setup.bash
 
-   # as per your install
-   source $HOME/catkin_ws/devel/setup.bash
+      # set up networking
+      export ROS_IP=$(hostname -I | awk '{print $1;}')
+      export ROS_HOSTNAME=$ROS_IP
+      export ROS_MASTER_URI=http://$ROS_HOSTNAME:11311
 
-   # start the ROS master node
-   roscore &
+      # as per your install
+      source $HOME/catkin_ws/devel/setup.bash
 
-   # start the turtlebot
-   roslaunch turtlebot_bringup minimal.launch &
+      # start the ROS master node
+      roscore &
 
-   # start the camera
-   roslaunch astra_launch astra.launch &
+      # start the turtlebot
+      roslaunch turtlebot_bringup minimal.launch &
 
-Then, on the learning computer, clone the repo::
+      # start the camera
+      roslaunch astra_launch astra.launch &
+
+On the learning computer -- whether directly or wirelessly connected to the robot -- clone the repo::
 
    git clone https://github.com/AmiiThinks/RobotLearning.git
    cd RobotLearning
@@ -73,6 +75,4 @@ Finally, call the :py:mod:`wall_demo_example` file::
 
    python src/wall_demo_example.py
 
-To view plots, use `rqt_plot <http://wiki.ros.org/rqt_plot>`_.
-
-
+Easy data plotting can be done using ROS's `rqt_plot <http://wiki.ros.org/rqt_plot>`_.
