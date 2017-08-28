@@ -2,18 +2,16 @@
 
 """Uses tilecoding to create state.
 
-Author: 
-    Niko Yasui, Shibhansh Dohare, Parash Rahman, Michele Albach,
-    David Quail June 1, 2017.
+Authors:
+    Michele Albach, Shibhansh Dohare, David Quail, Parash Rahman, Niko Yasui.
 """
-import random
-
 import numpy as np
 import rospy
 from scipy.misc import comb
 
 from CTiles import tiles
 from tools import get_next_pow2, timing
+
 
 class StateConstants:
     """ Constants useful for the tile coding in StateManager
@@ -102,12 +100,12 @@ class StateConstants:
 
 class StateManager(object):
     def __init__(self, features_to_use):
-        """ Sets up all the hash tables used for each feature encoding
+        """Sets up the hash tables used for each feature encoding.
 
-            Args:
-                features_to_use: strings representing which sensorimotor 
-                    information should actually be incorporated into phi
-                    (see self.get_phi)
+        Args:
+            features_to_use: strings representing which sensorimotor
+                information should actually be incorporated into phi
+                (see :py:meth:`~state_representation.StateManager.get_phi`).
         """
         num_img_ihts = StateConstants.NUM_RANDOM_POINTS * \
                        StateConstants.CHANNELS
@@ -136,6 +134,7 @@ class StateManager(object):
         self.pixel_mask = self.pixel_mask.reshape(StateConstants.IMAGE_LI,
                                                   StateConstants.IMAGE_CO)
 
+        # most recent data
         self.last_image_raw = np.zeros((StateConstants.IMAGE_LI,
                                         StateConstants.IMAGE_CO,
                                         3), dtype=int)
@@ -150,7 +149,7 @@ class StateManager(object):
     @timing
     def get_phi(self, image, bump, ir, imu, odom, bias, weights=None, *args,
                 **kwargs):
-        """ Gets the binary tile coding of all the pertinent fields
+        """Gets the binary tile coding of all the pertinent fields.
         """
 
         phi = np.zeros(StateConstants.TOTAL_FEATURE_LENGTH, dtype=bool)
@@ -323,8 +322,7 @@ class StateManager(object):
         return phi
 
     def get_observations(self, bump, ir, charging, odom, imu, **kwargs):
-        """ This function is meant to return some non tile coded information
-            that is still part of the state
+        """A way to access auxiliary state information.
         """
 
         observations = {
