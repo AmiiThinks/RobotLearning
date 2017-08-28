@@ -32,7 +32,7 @@ before_install:
 
 install:
   - conda install --yes python="2.7" sphinx
-  - pip install --user travis-sphinx recommonmark scipy matplotlib
+  - pip install --user travis-sphinx recommonmark scipy matplotlib sphinx_rtd_theme
 
 script:
   - cd src/CTiles
