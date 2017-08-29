@@ -33,7 +33,7 @@ You also need to decide if the computer that will run the learning code should b
       sudo apt-get install ros-indigo-desktop-full ros-indigo-kobuki libblas-dev liblapack-dev libatlas-base-dev gfortran
       sudo pip install future scipy
 
-   You will also have to set up your ``~/.bashrc`` file on ``N``. Make sure to change any paths to match your installation. Add the following to your ``~/.bashrc``::
+   You will also have to set some environment variables on the wirelessly connected computer. Add the following to your ``~/.bashrc``, while making sure to change any paths to match your installation.::
 
       # ROS setup.bash
       source /opt/ros/indigo/setup.bash

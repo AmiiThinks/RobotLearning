@@ -39,6 +39,7 @@ script:
   - cmake .
   - make
   - cd ../..
+  - sphinx-apidoc -eo sphinx/source/pyrst src src/CTiles
   - export PYTHONPATH=$PYTHONPATH:/usr/lib/python2.7/dist-packages:/usr/local/lib/python2.7/dist-packages
   - source /opt/ros/$ROS_DISTRO/setup.bash
   - travis-sphinx --source=sphinx/source build

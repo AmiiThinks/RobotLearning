@@ -1,6 +1,8 @@
 *.idea*
 *.pyc
 *.DS_Store*
+sphinx/source/pyrst/*
+sphinx/build
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
