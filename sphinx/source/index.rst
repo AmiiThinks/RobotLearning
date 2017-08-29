@@ -26,8 +26,9 @@ To get started, first follow the :doc:`Robot Computer Setup <TurtlebotSetup>` in
 
 You also need to decide if the computer that will run the learning code should be physically attached to the robot. If not, the learning computer will have to communicate with the robot computer over a wireless network. See :doc:`Running the code <RunningCode>` for pros and cons to each setup.
 
-Wirelessly connected learning computer setup
-............................................
+.. note::
+   **Wirelessly connected learning computer setup:**
+
    Dependencies::
 
       sudo apt-get install ros-indigo-desktop-full ros-indigo-kobuki libblas-dev liblapack-dev libatlas-base-dev gfortran
