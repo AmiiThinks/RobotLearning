@@ -32,14 +32,14 @@ before_install:
 
 install:
   - conda install --yes python="2.7" sphinx
-  - pip install --user travis-sphinx recommonmark scipy matplotlib sphinx_rtd_theme
+  - pip install --user travis-sphinx recommonmark scipy matplotlib sphinx_rtd_theme future
 
 script:
   - cd src/CTiles
   - cmake .
   - make
   - cd ../..
-  - sphinx-apidoc -eo sphinx/source/pyrst src src/CTiles
+  - sphinx-apidoc -eo sphinx/source/pyrst src src/CTiles src/tiles3.py
   - export PYTHONPATH=$PYTHONPATH:/usr/lib/python2.7/dist-packages:/usr/local/lib/python2.7/dist-packages
   - source /opt/ros/$ROS_DISTRO/setup.bash
   - travis-sphinx --source=sphinx/source build
