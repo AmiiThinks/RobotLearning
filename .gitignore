@@ -1,5 +1,8 @@
 *.idea*
+*.pyc
 *.DS_Store*
+sphinx/source/pyrst/*
+sphinx/build
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -110,5 +113,4 @@ ENV/
 *~
 
 # Experiment data
-ROSBase/src/horde/scripts/results.bag
-ROSBase/src/horde/scripts/MSRE_over_time.npz
+ROSBase/src/horde/scripts/observations.txt
