@@ -40,6 +40,7 @@ class LearningForeground:
             times the cumulant is non-zero. Could be incorporated into the
             Evaluator.
         reset_episode (fun): Whether the episode should be reset.
+        custom_stats (dictionary[string:lambda]): The custom topics defined by the user.
 
     Attributes:
         COLLECT_DATA_FLAG (bool): Whether or not to save data in bags.
