@@ -58,7 +58,8 @@ class LearningForeground:
                  stats,
                  control_gvf=None,
                  cumulant_counter=None,
-                 reset_episode=None):
+                 reset_episode=None,
+                 custom_stats=None):
 
         # function that generates a list of actions to perform to reset episode
         self.reset_episode = reset_episode 
@@ -156,6 +157,10 @@ class LearningForeground:
                           'rho': lambda g: g.rho,
                           'ESS': lambda g: g.evaluator.ESS}
         self.stats = filter(lambda s: s in valid_stats, stats)
+
+        if custom_stats != None:
+            self.stat_data.update(custom_stats)
+            self.stats += custom_stats.keys()
 
         def publisher_name(gvf, label):
             return '{}/{}'.format(gvf, label) if gvf else label
@@ -433,7 +438,8 @@ def start_learning_foreground(time_scale,
                               stats,
                               control_gvf=None,
                               cumulant_counter=None,
-                              reset_episode=None):
+                              reset_episode=None,
+                              custom_stats=None):
     """Function to call with multiprocessing or multithreading.
     """
     try:
