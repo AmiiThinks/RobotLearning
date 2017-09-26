@@ -1,0 +1,359 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>wis_to_gtd module &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="../index.html"/>
+        <link rel="up" title="src" href="modules.html"/>
+        <link rel="prev" title="wis_gtd module" href="wis_gtd.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../Overview.html">Code Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">File Index</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="action_manager.html">action_manager module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="align_ir_example.html">align_ir_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_docking_policies.html">auto_docking_policies module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_return_example.html">calculate_return_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluator.html">evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="greedy_gq.html">greedy_gq module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtd.html">gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gvf.html">gvf module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning_foreground.html">learning_foreground module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="policy.html">policy module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="return_calculator.html">return_calculator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="state_representation.html">state_representation module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="to_gtd.html">to_gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">tools module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize_pixels.html">visualize_pixels module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wall_demo_example.html">wall_demo_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wis_gtd.html">wis_gtd module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">wis_to_gtd module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">src</a> &raquo;</li>
+        
+      <li>wis_to_gtd module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/pyrst/wis_to_gtd.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-wis_to_gtd">
+<span id="wis-to-gtd-module"></span><h1>wis_to_gtd module<a class="headerlink" href="#module-wis_to_gtd" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="wis_to_gtd.WISTOGTD">
+<em class="property">class </em><code class="descclassname">wis_to_gtd.</code><code class="descname">WISTOGTD</code><span class="sig-paren">(</span><em>num_features</em>, <em>u</em>, <em>eta</em>, <em>beta</em>, <em>lmbda</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wis_to_gtd.html#WISTOGTD"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wis_to_gtd.WISTOGTD" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements WIS-TO-GTD(lambda) with linear function approximation.</p>
+<p>See <a class="reference external" href="https://armahmood.github.io/files/MS-WIS-O(n)-UAI-2015.pdf">https://armahmood.github.io/files/MS-WIS-O(n)-UAI-2015.pdf</a> for more
+details.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>num_features</strong> (<em>int</em>) – Length of weight vectors.</li>
+<li><strong>u</strong> (<em>float</em>) – Initial value for the usage vector. Can be interpreted as
+inverse initial step size.</li>
+<li><strong>eta</strong> (<em>float</em>) – Recency-weighting factor. Can be interpreted as desired
+final step size.</li>
+<li><strong>beta</strong> (<em>float</em>) – Secondary learning rate.</li>
+<li><strong>lmbda</strong> (<em>float</em>) – Trace decay rate.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="wis_to_gtd.WISTOGTD.theta">
+<code class="descname">theta</code><a class="headerlink" href="#wis_to_gtd.WISTOGTD.theta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Primary weight vector.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wis_to_gtd.WISTOGTD.w">
+<code class="descname">w</code><a class="headerlink" href="#wis_to_gtd.WISTOGTD.w" title="Permalink to this definition">¶</a></dt>
+<dd><p>Secondary weight vector.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wis_to_gtd.WISTOGTD.e">
+<code class="descname">e</code><a class="headerlink" href="#wis_to_gtd.WISTOGTD.e" title="Permalink to this definition">¶</a></dt>
+<dd><p>Eligibility trace vector.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wis_to_gtd.WISTOGTD.u">
+<code class="descname">u</code><a class="headerlink" href="#wis_to_gtd.WISTOGTD.u" title="Permalink to this definition">¶</a></dt>
+<dd><p>Usage vector.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wis_to_gtd.WISTOGTD.v">
+<code class="descname">v</code><a class="headerlink" href="#wis_to_gtd.WISTOGTD.v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Usage helper vector.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wis_to_gtd.WISTOGTD.beta">
+<code class="descname">beta</code><a class="headerlink" href="#wis_to_gtd.WISTOGTD.beta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Secondary learning rate.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wis_to_gtd.WISTOGTD.lmbda">
+<code class="descname">lmbda</code><a class="headerlink" href="#wis_to_gtd.WISTOGTD.lmbda" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trace decay rate.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wis_to_gtd.WISTOGTD.old_gamma">
+<code class="descname">old_gamma</code><a class="headerlink" href="#wis_to_gtd.WISTOGTD.old_gamma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Discounting parameter from the previous timestep.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wis_to_gtd.WISTOGTD.old_rho">
+<code class="descname">old_rho</code><a class="headerlink" href="#wis_to_gtd.WISTOGTD.old_rho" title="Permalink to this definition">¶</a></dt>
+<dd><p>Importance sampling weight from previous timestep.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wis_to_gtd.WISTOGTD.delta">
+<code class="descname">delta</code><a class="headerlink" href="#wis_to_gtd.WISTOGTD.delta" title="Permalink to this definition">¶</a></dt>
+<dd><p>TD-error of previous timestep.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wis_to_gtd.WISTOGTD.tderr_elig">
+<code class="descname">tderr_elig</code><a class="headerlink" href="#wis_to_gtd.WISTOGTD.tderr_elig" title="Permalink to this definition">¶</a></dt>
+<dd><p>delta * e for RUPEE calculations.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="wis_to_gtd.WISTOGTD.predict">
+<code class="descname">predict</code><span class="sig-paren">(</span><em>phi</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wis_to_gtd.html#WISTOGTD.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wis_to_gtd.WISTOGTD.predict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wis_to_gtd.WISTOGTD.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>phi</em>, <em>phi_prime</em>, <em>cumulant</em>, <em>gamma</em>, <em>rho</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wis_to_gtd.html#WISTOGTD.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wis_to_gtd.WISTOGTD.update" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="wis_gtd.html" class="btn btn-neutral" title="wis_gtd module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

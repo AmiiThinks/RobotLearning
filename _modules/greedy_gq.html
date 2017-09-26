@@ -1,0 +1,546 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>greedy_gq &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../Overview.html">Code Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pyrst/modules.html">File Index</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>greedy_gq</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for greedy_gq</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;Module containing the GreedyGQ algorithm.</span>
+
+<span class="sd">Also supports prioritized and uniform experience replay</span>
+
+<span class="sd">Authors: </span>
+<span class="sd">    Shibhansh Dohare, Niko Yasui.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">random</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">rospy</span>
+
+<span class="kn">import</span> <span class="nn">tools</span>
+
+
+<div class="viewcode-block" id="GreedyGQ"><a class="viewcode-back" href="../pyrst/greedy_gq.html#greedy_gq.GreedyGQ">[docs]</a><span class="k">class</span> <span class="nc">GreedyGQ</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;An implementation of GreedyGQ learning algoritm.</span>
+
+<span class="sd">    Implementation on greedy_gq based on </span>
+<span class="sd">    https://era.library.ualberta.ca/files/8s45q967t/Hamid_Maei_PhDThesis.pdf</span>
+<span class="sd">    and prioritized experience replay based on </span>
+<span class="sd">    https://arxiv.org/pdf/1511.05952.pdf</span>
+<span class="sd">    Doesn&#39;t update some paramenters when we are replaying experience </span>
+<span class="sd">    (either uniform or prioritized). </span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        action_space (numpy array of action): Numpy array containing</span>
+<span class="sd">            all actions available to any agent.</span>
+<span class="sd">        finished_episode (fun): Function that evaluates if an episode</span>
+<span class="sd">            has been finished or not.</span>
+<span class="sd">        num_features (int): The number of features in the state-action</span>
+<span class="sd">            representation.</span>
+<span class="sd">        alpha (float): Primary learning rate.</span>
+<span class="sd">        beta (float): Secondary learning rate</span>
+<span class="sd">        lmbda (float): Trace decay rate.</span>
+
+<span class="sd">        Note: A copy of phi is created during the construction process.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">action_space</span><span class="p">,</span>
+                 <span class="n">finished_episode</span><span class="p">,</span>
+                 <span class="n">num_features</span><span class="p">,</span>
+                 <span class="n">alpha</span><span class="p">,</span>
+                 <span class="n">beta</span><span class="p">,</span>
+                 <span class="n">lmbda</span><span class="p">,</span>
+                 <span class="n">decay</span><span class="o">=</span><span class="k">False</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lmbda</span> <span class="o">=</span> <span class="n">lmbda</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">decay</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="k">if</span> <span class="n">decay</span> <span class="k">else</span> <span class="n">tools</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">decay</span><span class="p">(</span><span class="n">beta</span><span class="p">)</span> <span class="k">if</span> <span class="n">decay</span> <span class="k">else</span> <span class="n">tools</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">beta</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_features</span> <span class="o">=</span> <span class="n">num_features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span> <span class="o">=</span> <span class="n">action_space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finished_episode</span> <span class="o">=</span> <span class="n">finished_episode</span>
+
+        <span class="c"># learning </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_features</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sec_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_features</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_features</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_gamma</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_features</span><span class="p">)</span>
+
+        <span class="c"># measuring performance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timeStep</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">average_td_error</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">average_td_errors</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delta</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_episodes</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tderr_elig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_features</span><span class="p">)</span>
+
+        <span class="c"># prioritized experience replay</span>
+        <span class="c"># list is maintained in the reverse order of td_error</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">worst_experiences</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_experiences</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c"># helper</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_state_action</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">action_state_rep</span><span class="p">(</span><span class="n">action_space</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode_finished_last_step</span> <span class="o">=</span> <span class="k">False</span>
+
+<div class="viewcode-block" id="GreedyGQ.predict"><a class="viewcode-back" href="../pyrst/greedy_gq.html#greedy_gq.GreedyGQ.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Builds the action state reperesentaiton and multiplies by theta.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            phi (numpy array of bool): Boolean feature vector.</span>
+<span class="sd">            action (action): Action that was taken.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">action</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span><span class="p">:</span>
+            <span class="n">q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_state_action</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">action</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># get average value of actions</span>
+            <span class="k">def</span> <span class="nf">get_a_phi</span><span class="p">(</span><span class="n">actn</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_state_action</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">actn</span><span class="p">)</span>
+
+            <span class="n">dot_fun</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">get_a_phi</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta</span><span class="p">))</span>
+            <span class="n">q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dot_fun</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">q</span></div>
+
+<div class="viewcode-block" id="GreedyGQ.update"><a class="viewcode-back" href="../pyrst/greedy_gq.html#greedy_gq.GreedyGQ.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+               <span class="n">phi</span><span class="p">,</span>
+               <span class="n">last_action</span><span class="p">,</span>
+               <span class="n">phi_prime</span><span class="p">,</span>
+               <span class="n">cumulant</span><span class="p">,</span>
+               <span class="n">gamma</span><span class="p">,</span>
+               <span class="n">rho</span><span class="p">,</span>
+               <span class="n">replaying_experience</span><span class="o">=</span><span class="k">False</span><span class="p">,</span>
+               <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Updates the parameters (weights) of the greedy_gq learner.</span>
+
+<span class="sd">        Doesn&#39;t update some paramenters when we are replaying experience</span>
+<span class="sd">        (either uniform or prioritized). </span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            phi (numpy array of bool): State at time t.</span>
+<span class="sd">            last_action (action): Action at time t.</span>
+<span class="sd">            phi_prime (numpy array of bool): State at time t+1.</span>
+<span class="sd">            cumulant (float): Cumulant at time t.</span>
+<span class="sd">            gamma (float): Discounting factor at time t+1.</span>
+<span class="sd">            rho (float): Off policy importance sampling ratio at time t.</span>
+<span class="sd">            replaying_experience (bool): True if replaying an </span>
+<span class="sd">                experience, false if gathering a new experience from the</span>
+<span class="sd">                environment.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            self.action_phi (numpy array of bool): Representation for the</span>
+<span class="sd">                state-action pair at time t. Only used to calculate</span>
+<span class="sd">                RUPEE.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">replaying_experience</span> <span class="ow">is</span> <span class="k">False</span><span class="p">:</span>
+            <span class="c"># To make sure we don&#39;t update anything between the last </span>
+            <span class="c"># termination state and the new start state</span>
+            <span class="c"># i.e. Skip one learning step</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_finished_last_step</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">episode_finished_last_step</span> <span class="o">=</span> <span class="k">False</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_phi</span>
+
+            <span class="n">new_experience</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;phi&#39;</span><span class="p">:</span> <span class="n">phi</span><span class="p">,</span>
+                              <span class="s">&#39;last_action&#39;</span><span class="p">:</span> <span class="n">last_action</span><span class="p">,</span>
+                              <span class="s">&#39;phi_prime&#39;</span><span class="p">:</span> <span class="n">phi_prime</span><span class="p">,</span>
+                              <span class="s">&#39;cumulant&#39;</span><span class="p">:</span> <span class="n">cumulant</span><span class="p">,</span>
+                              <span class="s">&#39;gamma&#39;</span><span class="p">:</span> <span class="n">gamma</span><span class="p">,</span>
+                              <span class="s">&#39;rho&#39;</span><span class="p">:</span> <span class="n">rho</span><span class="p">,</span>
+                              <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_experiences</span>
+                              <span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_experiences</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_phi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_state_action</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">last_action</span><span class="p">)</span>
+
+        <span class="n">action_phi_primes</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">temp_action</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_state_action</span><span class="p">(</span><span class="n">phi_prime</span><span class="p">,</span> <span class="n">temp_action</span><span class="p">)</span> <span class="k">for</span>
+            <span class="n">temp_action</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="p">}</span>
+
+        <span class="n">action_phis</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">temp_action</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_state_action</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">temp_action</span><span class="p">)</span> <span class="k">for</span>
+            <span class="n">temp_action</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="p">}</span>
+
+        <span class="c"># A_{t+1} update</span>
+        <span class="n">next_greedy_action</span> <span class="o">=</span> <span class="n">last_action</span>
+        <span class="k">for</span> <span class="n">temp_action</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">theta</span><span class="p">,</span>
+                      <span class="n">action_phi_primes</span><span class="p">[</span><span class="n">temp_action</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">theta</span><span class="p">,</span> <span class="n">action_phi_primes</span><span class="p">[</span><span class="n">next_greedy_action</span><span class="p">]):</span>
+                <span class="n">next_greedy_action</span> <span class="o">=</span> <span class="n">temp_action</span>
+
+        <span class="c"># action_phi_bar update</span>
+        <span class="n">action_phi_bar</span> <span class="o">=</span> <span class="n">action_phi_primes</span><span class="p">[</span><span class="n">next_greedy_action</span><span class="p">]</span>
+
+        <span class="c"># delta_t update</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delta</span> <span class="o">=</span> <span class="n">cumulant</span> <span class="o">+</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">theta</span><span class="p">,</span>
+                                               <span class="n">action_phi_bar</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">theta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_phi</span><span class="p">)</span>
+
+        <span class="n">previous_greedy_action</span> <span class="o">=</span> <span class="n">last_action</span>
+        <span class="k">for</span> <span class="n">temp_action</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">theta</span><span class="p">,</span> <span class="n">action_phis</span><span class="p">[</span><span class="n">temp_action</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">theta</span><span class="p">,</span> <span class="n">action_phis</span><span class="p">[</span><span class="n">previous_greedy_action</span><span class="p">]):</span>
+                <span class="n">previous_greedy_action</span> <span class="o">=</span> <span class="n">temp_action</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">theta</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">logwarn</span><span class="p">(</span><span class="s">&#39;self.theta in greedy_gq is zero&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_phi</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">logwarn</span><span class="p">(</span><span class="s">&#39;self.action_phi in greedy_gq is zero&#39;</span><span class="p">)</span>
+
+        <span class="c"># e_t update</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">e</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_gamma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lmbda</span> <span class="o">*</span> <span class="n">rho</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">e</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_phi</span>  <span class="c"># (phi_t)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">logwarn</span><span class="p">(</span><span class="s">&#39;self.e in greedy_gq is zero&#39;</span><span class="p">)</span>
+
+        <span class="c"># theta_t update</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">theta</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">.</span><span class="n">next</span><span class="p">()</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delta</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">e</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_gamma</span> <span class="o">*</span>
+                                    <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lmbda</span><span class="p">)</span> <span class="o">*</span>
+                                    <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sec_weights</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_phi</span><span class="p">)</span> <span class="o">*</span>
+                                    <span class="n">action_phi_bar</span><span class="p">)</span>
+
+        <span class="c"># w_t update</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sec_weights</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="o">.</span><span class="n">next</span><span class="p">()</span> <span class="o">*</span> \
+                            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delta</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">e</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sec_weights</span><span class="p">,</span>
+                                                          <span class="bp">self</span><span class="o">.</span><span class="n">action_phi</span><span class="p">)</span> <span class="o">*</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">action_phi</span><span class="p">)</span>
+
+        <span class="c"># for calculating RUPEE</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tderr_elig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">e</span>
+
+        <span class="c"># save gamma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_gamma</span> <span class="o">=</span> <span class="n">gamma</span>
+
+        <span class="k">if</span> <span class="n">replaying_experience</span> <span class="ow">is</span> <span class="k">False</span><span class="p">:</span>
+            <span class="n">new_experience</span><span class="p">[</span><span class="s">&#39;td_error&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delta</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">worst_experiences</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_experience</span><span class="p">)</span>
+
+            <span class="c"># saving the average abs(td_error) of last 1000 time steps</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">timeStep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeStep</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">average_td_errors</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1000</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">average_td_error</span> <span class="o">+=</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delta</span><span class="p">)</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">average_td_errors</span><span class="p">[</span><span class="o">-</span><span class="mi">1000</span><span class="p">]))</span> <span class="o">/</span> <span class="mi">1000</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">average_td_error</span> <span class="o">+=</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delta</span><span class="p">)</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">average_td_error</span><span class="p">))</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeStep</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">average_td_errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">average_td_error</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeStep</span> <span class="o">%</span> <span class="mi">100</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;average_td_errors&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">average_td_errors</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">finished_episode</span><span class="p">(</span><span class="n">cumulant</span><span class="p">):</span>
+                <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s">&#39;Episode finished&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">episode_finished_last_step</span> <span class="o">=</span> <span class="k">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">num_episodes</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_features</span><span class="p">)</span>
+
+        <span class="c"># returing to make sure self.action_phi is used in RUPEE calculation</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_phi</span></div>
+
+<div class="viewcode-block" id="GreedyGQ.uniform_experience_replay"><a class="viewcode-back" href="../pyrst/greedy_gq.html#greedy_gq.GreedyGQ.uniform_experience_replay">[docs]</a>    <span class="k">def</span> <span class="nf">uniform_experience_replay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Replays experiences from saved memory.</span>
+
+<span class="sd">        Replays ``num_updates_to_make`` experiences. </span>
+<span class="sd">        ``self.worst_experiences`` stores the most recent 100</span>
+<span class="sd">        experiences.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_experiences</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">random_indices</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">num_updates_to_make</span> <span class="o">=</span> <span class="mi">10</span>
+
+        <span class="c"># to avoide memory overflow</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">worst_experiences</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">worst_experiences</span><span class="p">[</span><span class="o">-</span><span class="mi">100</span><span class="p">:]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">random_indices</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
+                    <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">worst_experiences</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
+                    <span class="n">num_updates_to_make</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">for</span> <span class="n">experience_index</span> <span class="ow">in</span> <span class="n">random_indices</span><span class="p">:</span>
+            <span class="n">temp_experience</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">worst_experiences</span><span class="p">[</span><span class="n">experience_index</span><span class="p">]</span>
+            <span class="n">replayed_experience_location_in_sorted_list</span> <span class="o">=</span> <span class="n">experience_index</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">phi</span><span class="o">=</span><span class="n">temp_experience</span><span class="p">[</span><span class="s">&#39;phi&#39;</span><span class="p">],</span>
+                        <span class="n">last_action</span><span class="o">=</span><span class="n">temp_experience</span><span class="p">[</span><span class="s">&#39;last_action&#39;</span><span class="p">],</span>
+                        <span class="n">phi_prime</span><span class="o">=</span><span class="n">temp_experience</span><span class="p">[</span><span class="s">&#39;phi_prime&#39;</span><span class="p">],</span>
+                        <span class="n">cumulant</span><span class="o">=</span><span class="n">temp_experience</span><span class="p">[</span><span class="s">&#39;cumulant&#39;</span><span class="p">],</span>
+                        <span class="n">gamma</span><span class="o">=</span><span class="n">temp_experience</span><span class="p">[</span><span class="s">&#39;gamma&#39;</span><span class="p">],</span>
+                        <span class="n">rho</span><span class="o">=</span><span class="n">temp_experience</span><span class="p">[</span><span class="s">&#39;rho&#39;</span><span class="p">],</span>
+                        <span class="n">replaying_experience</span><span class="o">=</span><span class="k">True</span><span class="p">,</span>
+                        <span class="n">experience_id</span><span class="o">=</span><span class="n">temp_experience</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">])</span>
+            <span class="c"># the new_experience is put back in the array, in the update </span>
+            <span class="c"># function itself</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">worst_experiences</span><span class="p">[</span>
+                <span class="n">replayed_experience_location_in_sorted_list</span><span class="p">][</span><span class="s">&#39;td_error&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">delta</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GreedyGQ.td_error_prioritized_experience_replay"><a class="viewcode-back" href="../pyrst/greedy_gq.html#greedy_gq.GreedyGQ.td_error_prioritized_experience_replay">[docs]</a>    <span class="k">def</span> <span class="nf">td_error_prioritized_experience_replay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Replays worst experiences from memory.</span>
+
+<span class="sd">        ``self.worst_experiences`` stores the last 100 experiences.</span>
+<span class="sd">        The ``num_updates_to_make`` experiences with the highest TD</span>
+<span class="sd">        error are chosen for replay.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">worst_experiences</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">worst_experiences</span><span class="p">,</span>
+                                        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">k</span><span class="p">[</span><span class="s">&#39;td_error&#39;</span><span class="p">],</span>
+                                        <span class="n">reverse</span><span class="o">=</span><span class="k">True</span><span class="p">)[:</span><span class="mi">100</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_experiences</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">num_updates_to_make</span> <span class="o">=</span> <span class="mi">10</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">num_updates_to_make</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">worst_experiences</span><span class="p">))):</span>
+            <span class="c"># No need to do importance_sampling_correction as we are already</span>
+            <span class="c">#  doing off-policy learning</span>
+            <span class="c"># pop the next worst experience, prioritized by td_error</span>
+            <span class="n">temp_experience</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">worst_experiences</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="c"># print self.worst_experiences[i][&#39;td_error&#39;], &#39;experience id: </span>
+            <span class="c"># &#39;, temp_experience[&#39;id&#39;]</span>
+            <span class="n">replayed_experience_location_in_sorted_list</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">phi</span><span class="o">=</span><span class="n">temp_experience</span><span class="p">[</span><span class="s">&#39;phi&#39;</span><span class="p">],</span>
+                        <span class="n">last_action</span><span class="o">=</span><span class="n">temp_experience</span><span class="p">[</span><span class="s">&#39;last_action&#39;</span><span class="p">],</span>
+                        <span class="n">phi_prime</span><span class="o">=</span><span class="n">temp_experience</span><span class="p">[</span><span class="s">&#39;phi_prime&#39;</span><span class="p">],</span>
+                        <span class="n">cumulant</span><span class="o">=</span><span class="n">temp_experience</span><span class="p">[</span><span class="s">&#39;cumulant&#39;</span><span class="p">],</span>
+                        <span class="n">gamma</span><span class="o">=</span><span class="n">temp_experience</span><span class="p">[</span><span class="s">&#39;gamma&#39;</span><span class="p">],</span>
+                        <span class="n">rho</span><span class="o">=</span><span class="n">temp_experience</span><span class="p">[</span><span class="s">&#39;rho&#39;</span><span class="p">],</span>
+                        <span class="n">replaying_experience</span><span class="o">=</span><span class="k">True</span><span class="p">,</span>
+                        <span class="n">experience_id</span><span class="o">=</span><span class="n">temp_experience</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">])</span>
+            <span class="c"># the new_experience is put back in the heap, in the update</span>
+            <span class="c"># function itself</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">worst_experiences</span><span class="p">[</span>
+                <span class="n">replayed_experience_location_in_sorted_list</span><span class="p">][</span><span class="s">&#39;td_error&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">delta</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

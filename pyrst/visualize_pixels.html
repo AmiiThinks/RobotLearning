@@ -1,0 +1,284 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>visualize_pixels module &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="../index.html"/>
+        <link rel="up" title="src" href="modules.html"/>
+        <link rel="next" title="wall_demo_example module" href="wall_demo_example.html"/>
+        <link rel="prev" title="tools module" href="tools.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../Overview.html">Code Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">File Index</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="action_manager.html">action_manager module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="align_ir_example.html">align_ir_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_docking_policies.html">auto_docking_policies module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_return_example.html">calculate_return_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluator.html">evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="greedy_gq.html">greedy_gq module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtd.html">gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gvf.html">gvf module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning_foreground.html">learning_foreground module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="policy.html">policy module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="return_calculator.html">return_calculator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="state_representation.html">state_representation module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="to_gtd.html">to_gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">tools module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">visualize_pixels module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wall_demo_example.html">wall_demo_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wis_gtd.html">wis_gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wis_to_gtd.html">wis_to_gtd module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">src</a> &raquo;</li>
+        
+      <li>visualize_pixels module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/pyrst/visualize_pixels.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-visualize_pixels">
+<span id="visualize-pixels-module"></span><h1>visualize_pixels module<a class="headerlink" href="#module-visualize_pixels" title="Permalink to this headline">¶</a></h1>
+<p>Michele Albach, Niko Yasui
+June 8th 2017</p>
+<p>Visualizer:</p>
+<p>initializes by creating a Voronoi diagram to match the image size
+and set of points</p>
+<p>then update_colours can be called with image data to properly
+colorize the Voronoi diagram</p>
+<p>the Voronoi diagram is plotted using matplotlib</p>
+<dl class="class">
+<dt id="visualize_pixels.Visualize">
+<em class="property">class </em><code class="descclassname">visualize_pixels.</code><code class="descname">Visualize</code><span class="sig-paren">(</span><em>mask</em>, <em>imsizex</em>, <em>imsizey</em>, <em>dpi=100</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualize_pixels.html#Visualize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualize_pixels.Visualize" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="visualize_pixels.Visualize.update_colours">
+<code class="descname">update_colours</code><span class="sig-paren">(</span><em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualize_pixels.html#Visualize.update_colours"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualize_pixels.Visualize.update_colours" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="visualize_pixels.Visualize.update_image">
+<code class="descname">update_image</code><span class="sig-paren">(</span><em>image_data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualize_pixels.html#Visualize.update_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualize_pixels.Visualize.update_image" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="wall_demo_example.html" class="btn btn-neutral float-right" title="wall_demo_example module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tools.html" class="btn btn-neutral" title="tools module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

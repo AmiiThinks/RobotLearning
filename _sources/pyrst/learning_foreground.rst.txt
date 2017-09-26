@@ -1,0 +1,7 @@
+learning\_foreground module
+===========================
+
+.. automodule:: learning_foreground
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -1,0 +1,343 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>wall_demo_example module &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="../index.html"/>
+        <link rel="up" title="src" href="modules.html"/>
+        <link rel="next" title="wis_gtd module" href="wis_gtd.html"/>
+        <link rel="prev" title="visualize_pixels module" href="visualize_pixels.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../Overview.html">Code Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">File Index</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="action_manager.html">action_manager module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="align_ir_example.html">align_ir_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_docking_policies.html">auto_docking_policies module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_return_example.html">calculate_return_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluator.html">evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="greedy_gq.html">greedy_gq module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtd.html">gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gvf.html">gvf module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning_foreground.html">learning_foreground module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="policy.html">policy module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="return_calculator.html">return_calculator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="state_representation.html">state_representation module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="to_gtd.html">to_gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">tools module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize_pixels.html">visualize_pixels module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">wall_demo_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wis_gtd.html">wis_gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wis_to_gtd.html">wis_to_gtd module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">src</a> &raquo;</li>
+        
+      <li>wall_demo_example module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/pyrst/wall_demo_example.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-wall_demo_example">
+<span id="wall-demo-example-module"></span><h1>wall_demo_example module<a class="headerlink" href="#module-wall_demo_example" title="Permalink to this headline">¶</a></h1>
+<p>Runs the demo that learns to avoid walls.</p>
+<p>This module describes an agent that learns to avoid walls. It specifies
+the agent’s learning algorithm, parameters, policies, features, and
+actions. The module also interfaces with the <a class="reference internal" href="learning_foreground.html"><span class="doc">learning_foreground module</span></a>
+and the <a class="reference internal" href="action_manager.html"><span class="doc">action_manager module</span></a> to run the main learning loop and publish
+actions respectively.</p>
+<p>All parameters are set in <code class="docutils literal"><span class="pre">if</span> <span class="pre">__name__</span> <span class="pre">==</span> <span class="pre">&quot;__main__&quot;</span></code></p>
+<dl class="docutils">
+<dt>Authors:</dt>
+<dd>Michele Albach, Shibhansh Dohare, Banafsheh Rafiee,
+Parash Rahman, Niko Yasui.</dd>
+</dl>
+<dl class="class">
+<dt id="wall_demo_example.GoForward">
+<em class="property">class </em><code class="descclassname">wall_demo_example.</code><code class="descname">GoForward</code><span class="sig-paren">(</span><em>action_space</em>, <em>fwd_action_index</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wall_demo_example.html#GoForward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wall_demo_example.GoForward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="policy.html#policy.Policy" title="policy.Policy"><code class="xref py py-class docutils literal"><span class="pre">policy.Policy</span></code></a></p>
+<p>Target Policy.</p>
+<p>Constant policy that only goes forward.</p>
+<dl class="attribute">
+<dt id="wall_demo_example.GoForward.action_space">
+<code class="descname">action_space</code><a class="headerlink" href="#wall_demo_example.GoForward.action_space" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>numpy array of action</em> – Numpy array containing
+all actions available to any agent.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wall_demo_example.GoForward.fwd_action_index">
+<code class="descname">fwd_action_index</code><a class="headerlink" href="#wall_demo_example.GoForward.fwd_action_index" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – Index of <code class="docutils literal"><span class="pre">action_space</span></code> containing the
+forward action.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="wall_demo_example.GoForward.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>phi</em>, <em>observation</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wall_demo_example.html#GoForward.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wall_demo_example.GoForward.update" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="wall_demo_example.PavlovSoftmax">
+<em class="property">class </em><code class="descclassname">wall_demo_example.</code><code class="descname">PavlovSoftmax</code><span class="sig-paren">(</span><em>time_scale</em>, <em>action_space</em>, <em>value_function</em>, <em>feature_indices</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wall_demo_example.html#PavlovSoftmax"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wall_demo_example.PavlovSoftmax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="policy.html#policy.Policy" title="policy.Policy"><code class="xref py py-class docutils literal"><span class="pre">policy.Policy</span></code></a></p>
+<p>Behavior Policy.</p>
+<p>Softmax policy that forces the agent to select a “turn”
+action if the bump sensor is on.</p>
+<dl class="attribute">
+<dt id="wall_demo_example.PavlovSoftmax.time_scale">
+<code class="descname">time_scale</code><a class="headerlink" href="#wall_demo_example.PavlovSoftmax.time_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – Number of seconds in a learning timestep.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wall_demo_example.PavlovSoftmax.action_space">
+<code class="descname">action_space</code><a class="headerlink" href="#wall_demo_example.PavlovSoftmax.action_space" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>numpy array of action</em> – Numpy array containing
+all actions available to any agent.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wall_demo_example.PavlovSoftmax.value_function">
+<code class="descname">value_function</code><a class="headerlink" href="#wall_demo_example.PavlovSoftmax.value_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function used by the policy to update values
+of pi. This is usually a value function learned by a GVF.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="wall_demo_example.PavlovSoftmax.feature_indices">
+<code class="descname">feature_indices</code><a class="headerlink" href="#wall_demo_example.PavlovSoftmax.feature_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>numpy array of bool</em> – Indices of the feature
+vector corresponding to indices used by the
+<a class="reference internal" href="#wall_demo_example.PavlovSoftmax.value_function" title="wall_demo_example.PavlovSoftmax.value_function"><code class="xref py py-obj docutils literal"><span class="pre">value_function</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="wall_demo_example.PavlovSoftmax.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>phi</em>, <em>observation</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wall_demo_example.html#PavlovSoftmax.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wall_demo_example.PavlovSoftmax.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates <a class="reference internal" href="policy.html#policy.Policy.pi" title="policy.Policy.pi"><code class="xref py py-attr docutils literal"><span class="pre">pi</span></code></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="wis_gtd.html" class="btn btn-neutral float-right" title="wis_gtd module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="visualize_pixels.html" class="btn btn-neutral" title="visualize_pixels module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

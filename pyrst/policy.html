@@ -1,0 +1,412 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>policy module &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="../index.html"/>
+        <link rel="up" title="src" href="modules.html"/>
+        <link rel="next" title="return_calculator module" href="return_calculator.html"/>
+        <link rel="prev" title="learning_foreground module" href="learning_foreground.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../Overview.html">Code Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">File Index</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="action_manager.html">action_manager module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="align_ir_example.html">align_ir_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_docking_policies.html">auto_docking_policies module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_return_example.html">calculate_return_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluator.html">evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="greedy_gq.html">greedy_gq module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtd.html">gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gvf.html">gvf module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning_foreground.html">learning_foreground module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">policy module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="return_calculator.html">return_calculator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="state_representation.html">state_representation module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="to_gtd.html">to_gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">tools module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize_pixels.html">visualize_pixels module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wall_demo_example.html">wall_demo_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wis_gtd.html">wis_gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wis_to_gtd.html">wis_to_gtd module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">src</a> &raquo;</li>
+        
+      <li>policy module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/pyrst/policy.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-policy">
+<span id="policy-module"></span><h1>policy module<a class="headerlink" href="#module-policy" title="Permalink to this headline">¶</a></h1>
+<p>Module containing parent class for policies.</p>
+<dl class="class">
+<dt id="policy.Policy">
+<em class="property">class </em><code class="descclassname">policy.</code><code class="descname">Policy</code><span class="sig-paren">(</span><em>action_space</em>, <em>feature_indices=None</em>, <em>value_function=None</em>, <em>action_equality=&lt;function equal_twists&gt;</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/policy.html#Policy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#policy.Policy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parent class for policies.</p>
+<p>Inherit this class to make a policy. Action selection is based on
+maintaining a <code class="docutils literal"><span class="pre">pi</span></code> array which holds action selection
+probabilities.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>action_space</strong> (<em>numpy array of action</em>) – Numpy array containing
+all actions available to any agent.</li>
+<li><strong>value_function</strong> (<em>fun</em><em>, </em><em>optional</em>) – A function used by the Policy to
+update values of pi. This is usually a value function
+learned by a GVF.</li>
+<li><strong>action_equality</strong> (<em>fun</em><em>, </em><em>optional</em>) – The function used to compare
+two action objects to determine whether they are equivalent.
+Returns True if the actions are equivalent and False
+otherwise.</li>
+<li><strong>feature_indices</strong> (<em>numpy array of bool</em><em>, </em><em>optional</em>) – Indices of the
+feature vector corresponding to indices used by the
+<a class="reference internal" href="#policy.Policy.value_function" title="policy.Policy.value_function"><code class="xref py py-obj docutils literal"><span class="pre">value_function</span></code></a>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="policy.Policy.action_space">
+<code class="descname">action_space</code><a class="headerlink" href="#policy.Policy.action_space" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>numpy array of action</em> – Numpy array containing
+all actions available to any agent.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="policy.Policy.value_function">
+<code class="descname">value_function</code><a class="headerlink" href="#policy.Policy.value_function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>fun</em> – A function used by the Policy to
+update values of pi. This is usually a value function
+learned by a GVF.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="policy.Policy.action_equality">
+<code class="descname">action_equality</code><a class="headerlink" href="#policy.Policy.action_equality" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>fun</em> – The function used to compare two
+action objects to determine whether they are equivalent.
+Returns True if the actions are equivalent and False
+otherwise.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="policy.Policy.feature_indices">
+<code class="descname">feature_indices</code><a class="headerlink" href="#policy.Policy.feature_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>numpy array of bool</em> – The indices of the
+feature vector corresponding to the indices used by the
+<a class="reference internal" href="#policy.Policy.value_function" title="policy.Policy.value_function"><code class="xref py py-obj docutils literal"><span class="pre">value_function</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="policy.Policy.pi">
+<code class="descname">pi</code><a class="headerlink" href="#policy.Policy.pi" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>numpy array of float</em> – Numpy array containing probabilities
+corresponding to the actions at the corresponding index in
+<code class="docutils literal"><span class="pre">action_space</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="policy.Policy.last_index">
+<code class="descname">last_index</code><a class="headerlink" href="#policy.Policy.last_index" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – The index of the last action chosen by the
+policy.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="policy.Policy.choose_action">
+<code class="descname">choose_action</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/policy.html#Policy.choose_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#policy.Policy.choose_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates <code class="docutils literal"><span class="pre">last_index</span></code> and chooses an action according to <code class="docutils literal"><span class="pre">pi</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>*args</strong> – Ignored.</li>
+<li><strong>**kwargs</strong> – Ignored.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Action at the sampled index.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="policy.Policy.get_probability">
+<code class="descname">get_probability</code><span class="sig-paren">(</span><em>action</em>, <em>choice=True</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/policy.html#Policy.get_probability"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#policy.Policy.get_probability" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the probability of taking the provided action.</p>
+<p>This function can usually be used without being overwritten.
+Throws an error if the provided action is not equal to an action
+in <code class="docutils literal"><span class="pre">action_space</span></code> according to <code class="docutils literal"><span class="pre">action_equality</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>action</strong> (<a class="reference internal" href="action_manager.html#action_manager.ActionManager.action" title="action_manager.ActionManager.action"><em>action</em></a>) – Find the probability of this action.</li>
+<li><strong>choice</strong> (<em>bool</em>) – If set to true, updates <code class="docutils literal"><span class="pre">last_index</span></code>.</li>
+<li><strong>*args</strong> – Ignored.</li>
+<li><strong>**kwargs</strong> – Ignored.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Float from <code class="docutils literal"><span class="pre">pi</span></code> corresponding to <code class="docutils literal"><span class="pre">action</span></code>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="policy.Policy.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>phi</em>, <em>observation</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/policy.html#Policy.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#policy.Policy.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the probilities of taking each action</p>
+<p>This function should be replaced when creating a new policy. It
+takes a state <code class="docutils literal"><span class="pre">(phi,</span> <span class="pre">observation)</span></code> and modifies the <code class="docutils literal"><span class="pre">pi</span></code>
+array accordingly.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>phi</strong> (<em>numpy array of bool</em>) – Binary feature vector.</li>
+<li><strong>observation</strong> (<em>dictionary</em>) – User-defined dictionary containing
+miscellaneous information about the state that should
+not be included in the feature vector <code class="docutils literal"><span class="pre">phi</span></code>.</li>
+<li><strong>*args</strong> – Ignored.</li>
+<li><strong>**kwargs</strong> – Ignored.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="return_calculator.html" class="btn btn-neutral float-right" title="return_calculator module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="learning_foreground.html" class="btn btn-neutral" title="learning_foreground module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,381 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>visualize_pixels &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../Overview.html">Code Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pyrst/modules.html">File Index</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>visualize_pixels</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for visualize_pixels</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Michele Albach, Niko Yasui</span>
+<span class="sd">June 8th 2017</span>
+
+<span class="sd">Visualizer:</span>
+
+<span class="sd">initializes by creating a Voronoi diagram to match the image size</span>
+<span class="sd">and set of points</span>
+
+<span class="sd">then update_colours can be called with image data to properly </span>
+<span class="sd">colorize the Voronoi diagram</span>
+
+<span class="sd">the Voronoi diagram is plotted using matplotlib</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">rospy</span>
+
+<span class="kn">import</span> <span class="nn">tools</span>
+<span class="kn">from</span> <span class="nn">tools</span> <span class="k">import</span> <span class="n">timing</span>
+
+<span class="kn">from</span> <span class="nn">state_representation</span> <span class="k">import</span> <span class="n">StateConstants</span>
+
+<span class="c"># turn off toolbar</span>
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s">&#39;toolbar&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;None&#39;</span>
+
+
+<div class="viewcode-block" id="Visualize"><a class="viewcode-back" href="../pyrst/visualize_pixels.html#visualize_pixels.Visualize">[docs]</a><span class="k">class</span> <span class="nc">Visualize</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">imsizex</span><span class="p">,</span> <span class="n">imsizey</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+
+        <span class="c"># convert mask to x,y points</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="nb">reversed</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="p">)))))</span>
+
+        <span class="c"># make subdivision </span>
+        <span class="n">rect</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">imsizex</span><span class="p">,</span> <span class="n">imsizey</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subdiv</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">Subdiv2D</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subdiv</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+
+        <span class="c"># initialize figure</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s">&quot;Image Stream&quot;</span><span class="p">,</span>
+                              <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">imsizex</span> <span class="o">/</span> <span class="n">dpi</span><span class="p">,</span> <span class="n">imsizey</span> <span class="o">/</span> <span class="n">dpi</span><span class="p">),</span>
+                              <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">)</span>
+
+        <span class="c"># initialize ax</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">frame_on</span><span class="o">=</span><span class="k">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="k">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="k">False</span><span class="p">)</span>
+
+        <span class="c"># initialize image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">im</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">imsizey</span><span class="p">,</span> <span class="n">imsizex</span><span class="p">)),</span>
+                                 <span class="n">interpolation</span><span class="o">=</span><span class="s">&#39;none&#39;</span><span class="p">,</span>
+                                 <span class="n">animated</span><span class="o">=</span><span class="k">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="k">None</span>
+        <span class="c"># start figure</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Visualize.update_colours"><a class="viewcode-back" href="../pyrst/visualize_pixels.html#visualize_pixels.Visualize.update_colours">[docs]</a>    <span class="nd">@timing</span>
+    <span class="k">def</span> <span class="nf">update_colours</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="k">None</span>
+
+        <span class="p">(</span><span class="n">facets</span><span class="p">,</span> <span class="n">centers</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">subdiv</span><span class="o">.</span><span class="n">getVoronoiFacetList</span><span class="p">([])</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+        <span class="c"># color image</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">facets</span><span class="p">)):</span>
+            <span class="n">ifacet</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">facets</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">centers</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">])][</span><span class="nb">int</span><span class="p">(</span><span class="n">centers</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">])]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">fillConvexPoly</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">ifacet</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span>
+
+        <span class="c"># update image data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">im</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">flipud</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fliplr</span><span class="p">(</span><span class="n">img</span><span class="p">)))</span>
+
+        <span class="c"># draw image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">draw_artist</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">im</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">blit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">bbox</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">flush_events</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Visualize.update_image"><a class="viewcode-back" href="../pyrst/visualize_pixels.html#visualize_pixels.Visualize.update_image">[docs]</a>    <span class="k">def</span> <span class="nf">update_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_data</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">image_data</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                          <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">480</span><span class="p">,</span> <span class="mi">640</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> </div></div>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+
+    <span class="n">rospy</span><span class="o">.</span><span class="n">init_node</span><span class="p">(</span><span class="s">&#39;visualizer&#39;</span><span class="p">,</span> <span class="n">anonymous</span><span class="o">=</span><span class="k">True</span><span class="p">)</span>
+    
+    <span class="c"># setup visualization</span>
+    <span class="n">num_pixels</span> <span class="o">=</span> <span class="n">StateConstants</span><span class="o">.</span><span class="n">IMAGE_LI</span> <span class="o">*</span> <span class="n">StateConstants</span><span class="o">.</span><span class="n">IMAGE_CO</span>
+    <span class="n">num_chosen</span> <span class="o">=</span> <span class="n">StateConstants</span><span class="o">.</span><span class="n">NUM_RANDOM_POINTS</span>
+    <span class="n">chosen_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">num_pixels</span><span class="p">,</span>
+                                           <span class="n">size</span><span class="o">=</span><span class="n">num_chosen</span><span class="p">,</span>
+                                           <span class="n">replace</span><span class="o">=</span><span class="k">False</span><span class="p">)</span>
+
+    <span class="n">pixel_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_pixels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+    <span class="n">pixel_mask</span><span class="p">[</span><span class="n">chosen_indices</span><span class="p">]</span> <span class="o">=</span> <span class="k">True</span>
+    <span class="n">pixel_mask</span> <span class="o">=</span> <span class="n">pixel_mask</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">StateConstants</span><span class="o">.</span><span class="n">IMAGE_LI</span><span class="p">,</span>
+                                    <span class="n">StateConstants</span><span class="o">.</span><span class="n">IMAGE_CO</span><span class="p">)</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s">&quot;Creating visualization.&quot;</span><span class="p">)</span>
+    <span class="n">visualization</span> <span class="o">=</span> <span class="n">Visualize</span><span class="p">(</span><span class="n">pixel_mask</span><span class="p">,</span>
+                              <span class="n">imsizex</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span>
+                              <span class="n">imsizey</span><span class="o">=</span><span class="mi">480</span><span class="p">)</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s">&quot;Done creatiing visualization.&quot;</span><span class="p">)</span>
+    
+    <span class="c"># setup image subscriber</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="s">&quot;/camera/rgb/image_rect_color&quot;</span><span class="p">,</span>
+                     <span class="n">tools</span><span class="o">.</span><span class="n">topic_format</span><span class="p">[</span><span class="s">&quot;/camera/rgb/image_rect_color&quot;</span><span class="p">],</span>
+                     <span class="n">visualization</span><span class="o">.</span><span class="n">update_image</span><span class="p">)</span>    
+
+    <span class="n">r</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Rate</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mf">0.1</span><span class="p">))</span>
+
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
+        <span class="n">visualization</span><span class="o">.</span><span class="n">update_colours</span><span class="p">()</span>    
+        <span class="n">r</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span>
+
+
+<span class="c"># if __name__ == &quot;__main__&quot;:</span>
+
+<span class="c">#     rospy.init_node(&#39;visualizer&#39;, anonymous=True)</span>
+    
+<span class="c">#     # set up dictionary to receive image</span>
+<span class="c">#     recent = {&#39;image&#39;: Queue(1)}</span>
+
+<span class="c">#     # setup sensor parsers</span>
+<span class="c">#     rospy.Subscriber(&#39;image&#39;,</span>
+<span class="c">#                      tools.topic_format[&#39;image&#39;],</span>
+<span class="c">#                      recent[&#39;image&#39;].put)    </span>
+
+<span class="c">#     r = rospy.Rate(int(1.0 / 0.1))</span>
+    
+
+
+<span class="c">#     num_pixels = StateConstants.IMAGE_LI * StateConstants.IMAGE_CO</span>
+<span class="c">#     num_chosen = StateConstants.NUM_RANDOM_POINTS</span>
+<span class="c">#     chosen_indices = np.random.choice(a=num_pixels,</span>
+<span class="c">#                                            size=num_chosen,</span>
+<span class="c">#                                            replace=False)</span>
+
+<span class="c">#     pixel_mask = np.zeros(num_pixels, dtype=np.bool)</span>
+<span class="c">#     pixel_mask[chosen_indices] = True</span>
+<span class="c">#     pixel_mask = pixel_mask.reshape(StateConstants.IMAGE_LI,</span>
+<span class="c">#                                     StateConstants.IMAGE_CO)</span>
+<span class="c">#     rospy.loginfo(&quot;Creating visualization.&quot;)</span>
+<span class="c">#     visualization = Visualize(pixel_mask,</span>
+<span class="c">#                               imsizex=640,</span>
+<span class="c">#                               imsizey=480)</span>
+<span class="c">#     rospy.loginfo(&quot;Done creatiing visualization.&quot;)</span>
+    
+<span class="c">#     while not rospy.is_shutdown():</span>
+<span class="c">#         visualization.update_colours(recent[&#39;image&#39;].get_nowait())    </span>
+<span class="c">#         r.sleep()</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

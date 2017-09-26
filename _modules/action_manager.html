@@ -1,0 +1,326 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>action_manager &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../Overview.html">Code Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pyrst/modules.html">File Index</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>action_manager</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for action_manager</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Module to send actions to the turtlebot.</span>
+
+<span class="sd">Authors:</span>
+<span class="sd">    Shibhansh Dohare, Banafsheh Rafiee, Parash Rahman, Niko Yasui.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">rospy</span>
+<span class="kn">from</span> <span class="nn">geometry_msgs.msg</span> <span class="k">import</span> <span class="n">Twist</span><span class="p">,</span> <span class="n">Vector3</span>
+<span class="kn">from</span> <span class="nn">std_msgs.msg</span> <span class="k">import</span> <span class="n">Bool</span>
+
+<span class="kn">from</span> <span class="nn">tools</span> <span class="k">import</span> <span class="n">topic_format</span>
+
+
+<div class="viewcode-block" id="ActionManager"><a class="viewcode-back" href="../pyrst/action_manager.html#action_manager.ActionManager">[docs]</a><span class="k">class</span> <span class="nc">ActionManager</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Class that communicates directly with the turtlebot.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        action (action): The action to send to the turtlebot.</span>
+<span class="sd">        base_state: The current reading from the turtlebot&#39;s &#39;core&#39;</span>
+<span class="sd">            topic. Contains bump information.</span>
+<span class="sd">        termination_flag (bool): Quit if this is true.</span>
+<span class="sd">        pause_flag (bool): Stop sending actions if this is true.</span>
+<span class="sd">        stop_once (bool): Send one stop action and resume sending</span>
+<span class="sd">            ``action``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">STOP_ACTION</span> <span class="o">=</span> <span class="n">Twist</span><span class="p">(</span><span class="n">Vector3</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">Vector3</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">action</span> <span class="o">=</span> <span class="n">Twist</span><span class="p">(</span><span class="n">Vector3</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">Vector3</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_state</span> <span class="o">=</span> <span class="k">None</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="s">&quot;/mobile_base/sensors/core&quot;</span><span class="p">,</span>
+                         <span class="n">topic_format</span><span class="p">[</span><span class="s">&quot;/mobile_base/sensors/core&quot;</span><span class="p">],</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">update_base_state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">termination_flag</span> <span class="o">=</span> <span class="k">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pause_flag</span> <span class="o">=</span> <span class="k">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop_once</span> <span class="o">=</span> <span class="k">False</span>
+
+<div class="viewcode-block" id="ActionManager.update_base_state"><a class="viewcode-back" href="../pyrst/action_manager.html#action_manager.ActionManager.update_base_state">[docs]</a>    <span class="k">def</span> <span class="nf">update_base_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set ``action`` to ``STOP_ACTION`` if the bumper is on.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_state</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">action</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">x</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_state</span><span class="o">.</span><span class="n">bumper</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">STOP_ACTION</span></div>
+
+<div class="viewcode-block" id="ActionManager.set_termination_flag"><a class="viewcode-back" href="../pyrst/action_manager.html#action_manager.ActionManager.set_termination_flag">[docs]</a>    <span class="k">def</span> <span class="nf">set_termination_flag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">termination_flag</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">termination_flag</span> <span class="o">=</span> <span class="n">termination_flag</span></div>
+
+<div class="viewcode-block" id="ActionManager.set_pause_flag"><a class="viewcode-back" href="../pyrst/action_manager.html#action_manager.ActionManager.set_pause_flag">[docs]</a>    <span class="k">def</span> <span class="nf">set_pause_flag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pause_flag</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pause_flag</span> <span class="o">=</span> <span class="n">pause_flag</span><span class="o">.</span><span class="n">data</span></div>
+
+<div class="viewcode-block" id="ActionManager.update_action"><a class="viewcode-back" href="../pyrst/action_manager.html#action_manager.ActionManager.update_action">[docs]</a>    <span class="k">def</span> <span class="nf">update_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_cmd</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Don&#39;t go forward if bumping and wait before going forward </span>
+<span class="sd">        after turning.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">action_cmd</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">x</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_state</span><span class="o">.</span><span class="n">bumper</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">STOP_ACTION</span>
+        <span class="k">elif</span> <span class="n">action_cmd</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">x</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">action</span><span class="o">.</span><span class="n">angular</span><span class="o">.</span><span class="n">z</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stop_once</span> <span class="o">=</span> <span class="k">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">action</span> <span class="o">=</span> <span class="n">action_cmd</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">action</span> <span class="o">=</span> <span class="n">action_cmd</span></div>
+
+<div class="viewcode-block" id="ActionManager.run"><a class="viewcode-back" href="../pyrst/action_manager.html#action_manager.ActionManager.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Send an action at a 40Hz cycle.&quot;&quot;&quot;</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">init_node</span><span class="p">(</span><span class="s">&#39;action_manager&#39;</span><span class="p">,</span> <span class="n">anonymous</span><span class="o">=</span><span class="k">True</span><span class="p">)</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="s">&#39;action_cmd&#39;</span><span class="p">,</span> <span class="n">Twist</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_action</span><span class="p">)</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="s">&#39;termination&#39;</span><span class="p">,</span> <span class="n">Bool</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_termination_flag</span><span class="p">)</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="s">&#39;pause&#39;</span><span class="p">,</span> <span class="n">Bool</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_pause_flag</span><span class="p">)</span>
+
+        <span class="n">action_publisher</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="s">&#39;cmd_vel_mux/input/teleop&#39;</span><span class="p">,</span>
+                                           <span class="n">Twist</span><span class="p">,</span>
+                                           <span class="n">queue_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">action_pub_rate</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Rate</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>
+
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">termination_flag</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pause_flag</span> <span class="ow">is</span> <span class="k">False</span><span class="p">:</span>
+                <span class="c"># log action</span>
+                <span class="n">speeds</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">action</span><span class="o">.</span><span class="n">angular</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+                <span class="n">actn</span> <span class="o">=</span> <span class="s">&quot;linear: {}, angular: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">speeds</span><span class="p">)</span>
+                <span class="n">rospy</span><span class="o">.</span><span class="n">logdebug</span><span class="p">(</span><span class="s">&quot;Sending action to Turtlebot: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">actn</span><span class="p">))</span>
+
+                <span class="c"># send new actions</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop_once</span><span class="p">:</span>
+                    <span class="n">action_publisher</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">STOP_ACTION</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">stop_once</span> <span class="o">=</span> <span class="k">False</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">action_publisher</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action</span><span class="p">)</span>
+            <span class="n">action_pub_rate</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="start_action_manager"><a class="viewcode-back" href="../pyrst/action_manager.html#action_manager.start_action_manager">[docs]</a><span class="k">def</span> <span class="nf">start_action_manager</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Runs the action manager&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">action_manager</span> <span class="o">=</span> <span class="n">ActionManager</span><span class="p">()</span>
+        <span class="n">action_manager</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ROSInterruptException</span> <span class="k">as</span> <span class="n">detail</span><span class="p">:</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s">&quot;Handling: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">detail</span><span class="p">))</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,417 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>auto_docking_policies &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../Overview.html">Code Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pyrst/modules.html">File Index</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>auto_docking_policies</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for auto_docking_policies</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+
+<span class="sd">&quot;&quot;&quot;Contains the policies needed for auto-docking.</span>
+
+<span class="sd">Authors:</span>
+<span class="sd">    Shibhansh Dohare, Niko Yasui.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">rospy</span>
+
+<span class="kn">from</span> <span class="nn">policy</span> <span class="k">import</span> <span class="n">Policy</span>
+
+
+<div class="viewcode-block" id="EGreedy"><a class="viewcode-back" href="../pyrst/auto_docking_policies.html#auto_docking_policies.EGreedy">[docs]</a><span class="k">class</span> <span class="nc">EGreedy</span><span class="p">(</span><span class="n">Policy</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An epsilon-greedy policy.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        epsilon (float, optional): Proportion of time to take a random</span>
+<span class="sd">            action. Default: 0 (greedy).</span>
+<span class="sd">        action_space (numpy array of action): Numpy array containing</span>
+<span class="sd">            all actions available to any agent.</span>
+<span class="sd">        value_function: A function used by the Policy to update values </span>
+<span class="sd">            of pi. This is usually a value function learned by a GVF.</span>
+<span class="sd">        feature_indices (numpy array of bool): Indices of the feature</span>
+<span class="sd">            vector corresponding to indices used by the</span>
+<span class="sd">            :py:obj:`value_function`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+                 <span class="n">epsilon</span><span class="p">,</span>
+                 <span class="n">action_space</span><span class="p">,</span> 
+                 <span class="n">value_function</span><span class="p">,</span>
+                 <span class="n">feature_indices</span><span class="p">,</span>
+                 <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="n">epsilon</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value_function</span>
+
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;action_space&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">action_space</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;value_function&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value_function</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;feature_indices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">feature_indices</span>
+        <span class="n">Policy</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EGreedy.update"><a class="viewcode-back" href="../pyrst/auto_docking_policies.html#auto_docking_policies.EGreedy.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">phi</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_indices</span><span class="p">]</span>
+
+        <span class="n">q_fun</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="k">lambda</span> <span class="n">action</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_function</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">action</span><span class="p">))</span>
+        <span class="n">q_values</span> <span class="o">=</span> <span class="n">q_fun</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="p">)</span>
+
+        <span class="n">best_q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">q_values</span><span class="p">)</span>
+        <span class="n">max_indices</span> <span class="o">=</span> <span class="p">(</span><span class="n">q_values</span> <span class="o">==</span> <span class="n">best_q</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pi</span><span class="p">[</span><span class="n">max_indices</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="p">)</span> <span class="o">/</span> <span class="n">max_indices</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pi</span><span class="p">[</span><span class="o">~</span><span class="n">max_indices</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pi</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">size</span></div></div>
+
+
+<div class="viewcode-block" id="AlternatingRotation"><a class="viewcode-back" href="../pyrst/auto_docking_policies.html#auto_docking_policies.AlternatingRotation">[docs]</a><span class="k">class</span> <span class="nc">AlternatingRotation</span><span class="p">(</span><span class="n">Policy</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A policy for task-3 of auto-docking.</span>
+
+<span class="sd">    According to the policy, the robot rotates in one direction for some</span>
+<span class="sd">    time and in the opposite direction for some other time, with the</span>
+<span class="sd">    goal of aligning the robot with the docking station.</span>
+<span class="sd">    It&#39;s a non-markov policy.</span>
+<span class="sd">    Should be used as behaviour policy. </span>
+<span class="sd">    It is designed to improve exploration comapred to Greedy or eGreedy</span>
+<span class="sd">    for task-3 (align the robot with the docking station).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        action_space (numpy array of action): Numpy array containing</span>
+<span class="sd">            all actions available to any agent.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_space</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_steps</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_time_steps</span> <span class="o">=</span> <span class="mi">100</span>
+
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;action_space&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">action_space</span>
+        <span class="n">Policy</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">LEFT</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">RIGHT</span> <span class="o">=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="AlternatingRotation.update"><a class="viewcode-back" href="../pyrst/auto_docking_policies.html#auto_docking_policies.AlternatingRotation.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deterministically sets ``pi`` based on the timestep.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_steps</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_time_steps</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">LEFT</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RIGHT</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pi</span> <span class="o">*=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pi</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">last_index</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_steps</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_steps</span> <span class="o">%=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_time_steps</span></div></div>
+
+
+<div class="viewcode-block" id="ForwardIfClear"><a class="viewcode-back" href="../pyrst/auto_docking_policies.html#auto_docking_policies.ForwardIfClear">[docs]</a><span class="k">class</span> <span class="nc">ForwardIfClear</span><span class="p">(</span><span class="n">Policy</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An implementation of ForwardIfClear for task-2 of auto-docking.</span>
+
+<span class="sd">    According to the policy, the robot moves forward with a high</span>
+<span class="sd">    probablity and turns with a small probablity. It also turns if the</span>
+<span class="sd">    robot was moving forward and it encountered a bump.</span>
+<span class="sd">    It&#39;s a markov policy. </span>
+<span class="sd">    Should be used as behaviour policy. </span>
+<span class="sd">    It is designed to improve exploration comapred to Greedy or eGreedy</span>
+<span class="sd">    for task-2 (taking the robot to the center IR region).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_space</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c"># The last action is recorded according to its respective constants</span>
+        <span class="c"># these indices should be in order of action space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">FORWARD</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TURN_RIGHT</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TURN_LEFT</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;action_space&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">action_space</span>
+        <span class="n">Policy</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ForwardIfClear.update"><a class="viewcode-back" href="../pyrst/auto_docking_policies.html#auto_docking_policies.ForwardIfClear.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">observation</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Updates ``pi`` depending on if there is a bump or not.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pi</span> <span class="o">*=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">observation</span><span class="p">[</span><span class="s">&#39;bump&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pi</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">TURN_LEFT</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">0.5</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pi</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">TURN_RIGHT</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">0.5</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pi</span> <span class="o">+=</span> <span class="mf">0.05</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pi</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">FORWARD</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">0.9</span></div></div>
+
+
+<div class="viewcode-block" id="Switch"><a class="viewcode-back" href="../pyrst/auto_docking_policies.html#auto_docking_policies.Switch">[docs]</a><span class="k">class</span> <span class="nc">Switch</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Switches between two policies.</span>
+
+<span class="sd">    According to the policy, robot follows an exploring policy for some</span>
+<span class="sd">    time steps and then follows the learned greedy policy for some time.</span>
+<span class="sd">    It&#39;s a non-markov policy.</span>
+<span class="sd">    Should be used as behaviour policy. </span>
+<span class="sd">    It is designed to check how well the robot has performed at</span>
+<span class="sd">    regular intervals.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        explorer (policy): Policy to use for exploration.</span>
+<span class="sd">        exploiter (policy): Policy to use for exploitation.</span>
+<span class="sd">        num_timesteps_explore (int): Number of timesteps to run each</span>
+<span class="sd">            policy before switching.</span>
+<span class="sd">        t (int, not passed): Counter. Switch policies when counter</span>
+<span class="sd">            reaches ``num_timesteps_explore``. </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">explorer</span><span class="p">,</span> <span class="n">exploiter</span><span class="p">,</span> <span class="n">num_timesteps_explore</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">explorer</span> <span class="o">=</span> <span class="n">explorer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exploiter</span> <span class="o">=</span> <span class="n">exploiter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_timesteps_explore</span> <span class="o">=</span> <span class="n">num_timesteps_explore</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">explorer</span><span class="o">.</span><span class="n">action_space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">explorer</span><span class="o">.</span><span class="n">last_index</span>
+<div class="viewcode-block" id="Switch.update"><a class="viewcode-back" href="../pyrst/auto_docking_policies.html#auto_docking_policies.Switch.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">%=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_timesteps_explore</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_timesteps_explore</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exploiter</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span>
+                <span class="s">&#39;Greedy policy is the behaviour policy, no learning now&#39;</span><span class="p">)</span>
+            <span class="n">to_return</span> <span class="o">=</span> <span class="s">&#39;target_policy&#39;</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">exploiter</span><span class="o">.</span><span class="n">last_index</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">explorer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s">&#39;Explorer policy is the behaviour policy&#39;</span><span class="p">)</span>
+            <span class="n">to_return</span> <span class="o">=</span> <span class="s">&#39;behavior_policy&#39;</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">explorer</span><span class="o">.</span><span class="n">last_index</span>
+        <span class="k">return</span> <span class="n">to_return</span></div>
+
+<div class="viewcode-block" id="Switch.get_probability"><a class="viewcode-back" href="../pyrst/auto_docking_policies.html#auto_docking_policies.Switch.get_probability">[docs]</a>    <span class="k">def</span> <span class="nf">get_probability</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_timesteps_explore</span><span class="p">:</span>
+            <span class="n">prob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">exploiter</span><span class="o">.</span><span class="n">get_probability</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">prob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">explorer</span><span class="o">.</span><span class="n">get_probability</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">prob</span></div>
+
+<div class="viewcode-block" id="Switch.choose_action"><a class="viewcode-back" href="../pyrst/auto_docking_policies.html#auto_docking_policies.Switch.choose_action">[docs]</a>    <span class="k">def</span> <span class="nf">choose_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_timesteps_explore</span><span class="p">:</span>
+            <span class="n">action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">exploiter</span><span class="o">.</span><span class="n">choose_action</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">explorer</span><span class="o">.</span><span class="n">choose_action</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">action</span></div></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

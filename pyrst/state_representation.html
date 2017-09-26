@@ -1,0 +1,460 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>state_representation module &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="../index.html"/>
+        <link rel="up" title="src" href="modules.html"/>
+        <link rel="next" title="to_gtd module" href="to_gtd.html"/>
+        <link rel="prev" title="return_calculator module" href="return_calculator.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../Overview.html">Code Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">File Index</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="action_manager.html">action_manager module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="align_ir_example.html">align_ir_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_docking_policies.html">auto_docking_policies module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_return_example.html">calculate_return_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluator.html">evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="greedy_gq.html">greedy_gq module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtd.html">gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gvf.html">gvf module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning_foreground.html">learning_foreground module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="policy.html">policy module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="return_calculator.html">return_calculator module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">state_representation module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="to_gtd.html">to_gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">tools module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize_pixels.html">visualize_pixels module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wall_demo_example.html">wall_demo_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wis_gtd.html">wis_gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wis_to_gtd.html">wis_to_gtd module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">src</a> &raquo;</li>
+        
+      <li>state_representation module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/pyrst/state_representation.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-state_representation">
+<span id="state-representation-module"></span><h1>state_representation module<a class="headerlink" href="#module-state_representation" title="Permalink to this headline">¶</a></h1>
+<p>Uses tilecoding to create state.</p>
+<dl class="docutils">
+<dt>Authors:</dt>
+<dd>Michele Albach, Shibhansh Dohare, David Quail, Parash Rahman, Niko Yasui.</dd>
+</dl>
+<dl class="class">
+<dt id="state_representation.StateConstants">
+<em class="property">class </em><code class="descclassname">state_representation.</code><code class="descname">StateConstants</code><a class="reference internal" href="../_modules/state_representation.html#StateConstants"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#state_representation.StateConstants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constants useful for the tile coding in StateManager.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The constants here are just for reference. You may change them
+however you wish.</p>
+</div>
+<dl class="attribute">
+<dt id="state_representation.StateConstants.CHANNELS">
+<code class="descname">CHANNELS</code><em class="property"> = 3</em><a class="headerlink" href="#state_representation.StateConstants.CHANNELS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.IMAGE_CO">
+<code class="descname">IMAGE_CO</code><em class="property"> = 640</em><a class="headerlink" href="#state_representation.StateConstants.IMAGE_CO" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.IMAGE_IHT_SIZE">
+<code class="descname">IMAGE_IHT_SIZE</code><em class="property"> = 32</em><a class="headerlink" href="#state_representation.StateConstants.IMAGE_IHT_SIZE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.IMAGE_LI">
+<code class="descname">IMAGE_LI</code><em class="property"> = 480</em><a class="headerlink" href="#state_representation.StateConstants.IMAGE_LI" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.IMAGE_START_INDEX">
+<code class="descname">IMAGE_START_INDEX</code><em class="property"> = 0</em><a class="headerlink" href="#state_representation.StateConstants.IMAGE_START_INDEX" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.IMU_IHT_SIZE">
+<code class="descname">IMU_IHT_SIZE</code><em class="property"> = 32</em><a class="headerlink" href="#state_representation.StateConstants.IMU_IHT_SIZE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.IMU_START_INDEX">
+<code class="descname">IMU_START_INDEX</code><em class="property"> = 9600</em><a class="headerlink" href="#state_representation.StateConstants.IMU_START_INDEX" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.IR_ITH_SIZE">
+<code class="descname">IR_ITH_SIZE</code><em class="property"> = 6</em><a class="headerlink" href="#state_representation.StateConstants.IR_ITH_SIZE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.IR_START_INDEX">
+<code class="descname">IR_START_INDEX</code><em class="property"> = 9696</em><a class="headerlink" href="#state_representation.StateConstants.IR_START_INDEX" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.NUM_IMAGE_INTERVALS">
+<code class="descname">NUM_IMAGE_INTERVALS</code><em class="property"> = 4</em><a class="headerlink" href="#state_representation.StateConstants.NUM_IMAGE_INTERVALS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.NUM_IMAGE_TILINGS">
+<code class="descname">NUM_IMAGE_TILINGS</code><em class="property"> = 4</em><a class="headerlink" href="#state_representation.StateConstants.NUM_IMAGE_TILINGS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.NUM_IMU_TILES">
+<code class="descname">NUM_IMU_TILES</code><em class="property"> = 4</em><a class="headerlink" href="#state_representation.StateConstants.NUM_IMU_TILES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.NUM_IMU_TILINGS">
+<code class="descname">NUM_IMU_TILINGS</code><em class="property"> = 4</em><a class="headerlink" href="#state_representation.StateConstants.NUM_IMU_TILINGS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.NUM_ODOM_TILES">
+<code class="descname">NUM_ODOM_TILES</code><em class="property"> = 5</em><a class="headerlink" href="#state_representation.StateConstants.NUM_ODOM_TILES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.NUM_ODOM_TILINGS">
+<code class="descname">NUM_ODOM_TILINGS</code><em class="property"> = 1</em><a class="headerlink" href="#state_representation.StateConstants.NUM_ODOM_TILINGS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.NUM_PP">
+<code class="descname">NUM_PP</code><em class="property"> = 4950L</em><a class="headerlink" href="#state_representation.StateConstants.NUM_PP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.NUM_PP_TILES">
+<code class="descname">NUM_PP_TILES</code><em class="property"> = 4</em><a class="headerlink" href="#state_representation.StateConstants.NUM_PP_TILES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.NUM_PP_TILINGS">
+<code class="descname">NUM_PP_TILINGS</code><em class="property"> = 4</em><a class="headerlink" href="#state_representation.StateConstants.NUM_PP_TILINGS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.NUM_RANDOM_POINTS">
+<code class="descname">NUM_RANDOM_POINTS</code><em class="property"> = 100</em><a class="headerlink" href="#state_representation.StateConstants.NUM_RANDOM_POINTS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.ODOM_IHT_SIZE">
+<code class="descname">ODOM_IHT_SIZE</code><em class="property"> = 64</em><a class="headerlink" href="#state_representation.StateConstants.ODOM_IHT_SIZE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.ODOM_START_INDEX">
+<code class="descname">ODOM_START_INDEX</code><em class="property"> = 9632</em><a class="headerlink" href="#state_representation.StateConstants.ODOM_START_INDEX" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.PIXEL_FEATURE_LENGTH">
+<code class="descname">PIXEL_FEATURE_LENGTH</code><em class="property"> = 96</em><a class="headerlink" href="#state_representation.StateConstants.PIXEL_FEATURE_LENGTH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.PP_FEATURE_LENGTH">
+<code class="descname">PP_FEATURE_LENGTH</code><em class="property"> = 158400L</em><a class="headerlink" href="#state_representation.StateConstants.PP_FEATURE_LENGTH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.PP_IHT_SIZE">
+<code class="descname">PP_IHT_SIZE</code><em class="property"> = 32</em><a class="headerlink" href="#state_representation.StateConstants.PP_IHT_SIZE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.PP_START_INDEX">
+<code class="descname">PP_START_INDEX</code><em class="property"> = 9702</em><a class="headerlink" href="#state_representation.StateConstants.PP_START_INDEX" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.SCALE_IMU">
+<code class="descname">SCALE_IMU</code><em class="property"> = 2.0</em><a class="headerlink" href="#state_representation.StateConstants.SCALE_IMU" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.SCALE_ODOM">
+<code class="descname">SCALE_ODOM</code><em class="property"> = 2.5</em><a class="headerlink" href="#state_representation.StateConstants.SCALE_ODOM" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.SCALE_PP">
+<code class="descname">SCALE_PP</code><em class="property"> = 2.0</em><a class="headerlink" href="#state_representation.StateConstants.SCALE_PP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.SCALE_RGB">
+<code class="descname">SCALE_RGB</code><em class="property"> = 0.015625</em><a class="headerlink" href="#state_representation.StateConstants.SCALE_RGB" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.TOTAL_FEATURE_LENGTH">
+<code class="descname">TOTAL_FEATURE_LENGTH</code><em class="property"> = 168106L</em><a class="headerlink" href="#state_representation.StateConstants.TOTAL_FEATURE_LENGTH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.TOTAL_IMAGE_FEATURE_LENGTH">
+<code class="descname">TOTAL_IMAGE_FEATURE_LENGTH</code><em class="property"> = 9600</em><a class="headerlink" href="#state_representation.StateConstants.TOTAL_IMAGE_FEATURE_LENGTH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.indices_in_phi">
+<code class="descname">indices_in_phi</code><em class="property"> = {'bias': array([168105]), 'imu': array([9600, 9601, 9602, 9603, 9604, 9605, 9606, 9607, 9608, 9609, 9610,        9611, 9612, 9613, 9614, 9615, 9616, 9617, 9618, 9619, 9620, 9621,        9622, 9623, 9624, 9625, 9626, 9627, 9628, 9629, 9630, 9631]), 'odom': array([9632, 9633, 9634, 9635, 9636, 9637, 9638, 9639, 9640, 9641, 9642,        9643, 9644, 9645, 9646, 9647, 9648, 9649, 9650, 9651, 9652, 9653,        9654, 9655, 9656, 9657, 9658, 9659, 9660, 9661, 9662, 9663, 9664,        9665, 9666, 9667, 9668, 9669, 9670, 9671, 9672, 9673, 9674, 9675,        9676, 9677, 9678, 9679, 9680, 9681, 9682, 9683, 9684, 9685, 9686,        9687, 9688, 9689, 9690, 9691, 9692, 9693, 9694, 9695]), 'last_action': array([], dtype=int64), 'bump': array([168102, 168103, 168104]), 'pixel_pairs': array([  9702,   9703,   9704, ..., 168099, 168100, 168101]), 'image': array([   0,    1,    2, ..., 9597, 9598, 9599]), 'ir': array([9696, 9697, 9698, 9699, 9700, 9701]), 'cimage': array([   0,    1,    2, ..., 9597, 9598, 9599])}</em><a class="headerlink" href="#state_representation.StateConstants.indices_in_phi" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="state_representation.StateConstants.num_active_features">
+<code class="descname">num_active_features</code><em class="property"> = {'bias': 1, 'imu': 4, 'odom': 1, 'last_action': 1, 'bump': 3, 'pixel_pairs': 19800L, 'image': 1200, 'ir': 3, 'cimage': 1200}</em><a class="headerlink" href="#state_representation.StateConstants.num_active_features" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="state_representation.StateManager">
+<em class="property">class </em><code class="descclassname">state_representation.</code><code class="descname">StateManager</code><span class="sig-paren">(</span><em>features_to_use</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/state_representation.html#StateManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#state_representation.StateManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="state_representation.StateManager.get_observations">
+<code class="descname">get_observations</code><span class="sig-paren">(</span><em>bump</em>, <em>ir</em>, <em>charging</em>, <em>odom</em>, <em>imu</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/state_representation.html#StateManager.get_observations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#state_representation.StateManager.get_observations" title="Permalink to this definition">¶</a></dt>
+<dd><p>A way to access auxiliary state information.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="state_representation.StateManager.get_phi">
+<code class="descname">get_phi</code><span class="sig-paren">(</span><em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/state_representation.html#StateManager.get_phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#state_representation.StateManager.get_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the binary tile coding of all the pertinent fields.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="to_gtd.html" class="btn btn-neutral float-right" title="to_gtd module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="return_calculator.html" class="btn btn-neutral" title="return_calculator module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

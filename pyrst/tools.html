@@ -1,0 +1,385 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>tools module &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="../index.html"/>
+        <link rel="up" title="src" href="modules.html"/>
+        <link rel="next" title="visualize_pixels module" href="visualize_pixels.html"/>
+        <link rel="prev" title="to_gtd module" href="to_gtd.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../Overview.html">Code Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">File Index</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="action_manager.html">action_manager module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="align_ir_example.html">align_ir_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_docking_policies.html">auto_docking_policies module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_return_example.html">calculate_return_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluator.html">evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="greedy_gq.html">greedy_gq module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtd.html">gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gvf.html">gvf module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning_foreground.html">learning_foreground module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="policy.html">policy module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="return_calculator.html">return_calculator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="state_representation.html">state_representation module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="to_gtd.html">to_gtd module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">tools module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize_pixels.html">visualize_pixels module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wall_demo_example.html">wall_demo_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wis_gtd.html">wis_gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wis_to_gtd.html">wis_to_gtd module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">src</a> &raquo;</li>
+        
+      <li>tools module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/pyrst/tools.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-tools">
+<span id="tools-module"></span><h1>tools module<a class="headerlink" href="#module-tools" title="Permalink to this headline">¶</a></h1>
+<p>Various functions and objects that we found useful to place here
+so all files can share its functionality.</p>
+<dl class="docutils">
+<dt>Authors:</dt>
+<dd>Michele Albach, Parash Rahman, Niko Yasui.</dd>
+</dl>
+<dl class="function">
+<dt id="tools.action_state_rep">
+<code class="descclassname">tools.</code><code class="descname">action_state_rep</code><span class="sig-paren">(</span><em>action_space</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tools.html#action_state_rep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.action_state_rep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a function that generates phi (feature rep of state)
+based on all other aspects of state (e.g. camera, ir, etc.) and
+action.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>action_space</strong> – a list of all possible actions</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.constant">
+<code class="descclassname">tools.</code><code class="descname">constant</code><span class="sig-paren">(</span><em>base</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tools.html#constant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.constant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yields a constant value.</p>
+<p>Used for constant parameters (e.g. constant alpha)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.decay">
+<code class="descclassname">tools.</code><code class="descname">decay</code><span class="sig-paren">(</span><em>base</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tools.html#decay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.decay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yields the base value divided by t each timestep.</p>
+<p>Used for decaying parameters (e.g. decaying alpha)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.dock_ir_parse">
+<code class="descclassname">tools.</code><code class="descname">dock_ir_parse</code><span class="sig-paren">(</span><em>dock_ir</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tools.html#dock_ir_parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.dock_ir_parse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tools.equal_twists">
+<code class="descclassname">tools.</code><code class="descname">equal_twists</code><span class="sig-paren">(</span><em>t1</em>, <em>t2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tools.html#equal_twists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.equal_twists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines if two Twist actions are equal</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>t2</strong> (<em>t1</em><em>,</em>) – the Twist actions in question</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.get_next_pow2">
+<code class="descclassname">tools.</code><code class="descname">get_next_pow2</code><span class="sig-paren">(</span><em>number</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tools.html#get_next_pow2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.get_next_pow2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the next highest power of two for number</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.image_parse">
+<code class="descclassname">tools.</code><code class="descname">image_parse</code><span class="sig-paren">(</span><em>img</em>, <em>enc='passthrough'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tools.html#image_parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.image_parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a ros image to a numpy array</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.imu_parse">
+<code class="descclassname">tools.</code><code class="descname">imu_parse</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tools.html#imu_parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.imu_parse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tools.overrides">
+<code class="descclassname">tools.</code><code class="descname">overrides</code><span class="sig-paren">(</span><em>interface_class</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tools.html#overrides"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.overrides" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator that ensures overriden methods are valid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>interface_class</strong> – the respective super class</td>
+</tr>
+</tbody>
+</table>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="k">class</span> <span class="nc">ConcreteImplementer</span><span class="p">(</span><span class="n">MySuperInterface</span><span class="p">):</span>
+    <span class="nd">@overrides</span><span class="p">(</span><span class="n">MySuperInterface</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">my_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span> <span class="s">&#39;hello kitty!&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.pc2_parse">
+<code class="descclassname">tools.</code><code class="descname">pc2_parse</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tools.html#pc2_parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.pc2_parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>PointCloud2 parser
+pc2.read_points returns a generator of (x,y,z) tuples</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.sensor_state_parse">
+<code class="descclassname">tools.</code><code class="descname">sensor_state_parse</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tools.html#sensor_state_parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.sensor_state_parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats all the sensorimotor data into an appropriate
+dictionary with appropriate types</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.softmax">
+<code class="descclassname">tools.</code><code class="descname">softmax</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tools.html#softmax"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.softmax" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tools.timing">
+<code class="descclassname">tools.</code><code class="descname">timing</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tools.html#timing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.timing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator that print how long a function takes to execute.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="tools.topic_format">
+<code class="descclassname">tools.</code><code class="descname">topic_format</code><em class="property"> = {'/camera/depth/image': &lt;class 'sensor_msgs.msg._Image.Image'&gt;, '/camera/rgb/image_raw': &lt;class 'sensor_msgs.msg._Image.Image'&gt;, '/mobile_base/sensors/dock_ir': &lt;class 'kobuki_msgs.msg._DockInfraRed.DockInfraRed'&gt;, '/mobile_base/sensors/core': &lt;class 'kobuki_msgs.msg._SensorState.SensorState'&gt;, '/camera/ir/image': &lt;class 'sensor_msgs.msg._Image.Image'&gt;, '/camera/rgb/image_rect_color': &lt;class 'sensor_msgs.msg._Image.Image'&gt;, '/mobile_base/sensors/imu_data': &lt;class 'sensor_msgs.msg._Imu.Imu'&gt;, '/odom': &lt;class 'nav_msgs.msg._Odometry.Odometry'&gt;, '/camera/rgb/image_rect_color/compressed': &lt;class 'sensor_msgs.msg._CompressedImage.CompressedImage'&gt;, '/camera/depth/points': &lt;class 'sensor_msgs.msg._PointCloud2.PointCloud2'&gt;, '/turtle1/pose': &lt;class 'turtlesim.msg._Pose.Pose'&gt;}</em><a class="headerlink" href="#tools.topic_format" title="Permalink to this definition">¶</a></dt>
+<dd><p>features mapped to their corresponding ROS topic</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="visualize_pixels.html" class="btn btn-neutral float-right" title="visualize_pixels module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="to_gtd.html" class="btn btn-neutral" title="to_gtd module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

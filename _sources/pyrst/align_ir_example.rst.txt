@@ -1,0 +1,7 @@
+align\_ir\_example module
+=========================
+
+.. automodule:: align_ir_example
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -1,0 +1,273 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Running the code &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="index.html"/>
+        <link rel="next" title="src" href="pyrst/modules.html"/>
+        <link rel="prev" title="Robot Computer Setup" href="TurtlebotSetup.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Overview.html">Code Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Running the Code</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#pros-and-cons">Pros and cons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#option-1-run-code-on-your-local-computer">Option 1: Run code on your local computer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#option-2-run-code-on-the-turtlebot-s-netbook">Option 2: Run code on the TurtleBot's netbook</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pyrst/modules.html">File Index</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Running the code</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/RunningCode.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="running-the-code">
+<span id="running-the-code"></span><h1>Running the code<a class="headerlink" href="#running-the-code" title="Permalink to this headline">¶</a></h1>
+<p>You have two options when it comes to running your code on the TurtleBot from your laptop:</p>
+<ul class="simple">
+<li>Option 1: Run the code on your local computer while connected to the TurtleBot's network ('critterbot2' in the RLAI lab).</li>
+<li>Option 2: Run on the TurtleBot's netbook after 'rsync'ing the code from your computer to the turtle bot.</li>
+</ul>
+<div class="section" id="pros-and-cons">
+<span id="pros-and-cons"></span><h2>Pros and cons<a class="headerlink" href="#pros-and-cons" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Option 1 is heavily affected by network quality, and in our tests had highly variable latency.</li>
+<li>Option 2 requires using the TurtleBot's netbook which may not be as powerful as you like (in that case consider replacing it, or tethering the turtlebot to a desktop computer).</li>
+</ul>
+</div>
+<div class="section" id="option-1-run-code-on-your-local-computer">
+<span id="option-1-run-code-on-your-local-computer"></span><h2>Option 1: Run code on your local computer<a class="headerlink" href="#option-1-run-code-on-your-local-computer" title="Permalink to this headline">¶</a></h2>
+<ol class="simple">
+<li>Ensure you are connected to the TurtleBot's network.</li>
+<li>Ensure Desktop-Full ROS is installed. Follow these instructions to do so (if you have Ubuntu 16.04! Otherwise find the corresponding ROS version that is pertinent to your Linux distro): http://wiki.ros.org/kinetic/Installation/Ubuntu. Note the note under Step 1.3 if you are having trouble with it.</li>
+<li>Ensure your environment variable ROS_MASTER_URI is set properly. Use command 'export ROS_MASTER_URI=http://&lt;turtlebot's ip&gt;:11311' and replace &lt;turtlebot's ip&gt; with the turtlebot IP.</li>
+<li>Run the python file you want on your laptop [e.g. Use command 'python wall_demo.py'].</li>
+</ol>
+</div>
+<div class="section" id="option-2-run-code-on-the-turtlebot-s-netbook">
+<span id="option-2-run-code-on-the-turtlebot-s-netbook"></span><h2>Option 2: Run code on the TurtleBot's netbook<a class="headerlink" href="#option-2-run-code-on-the-turtlebot-s-netbook" title="Permalink to this headline">¶</a></h2>
+<ol class="simple">
+<li>Ensure you are connected to the TurtleBot's network.</li>
+<li>Open a terminal and ssh into your TurtleBot [Use 'ssh turtlebot&#64;&lt;turtlebot's ip&gt;'</li>
+<li>In a new terminal (non ssh) transfer all files to the TurtleBot. [e.g. 'rsync -r /path/to/script_folder/ /path/from/home/my_folder]. Make sure there is a slash at the end of the source path but not at the end of the destination path.</li>
+<li>Inside the ssh terminal run your code [e.g. 'python my_folder/wall_demo.py'].</li>
+</ol>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pyrst/modules.html" class="btn btn-neutral float-right" title="src" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="TurtlebotSetup.html" class="btn btn-neutral" title="Robot Computer Setup" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

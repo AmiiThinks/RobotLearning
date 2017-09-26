@@ -1,0 +1,399 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>auto_docking_policies module &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="../index.html"/>
+        <link rel="up" title="src" href="modules.html"/>
+        <link rel="next" title="calculate_return_example module" href="calculate_return_example.html"/>
+        <link rel="prev" title="align_ir_example module" href="align_ir_example.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../Overview.html">Code Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">File Index</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="action_manager.html">action_manager module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="align_ir_example.html">align_ir_example module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">auto_docking_policies module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_return_example.html">calculate_return_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluator.html">evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="greedy_gq.html">greedy_gq module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtd.html">gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gvf.html">gvf module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning_foreground.html">learning_foreground module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="policy.html">policy module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="return_calculator.html">return_calculator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="state_representation.html">state_representation module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="to_gtd.html">to_gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">tools module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize_pixels.html">visualize_pixels module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wall_demo_example.html">wall_demo_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wis_gtd.html">wis_gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wis_to_gtd.html">wis_to_gtd module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">src</a> &raquo;</li>
+        
+      <li>auto_docking_policies module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/pyrst/auto_docking_policies.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-auto_docking_policies">
+<span id="auto-docking-policies-module"></span><h1>auto_docking_policies module<a class="headerlink" href="#module-auto_docking_policies" title="Permalink to this headline">¶</a></h1>
+<p>Contains the policies needed for auto-docking.</p>
+<dl class="docutils">
+<dt>Authors:</dt>
+<dd>Shibhansh Dohare, Niko Yasui.</dd>
+</dl>
+<dl class="class">
+<dt id="auto_docking_policies.AlternatingRotation">
+<em class="property">class </em><code class="descclassname">auto_docking_policies.</code><code class="descname">AlternatingRotation</code><span class="sig-paren">(</span><em>action_space</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/auto_docking_policies.html#AlternatingRotation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#auto_docking_policies.AlternatingRotation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="policy.html#policy.Policy" title="policy.Policy"><code class="xref py py-class docutils literal"><span class="pre">policy.Policy</span></code></a></p>
+<p>A policy for task-3 of auto-docking.</p>
+<p>According to the policy, the robot rotates in one direction for some
+time and in the opposite direction for some other time, with the
+goal of aligning the robot with the docking station.
+It’s a non-markov policy.
+Should be used as behaviour policy.
+It is designed to improve exploration comapred to Greedy or eGreedy
+for task-3 (align the robot with the docking station).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>action_space</strong> (<em>numpy array of action</em>) – Numpy array containing
+all actions available to any agent.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="auto_docking_policies.AlternatingRotation.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/auto_docking_policies.html#AlternatingRotation.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#auto_docking_policies.AlternatingRotation.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deterministically sets <code class="docutils literal"><span class="pre">pi</span></code> based on the timestep.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="auto_docking_policies.EGreedy">
+<em class="property">class </em><code class="descclassname">auto_docking_policies.</code><code class="descname">EGreedy</code><span class="sig-paren">(</span><em>epsilon</em>, <em>action_space</em>, <em>value_function</em>, <em>feature_indices</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/auto_docking_policies.html#EGreedy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#auto_docking_policies.EGreedy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="policy.html#policy.Policy" title="policy.Policy"><code class="xref py py-class docutils literal"><span class="pre">policy.Policy</span></code></a></p>
+<p>An epsilon-greedy policy.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>epsilon</strong> (<em>float</em><em>, </em><em>optional</em>) – Proportion of time to take a random
+action. Default: 0 (greedy).</li>
+<li><strong>action_space</strong> (<em>numpy array of action</em>) – Numpy array containing
+all actions available to any agent.</li>
+<li><strong>value_function</strong> – A function used by the Policy to update values
+of pi. This is usually a value function learned by a GVF.</li>
+<li><strong>feature_indices</strong> (<em>numpy array of bool</em>) – Indices of the feature
+vector corresponding to indices used by the
+<code class="xref py py-obj docutils literal"><span class="pre">value_function</span></code>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="auto_docking_policies.EGreedy.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>phi</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/auto_docking_policies.html#EGreedy.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#auto_docking_policies.EGreedy.update" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="auto_docking_policies.ForwardIfClear">
+<em class="property">class </em><code class="descclassname">auto_docking_policies.</code><code class="descname">ForwardIfClear</code><span class="sig-paren">(</span><em>action_space</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/auto_docking_policies.html#ForwardIfClear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#auto_docking_policies.ForwardIfClear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="policy.html#policy.Policy" title="policy.Policy"><code class="xref py py-class docutils literal"><span class="pre">policy.Policy</span></code></a></p>
+<p>An implementation of ForwardIfClear for task-2 of auto-docking.</p>
+<p>According to the policy, the robot moves forward with a high
+probablity and turns with a small probablity. It also turns if the
+robot was moving forward and it encountered a bump.
+It’s a markov policy.
+Should be used as behaviour policy.
+It is designed to improve exploration comapred to Greedy or eGreedy
+for task-2 (taking the robot to the center IR region).</p>
+<dl class="method">
+<dt id="auto_docking_policies.ForwardIfClear.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>phi</em>, <em>observation</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/auto_docking_policies.html#ForwardIfClear.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#auto_docking_policies.ForwardIfClear.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates <code class="docutils literal"><span class="pre">pi</span></code> depending on if there is a bump or not.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="auto_docking_policies.Switch">
+<em class="property">class </em><code class="descclassname">auto_docking_policies.</code><code class="descname">Switch</code><span class="sig-paren">(</span><em>explorer</em>, <em>exploiter</em>, <em>num_timesteps_explore</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/auto_docking_policies.html#Switch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#auto_docking_policies.Switch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Switches between two policies.</p>
+<p>According to the policy, robot follows an exploring policy for some
+time steps and then follows the learned greedy policy for some time.
+It’s a non-markov policy.
+Should be used as behaviour policy.
+It is designed to check how well the robot has performed at
+regular intervals.</p>
+<dl class="attribute">
+<dt id="auto_docking_policies.Switch.explorer">
+<code class="descname">explorer</code><a class="headerlink" href="#auto_docking_policies.Switch.explorer" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>policy</em> – Policy to use for exploration.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="auto_docking_policies.Switch.exploiter">
+<code class="descname">exploiter</code><a class="headerlink" href="#auto_docking_policies.Switch.exploiter" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>policy</em> – Policy to use for exploitation.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="auto_docking_policies.Switch.num_timesteps_explore">
+<code class="descname">num_timesteps_explore</code><a class="headerlink" href="#auto_docking_policies.Switch.num_timesteps_explore" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – Number of timesteps to run each
+policy before switching.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="auto_docking_policies.Switch.t">
+<code class="descname">t</code><a class="headerlink" href="#auto_docking_policies.Switch.t" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int, not passed</em> – Counter. Switch policies when counter
+reaches <code class="docutils literal"><span class="pre">num_timesteps_explore</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="auto_docking_policies.Switch.choose_action">
+<code class="descname">choose_action</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/auto_docking_policies.html#Switch.choose_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#auto_docking_policies.Switch.choose_action" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="auto_docking_policies.Switch.get_probability">
+<code class="descname">get_probability</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/auto_docking_policies.html#Switch.get_probability"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#auto_docking_policies.Switch.get_probability" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="auto_docking_policies.Switch.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/auto_docking_policies.html#Switch.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#auto_docking_policies.Switch.update" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="calculate_return_example.html" class="btn btn-neutral float-right" title="calculate_return_example module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="align_ir_example.html" class="btn btn-neutral" title="align_ir_example module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

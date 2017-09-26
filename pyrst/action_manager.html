@@ -1,0 +1,339 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>action_manager module &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="../index.html"/>
+        <link rel="up" title="src" href="modules.html"/>
+        <link rel="next" title="align_ir_example module" href="align_ir_example.html"/>
+        <link rel="prev" title="src" href="modules.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../Overview.html">Code Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">File Index</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">action_manager module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="align_ir_example.html">align_ir_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_docking_policies.html">auto_docking_policies module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_return_example.html">calculate_return_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluator.html">evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="greedy_gq.html">greedy_gq module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtd.html">gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gvf.html">gvf module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning_foreground.html">learning_foreground module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="policy.html">policy module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="return_calculator.html">return_calculator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="state_representation.html">state_representation module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="to_gtd.html">to_gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">tools module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize_pixels.html">visualize_pixels module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wall_demo_example.html">wall_demo_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wis_gtd.html">wis_gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wis_to_gtd.html">wis_to_gtd module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">src</a> &raquo;</li>
+        
+      <li>action_manager module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/pyrst/action_manager.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-action_manager">
+<span id="action-manager-module"></span><h1>action_manager module<a class="headerlink" href="#module-action_manager" title="Permalink to this headline">¶</a></h1>
+<p>Module to send actions to the turtlebot.</p>
+<dl class="docutils">
+<dt>Authors:</dt>
+<dd>Shibhansh Dohare, Banafsheh Rafiee, Parash Rahman, Niko Yasui.</dd>
+</dl>
+<dl class="class">
+<dt id="action_manager.ActionManager">
+<em class="property">class </em><code class="descclassname">action_manager.</code><code class="descname">ActionManager</code><a class="reference internal" href="../_modules/action_manager.html#ActionManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#action_manager.ActionManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class that communicates directly with the turtlebot.</p>
+<dl class="attribute">
+<dt id="action_manager.ActionManager.action">
+<code class="descname">action</code><a class="headerlink" href="#action_manager.ActionManager.action" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>action</em> – The action to send to the turtlebot.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="action_manager.ActionManager.base_state">
+<code class="descname">base_state</code><a class="headerlink" href="#action_manager.ActionManager.base_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>The current reading from the turtlebot’s ‘core’
+topic. Contains bump information.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="action_manager.ActionManager.termination_flag">
+<code class="descname">termination_flag</code><a class="headerlink" href="#action_manager.ActionManager.termination_flag" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> – Quit if this is true.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="action_manager.ActionManager.pause_flag">
+<code class="descname">pause_flag</code><a class="headerlink" href="#action_manager.ActionManager.pause_flag" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> – Stop sending actions if this is true.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="action_manager.ActionManager.stop_once">
+<code class="descname">stop_once</code><a class="headerlink" href="#action_manager.ActionManager.stop_once" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> – Send one stop action and resume sending
+<code class="docutils literal"><span class="pre">action</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="action_manager.ActionManager.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/action_manager.html#ActionManager.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#action_manager.ActionManager.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send an action at a 40Hz cycle.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="action_manager.ActionManager.set_pause_flag">
+<code class="descname">set_pause_flag</code><span class="sig-paren">(</span><em>pause_flag</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/action_manager.html#ActionManager.set_pause_flag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#action_manager.ActionManager.set_pause_flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="action_manager.ActionManager.set_termination_flag">
+<code class="descname">set_termination_flag</code><span class="sig-paren">(</span><em>termination_flag</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/action_manager.html#ActionManager.set_termination_flag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#action_manager.ActionManager.set_termination_flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="action_manager.ActionManager.update_action">
+<code class="descname">update_action</code><span class="sig-paren">(</span><em>action_cmd</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/action_manager.html#ActionManager.update_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#action_manager.ActionManager.update_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Don’t go forward if bumping and wait before going forward
+after turning.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="action_manager.ActionManager.update_base_state">
+<code class="descname">update_base_state</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/action_manager.html#ActionManager.update_base_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#action_manager.ActionManager.update_base_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set <code class="docutils literal"><span class="pre">action</span></code> to <code class="docutils literal"><span class="pre">STOP_ACTION</span></code> if the bumper is on.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="action_manager.start_action_manager">
+<code class="descclassname">action_manager.</code><code class="descname">start_action_manager</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/action_manager.html#start_action_manager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#action_manager.start_action_manager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the action manager</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="align_ir_example.html" class="btn btn-neutral float-right" title="align_ir_example module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="modules.html" class="btn btn-neutral" title="src" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

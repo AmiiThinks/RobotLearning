@@ -1,0 +1,411 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>learning_foreground module &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="../index.html"/>
+        <link rel="up" title="src" href="modules.html"/>
+        <link rel="next" title="policy module" href="policy.html"/>
+        <link rel="prev" title="gvf module" href="gvf.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../Overview.html">Code Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">File Index</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="action_manager.html">action_manager module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="align_ir_example.html">align_ir_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_docking_policies.html">auto_docking_policies module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_return_example.html">calculate_return_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluator.html">evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="greedy_gq.html">greedy_gq module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtd.html">gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gvf.html">gvf module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">learning_foreground module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="policy.html">policy module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="return_calculator.html">return_calculator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="state_representation.html">state_representation module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="to_gtd.html">to_gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">tools module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize_pixels.html">visualize_pixels module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wall_demo_example.html">wall_demo_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wis_gtd.html">wis_gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wis_to_gtd.html">wis_to_gtd module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">src</a> &raquo;</li>
+        
+      <li>learning_foreground module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/pyrst/learning_foreground.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-learning_foreground">
+<span id="learning-foreground-module"></span><h1>learning_foreground module<a class="headerlink" href="#module-learning_foreground" title="Permalink to this headline">¶</a></h1>
+<p>Ties together the learning environment and main learning loop.</p>
+<dl class="docutils">
+<dt>Authors:</dt>
+<dd>Michele Albach, Shibhansh Dohare, David Quail, Parash Rahman, Niko Yasui.</dd>
+</dl>
+<dl class="class">
+<dt id="learning_foreground.LearningForeground">
+<em class="property">class </em><code class="descclassname">learning_foreground.</code><code class="descname">LearningForeground</code><span class="sig-paren">(</span><em>time_scale</em>, <em>gvfs</em>, <em>features_to_use</em>, <em>behavior_policy</em>, <em>stats</em>, <em>control_gvf=None</em>, <em>cumulant_counter=None</em>, <em>reset_episode=None</em>, <em>custom_stats=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learning_foreground.html#LearningForeground"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#learning_foreground.LearningForeground" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connects the environment through sensors and ROS with the learning algs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>time_scale</strong> (<em>float</em>) – Length of a time step in seconds.</li>
+<li><strong>gvfs</strong> (<em>list of GVF</em>) – List of GVFs to learn.</li>
+<li><strong>features_to_use</strong> (<em>set of str</em>) – Union of the features that each GVF
+uses to learn their respective predictions.</li>
+<li><strong>behavior_policy</strong> (<a class="reference internal" href="policy.html#policy.Policy" title="policy.Policy"><em>Policy</em></a>) – Policy for the robot to follow.</li>
+<li><strong>stats</strong> (<em>list of str</em>) – List of statistics to record and publish.</li>
+<li><strong>control_gvf</strong> (<a class="reference internal" href="gvf.html#gvf.GVF" title="gvf.GVF"><em>GVF</em></a>) – GVF that needs to be reset when the episode
+restarts.</li>
+<li><strong>cumulant_counter</strong> (<em>multiprocessing Value</em>) – Record for the number of
+times the cumulant is non-zero. Could be incorporated into the
+Evaluator.</li>
+<li><strong>reset_episode</strong> (<em>fun</em>) – Whether the episode should be reset.</li>
+<li><strong>(</strong><strong>dictionary</strong><strong>[</strong><strong>string</strong> (<em>custom_stats</em>) – lambda]): The custom topics defined by the user.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="learning_foreground.LearningForeground.COLLECT_DATA_FLAG">
+<code class="descname">COLLECT_DATA_FLAG</code><a class="headerlink" href="#learning_foreground.LearningForeground.COLLECT_DATA_FLAG" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> – Whether or not to save data in bags.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="learning_foreground.LearningForeground.vis">
+<code class="descname">vis</code><a class="headerlink" href="#learning_foreground.LearningForeground.vis" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> – Whether or not to use the visualizer.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="learning_foreground.LearningForeground.to_replay_experience">
+<code class="descname">to_replay_experience</code><a class="headerlink" href="#learning_foreground.LearningForeground.to_replay_experience" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> – Whether or not to use experience replay.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="learning_foreground.LearningForeground.recent">
+<code class="descname">recent</code><a class="headerlink" href="#learning_foreground.LearningForeground.recent" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>dict of queue</em> – Dictionary mapping topic names to the queue
+of recent values from their respective topics.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="learning_foreground.LearningForeground.publishers">
+<code class="descname">publishers</code><a class="headerlink" href="#learning_foreground.LearningForeground.publishers" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>dict of ROS publishers</em> – Publishers for each of the
+data we want to publish.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="learning_foreground.LearningForeground.create_state">
+<code class="descname">create_state</code><span class="sig-paren">(</span><em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learning_foreground.html#LearningForeground.create_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#learning_foreground.LearningForeground.create_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses data from <a class="reference internal" href="#learning_foreground.LearningForeground.recent" title="learning_foreground.LearningForeground.recent"><code class="xref py py-attr docutils literal"><span class="pre">recent</span></code></a> to create the state representation.</p>
+<ol class="arabic">
+<li><p class="first">Reads data from the <a class="reference internal" href="#learning_foreground.LearningForeground.recent" title="learning_foreground.LearningForeground.recent"><code class="xref py py-attr docutils literal"><span class="pre">recent</span></code></a> dictionary.</p>
+</li>
+<li><p class="first">Process data into a format to pass to <a class="reference internal" href="state_representation.html"><span class="doc">state_representation module</span></a>.</p>
+</li>
+<li><dl class="first docutils">
+<dt>Pass data to <a class="reference internal" href="state_representation.html#state_representation.StateManager.get_phi" title="state_representation.StateManager.get_phi"><code class="xref py py-func docutils literal"><span class="pre">get_phi()</span></code></a></dt>
+<dd><p class="first last">and <code class="xref py py-func docutils literal"><span class="pre">get_observation()</span></code>.</p>
+</dd>
+</dl>
+</li>
+</ol>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>Feature vector and ancillary state</dt>
+<dd>information.</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">(numpy array, dict)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="learning_foreground.LearningForeground.read_source">
+<code class="descname">read_source</code><span class="sig-paren">(</span><em>source</em>, <em>history=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learning_foreground.html#LearningForeground.read_source"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#learning_foreground.LearningForeground.read_source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads from the topics and returns the most recent value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="learning_foreground.LearningForeground.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learning_foreground.html#LearningForeground.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#learning_foreground.LearningForeground.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main learning loop.</p>
+<dl class="docutils">
+<dt>Repeat:</dt>
+<dd><ol class="first last arabic simple">
+<li>Get new state.</li>
+<li>Take an action.</li>
+<li>Learn.</li>
+</ol>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="learning_foreground.LearningForeground.take_action">
+<code class="descname">take_action</code><span class="sig-paren">(</span><em>action</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learning_foreground.html#LearningForeground.take_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#learning_foreground.LearningForeground.take_action" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="learning_foreground.LearningForeground.update_gvfs">
+<code class="descname">update_gvfs</code><span class="sig-paren">(</span><em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learning_foreground.html#LearningForeground.update_gvfs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#learning_foreground.LearningForeground.update_gvfs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls the GVF update function for each GVF and publishes their updated
+statistics.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>phi_prime</strong> (<em>numpy array</em>) – Feature vector for timestep t+1.</li>
+<li><strong>observation</strong> (<em>dict</em>) – Ancillary state information.</li>
+<li><strong>action</strong> (<a class="reference internal" href="action_manager.html#action_manager.ActionManager.action" title="action_manager.ActionManager.action"><em>action</em></a>) – Action taken at time t+1.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="learning_foreground.start_learning_foreground">
+<code class="descclassname">learning_foreground.</code><code class="descname">start_learning_foreground</code><span class="sig-paren">(</span><em>time_scale</em>, <em>GVFs</em>, <em>topics</em>, <em>policy</em>, <em>stats</em>, <em>control_gvf=None</em>, <em>cumulant_counter=None</em>, <em>reset_episode=None</em>, <em>custom_stats=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learning_foreground.html#start_learning_foreground"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#learning_foreground.start_learning_foreground" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to call with multiprocessing or multithreading.</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="policy.html" class="btn btn-neutral float-right" title="policy module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="gvf.html" class="btn btn-neutral" title="gvf module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

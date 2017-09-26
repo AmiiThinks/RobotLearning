@@ -1,0 +1,684 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>learning_foreground &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../Overview.html">Code Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pyrst/modules.html">File Index</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>learning_foreground</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for learning_foreground</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+
+<span class="sd">&quot;&quot;&quot;Ties together the learning environment and main learning loop.</span>
+
+<span class="sd">Authors:</span>
+<span class="sd">    Michele Albach, Shibhansh Dohare, David Quail, Parash Rahman, Niko Yasui.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">Queue</span> <span class="k">import</span> <span class="n">Queue</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="k">import</span> <span class="n">Value</span>
+
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">geometry_msgs.msg</span> <span class="k">as</span> <span class="nn">geom_msg</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">rosbag</span>
+<span class="kn">import</span> <span class="nn">rospy</span>
+<span class="kn">import</span> <span class="nn">std_msgs.msg</span> <span class="k">as</span> <span class="nn">std_msg</span>
+
+<span class="kn">from</span> <span class="nn">state_representation</span> <span class="k">import</span> <span class="n">StateManager</span>
+<span class="kn">import</span> <span class="nn">tools</span>
+<span class="kn">from</span> <span class="nn">tools</span> <span class="k">import</span> <span class="n">timing</span>
+<span class="kn">from</span> <span class="nn">visualize_pixels</span> <span class="k">import</span> <span class="n">Visualize</span>
+
+
+<div class="viewcode-block" id="LearningForeground"><a class="viewcode-back" href="../pyrst/learning_foreground.html#learning_foreground.LearningForeground">[docs]</a><span class="k">class</span> <span class="nc">LearningForeground</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Connects the environment through sensors and ROS with the learning algs.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        time_scale (float): Length of a time step in seconds.</span>
+<span class="sd">        gvfs (list of GVF): List of GVFs to learn.</span>
+<span class="sd">        features_to_use (set of str): Union of the features that each GVF</span>
+<span class="sd">            uses to learn their respective predictions.</span>
+<span class="sd">        behavior_policy (Policy): Policy for the robot to follow.</span>
+<span class="sd">        stats (list of str): List of statistics to record and publish.</span>
+<span class="sd">        control_gvf (GVF): GVF that needs to be reset when the episode</span>
+<span class="sd">            restarts.</span>
+<span class="sd">        cumulant_counter (multiprocessing Value): Record for the number of</span>
+<span class="sd">            times the cumulant is non-zero. Could be incorporated into the</span>
+<span class="sd">            Evaluator.</span>
+<span class="sd">        reset_episode (fun): Whether the episode should be reset.</span>
+<span class="sd">        custom_stats (dictionary[string:lambda]): The custom topics defined by the user.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        COLLECT_DATA_FLAG (bool): Whether or not to save data in bags.</span>
+<span class="sd">        vis (bool): Whether or not to use the visualizer.</span>
+<span class="sd">        to_replay_experience (bool): Whether or not to use experience replay.</span>
+<span class="sd">        recent (dict of queue): Dictionary mapping topic names to the queue</span>
+<span class="sd">            of recent values from their respective topics.</span>
+<span class="sd">        publishers (dict of ROS publishers): Publishers for each of the</span>
+<span class="sd">            data we want to publish.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">time_scale</span><span class="p">,</span>
+                 <span class="n">gvfs</span><span class="p">,</span>
+                 <span class="n">features_to_use</span><span class="p">,</span>
+                 <span class="n">behavior_policy</span><span class="p">,</span>
+                 <span class="n">stats</span><span class="p">,</span>
+                 <span class="n">control_gvf</span><span class="o">=</span><span class="k">None</span><span class="p">,</span>
+                 <span class="n">cumulant_counter</span><span class="o">=</span><span class="k">None</span><span class="p">,</span>
+                 <span class="n">reset_episode</span><span class="o">=</span><span class="k">None</span><span class="p">,</span>
+                 <span class="n">custom_stats</span><span class="o">=</span><span class="k">None</span><span class="p">):</span>
+
+        <span class="c"># function that generates a list of actions to perform to reset episode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset_episode</span> <span class="o">=</span> <span class="n">reset_episode</span> 
+
+        <span class="c"># set up ros</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">init_node</span><span class="p">(</span><span class="s">&#39;agent&#39;</span><span class="p">,</span> <span class="n">anonymous</span><span class="o">=</span><span class="k">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">COLLECT_DATA_FLAG</span> <span class="o">=</span> <span class="k">False</span>
+
+        <span class="c"># counts the total cumulant for the session</span>
+        <span class="k">if</span> <span class="n">cumulant_counter</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cumulant_counter</span> <span class="o">=</span> <span class="n">cumulant_counter</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cumulant_counter</span> <span class="o">=</span> <span class="n">Value</span><span class="p">(</span><span class="s">&#39;d&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c"># capture this session&#39;s data and actions</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">COLLECT_DATA_FLAG</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">history</span> <span class="o">=</span> <span class="n">rosbag</span><span class="o">.</span><span class="n">Bag</span><span class="p">(</span><span class="s">&#39;results.bag&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_time</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Time</span><span class="p">()</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">vis</span> <span class="o">=</span> <span class="k">False</span>
+        <span class="c"># self.vis = True</span>
+
+        <span class="n">extras</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;core&#39;</span><span class="p">,</span> <span class="s">&#39;ir&#39;</span><span class="p">,</span> <span class="s">&#39;odom&#39;</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">features_to_use</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">features_to_use</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">extras</span><span class="p">)</span>
+
+        <span class="n">topics</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span>
+                        <span class="p">[</span><span class="n">tools</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_to_use</span><span class="p">])</span>
+
+        <span class="c"># set up dictionary to receive sensor info</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recent</span> <span class="o">=</span> <span class="p">{</span><span class="n">topic</span><span class="p">:</span> <span class="n">Queue</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">topic</span> <span class="ow">in</span> <span class="n">topics</span><span class="p">}</span>
+
+        <span class="c"># setup sensor parsers</span>
+        <span class="k">for</span> <span class="n">topic</span> <span class="ow">in</span> <span class="n">topics</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="n">topic</span><span class="p">,</span>
+                             <span class="n">tools</span><span class="o">.</span><span class="n">topic_format</span><span class="p">[</span><span class="n">topic</span><span class="p">],</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">recent</span><span class="p">[</span><span class="n">topic</span><span class="p">]</span><span class="o">.</span><span class="n">put</span><span class="p">)</span>
+
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s">&quot;Started sensor threads.&quot;</span><span class="p">)</span>
+
+        <span class="c"># smooth out the actions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_scale</span> <span class="o">=</span> <span class="n">time_scale</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Rate</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_scale</span><span class="p">))</span>
+
+        <span class="c"># agent info</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gvfs</span> <span class="o">=</span> <span class="n">gvfs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">control_gvf</span> <span class="o">=</span> <span class="n">control_gvf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">behavior_policy</span> <span class="o">=</span> <span class="n">behavior_policy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">avg_td_err</span> <span class="o">=</span> <span class="k">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">state_manager</span> <span class="o">=</span> <span class="n">StateManager</span><span class="p">(</span><span class="n">features_to_use</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vis</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s">&quot;Creating visualization.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visualization</span> <span class="o">=</span> <span class="n">Visualize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state_manager</span><span class="o">.</span><span class="n">pixel_mask</span><span class="p">,</span>
+                                           <span class="n">imsizex</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span>
+                                           <span class="n">imsizey</span><span class="o">=</span><span class="mi">480</span><span class="p">)</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s">&quot;Done creatiing visualization.&quot;</span><span class="p">)</span>
+
+        <span class="c"># previous timestep information</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_action</span> <span class="o">=</span> <span class="k">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_phi</span> <span class="o">=</span> <span class="k">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_observation</span> <span class="o">=</span> <span class="k">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_mu</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="c"># experience replay</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">to_replay_experience</span> <span class="o">=</span> <span class="k">False</span>
+
+        <span class="n">action_publisher</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="s">&#39;action_cmd&#39;</span><span class="p">,</span>
+                                           <span class="n">geom_msg</span><span class="o">.</span><span class="n">Twist</span><span class="p">,</span>
+                                           <span class="n">queue_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">pause_publisher</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="s">&#39;pause&#39;</span><span class="p">,</span>
+                                          <span class="n">std_msg</span><span class="o">.</span><span class="n">Bool</span><span class="p">,</span>
+                                          <span class="n">queue_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">termination_publisher</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="s">&#39;termination&#39;</span><span class="p">,</span>
+                                                <span class="n">std_msg</span><span class="o">.</span><span class="n">Bool</span><span class="p">,</span>
+                                                <span class="n">queue_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">publishers</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;action&#39;</span><span class="p">:</span> <span class="n">action_publisher</span><span class="p">,</span>
+                           <span class="s">&#39;pause&#39;</span><span class="p">:</span> <span class="n">pause_publisher</span><span class="p">,</span>
+                           <span class="s">&#39;termination&#39;</span><span class="p">:</span> <span class="n">termination_publisher</span>
+                           <span class="p">}</span>
+
+        <span class="n">valid_stats</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;prediction&#39;</span><span class="p">,</span> <span class="s">&#39;td_error&#39;</span><span class="p">,</span> <span class="s">&#39;avg_td_error&#39;</span><span class="p">,</span> <span class="s">&#39;rupee&#39;</span><span class="p">,</span>
+                       <span class="s">&#39;MSRE&#39;</span><span class="p">,</span> <span class="s">&#39;cumulant&#39;</span><span class="p">,</span> <span class="s">&#39;phi&#39;</span><span class="p">,</span> <span class="s">&#39;e&#39;</span><span class="p">,</span> <span class="s">&#39;rho&#39;</span><span class="p">,</span> <span class="s">&#39;ESS&#39;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">stat_data</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;prediction&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">g</span><span class="p">:</span> <span class="n">g</span><span class="o">.</span><span class="n">last_prediction</span><span class="p">,</span>
+                          <span class="s">&#39;cumulant&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">g</span><span class="p">:</span> <span class="n">g</span><span class="o">.</span><span class="n">last_cumulant</span><span class="p">,</span>
+                          <span class="s">&#39;td_error&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">g</span><span class="p">:</span> <span class="n">g</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">td_error</span><span class="p">,</span>
+                          <span class="s">&#39;avg_td_error&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">g</span><span class="p">:</span> <span class="n">g</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">avg_td_error</span><span class="p">,</span>
+                          <span class="s">&#39;rupee&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">g</span><span class="p">:</span> <span class="n">g</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">rupee</span><span class="p">,</span>
+                          <span class="s">&#39;MSRE&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">g</span><span class="p">:</span> <span class="n">g</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">MSRE</span><span class="p">,</span>
+                          <span class="s">&#39;phi&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">g</span><span class="p">:</span> <span class="n">g</span><span class="o">.</span><span class="n">phi</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span>
+                          <span class="s">&#39;e&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">g</span><span class="p">:</span> <span class="n">g</span><span class="o">.</span><span class="n">learner</span><span class="o">.</span><span class="n">e</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span>
+                          <span class="s">&#39;rho&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">g</span><span class="p">:</span> <span class="n">g</span><span class="o">.</span><span class="n">rho</span><span class="p">,</span>
+                          <span class="s">&#39;ESS&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">g</span><span class="p">:</span> <span class="n">g</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">ESS</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">valid_stats</span><span class="p">,</span> <span class="n">stats</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">custom_stats</span> <span class="o">!=</span> <span class="k">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stat_data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">custom_stats</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">+=</span> <span class="n">custom_stats</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+        <span class="k">def</span> <span class="nf">publisher_name</span><span class="p">(</span><span class="n">gvf</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s">&#39;{}/{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gvf</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span> <span class="k">if</span> <span class="n">gvf</span> <span class="k">else</span> <span class="n">label</span>
+
+        <span class="k">def</span> <span class="nf">make_publisher</span><span class="p">(</span><span class="n">gvf</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="n">publisher_name</span><span class="p">(</span><span class="n">gvf</span><span class="p">,</span> <span class="n">label</span><span class="p">),</span>
+                                   <span class="n">std_msg</span><span class="o">.</span><span class="n">Float64</span><span class="p">,</span>
+                                   <span class="n">queue_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">stat_publishers</span> <span class="o">=</span> <span class="p">{</span><span class="n">gvf</span><span class="p">:</span> <span class="p">{</span><span class="n">stat</span><span class="p">:</span> <span class="n">make_publisher</span><span class="p">(</span><span class="n">gvf</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">stat</span><span class="p">)</span>
+                                 <span class="k">for</span> <span class="n">stat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">}</span>
+                           <span class="k">for</span> <span class="n">gvf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gvfs</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">publishers</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">stat_publishers</span><span class="p">)</span>
+
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s">&quot;Done LearningForeground init.&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LearningForeground.update_gvfs"><a class="viewcode-back" href="../pyrst/learning_foreground.html#learning_foreground.LearningForeground.update_gvfs">[docs]</a>    <span class="nd">@timing</span>
+    <span class="k">def</span> <span class="nf">update_gvfs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phi_prime</span><span class="p">,</span> <span class="n">observation</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calls the GVF update function for each GVF and publishes their updated</span>
+<span class="sd">        statistics.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            phi_prime (numpy array): Feature vector for timestep t+1.</span>
+<span class="sd">            observation (dict): Ancillary state information.</span>
+<span class="sd">            action (action): Action taken at time t+1.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">gvf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gvfs</span><span class="p">:</span>
+            <span class="n">gvf</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">last_observation</span><span class="p">,</span>
+                       <span class="bp">self</span><span class="o">.</span><span class="n">last_phi</span><span class="p">,</span>
+                       <span class="bp">self</span><span class="o">.</span><span class="n">last_action</span><span class="p">,</span>
+                       <span class="n">observation</span><span class="p">,</span>
+                       <span class="n">phi_prime</span><span class="p">,</span>
+                       <span class="bp">self</span><span class="o">.</span><span class="n">last_mu</span><span class="p">,</span>
+                       <span class="n">action</span><span class="p">)</span>
+
+        <span class="c"># publishing</span>
+        <span class="k">for</span> <span class="n">gvf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gvfs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">stat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">publishers</span><span class="p">[</span><span class="n">gvf</span><span class="p">][</span><span class="n">stat</span><span class="p">]</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stat_data</span><span class="p">[</span><span class="n">stat</span><span class="p">](</span><span class="n">gvf</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="LearningForeground.read_source"><a class="viewcode-back" href="../pyrst/learning_foreground.html#learning_foreground.LearningForeground.read_source">[docs]</a>    <span class="k">def</span> <span class="nf">read_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">history</span><span class="o">=</span><span class="k">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reads from the topics and returns the most recent value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">history</span> <span class="k">else</span> <span class="k">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">stream</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="n">source</span><span class="p">]</span>
+            <span class="k">while</span> <span class="k">True</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">history</span><span class="p">:</span>
+                    <span class="n">temp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">recent</span><span class="p">[</span><span class="n">stream</span><span class="p">]</span><span class="o">.</span><span class="n">get_nowait</span><span class="p">())</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">temp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">recent</span><span class="p">[</span><span class="n">stream</span><span class="p">]</span><span class="o">.</span><span class="n">get_nowait</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">return</span> <span class="n">temp</span></div>
+
+<div class="viewcode-block" id="LearningForeground.create_state"><a class="viewcode-back" href="../pyrst/learning_foreground.html#learning_foreground.LearningForeground.create_state">[docs]</a>    <span class="nd">@timing</span>
+    <span class="k">def</span> <span class="nf">create_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Uses data from :py:attr:`recent` to create the state representation.</span>
+
+<span class="sd">        1. Reads data from the :py:attr:`recent` dictionary.</span>
+<span class="sd">        2. Process data into a format to pass to :doc:`state_representation`.</span>
+<span class="sd">        3. Pass data to :py:func:`~state_representation.StateManager.get_phi`</span>
+<span class="sd">            and :py:func:`~state_representation.StateManager.get_observation`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (numpy array, dict): Feature vector and ancillary state</span>
+<span class="sd">                information.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># bumper constants from</span>
+        <span class="c"># http://docs.ros.org/hydro/api/kobuki_msgs/html/msg/SensorState.html</span>
+        <span class="n">bump_codes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+
+        <span class="c"># initialize data</span>
+        <span class="n">additional_features</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">tools</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;charging&#39;</span><span class="p">])</span>
+        <span class="n">sensors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_to_use</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">additional_features</span><span class="p">)</span>
+
+        <span class="c"># read data (used to make phi)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="n">sensor</span><span class="p">:</span> <span class="k">None</span> <span class="k">for</span> <span class="n">sensor</span> <span class="ow">in</span> <span class="n">sensors</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">sensors</span> <span class="o">-</span> <span class="p">{</span><span class="s">&#39;ir&#39;</span><span class="p">,</span> <span class="s">&#39;core&#39;</span><span class="p">}:</span>
+            <span class="n">data</span><span class="p">[</span><span class="n">source</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_source</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+
+        <span class="n">data</span><span class="p">[</span><span class="s">&#39;ir&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_source</span><span class="p">(</span><span class="s">&#39;ir&#39;</span><span class="p">,</span> <span class="n">history</span><span class="o">=</span><span class="k">True</span><span class="p">)[</span><span class="o">-</span><span class="mi">10</span><span class="p">:]</span>
+
+        <span class="n">data</span><span class="p">[</span><span class="s">&#39;core&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_source</span><span class="p">(</span><span class="s">&#39;core&#39;</span><span class="p">,</span> <span class="n">history</span><span class="o">=</span><span class="k">True</span><span class="p">)</span>
+
+        <span class="c"># process data</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;core&#39;</span><span class="p">]:</span>
+            <span class="n">bumps</span> <span class="o">=</span> <span class="p">[</span><span class="n">dat</span><span class="o">.</span><span class="n">bumper</span> <span class="k">for</span> <span class="n">dat</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;core&#39;</span><span class="p">]]</span>
+            <span class="n">data</span><span class="p">[</span><span class="s">&#39;bump&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                    <span class="p">[[</span><span class="nb">bool</span><span class="p">(</span><span class="n">x</span> <span class="o">&amp;</span> <span class="n">bump</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">bump_codes</span><span class="p">]</span> <span class="k">for</span> <span class="n">bump</span> <span class="ow">in</span> <span class="n">bumps</span><span class="p">],</span>
+                    <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">data</span><span class="p">[</span><span class="s">&#39;charging&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;core&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">charger</span> <span class="o">&amp;</span> <span class="mi">2</span><span class="p">)</span>
+
+            <span class="c"># enter the data into rosbag</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">COLLECT_DATA_FLAG</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">bindex</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;bump&#39;</span><span class="p">])):</span>
+                    <span class="n">bump_bool</span> <span class="o">=</span> <span class="n">std_msg</span><span class="o">.</span><span class="n">Bool</span><span class="p">()</span>
+                    <span class="n">bump_bool</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;bump&#39;</span><span class="p">][</span><span class="n">bindex</span><span class="p">]</span> <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;bump&#39;</span><span class="p">][</span>
+                        <span class="n">bindex</span><span class="p">]</span> <span class="k">else</span> <span class="k">False</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;bump&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">bindex</span><span class="p">),</span> <span class="n">bump_bool</span><span class="p">,</span>
+                                       <span class="n">t</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">current_time</span><span class="p">)</span>
+                <span class="n">charge_bool</span> <span class="o">=</span> <span class="n">std_msg</span><span class="o">.</span><span class="n">Bool</span><span class="p">()</span>
+                <span class="n">charge_bool</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;charging&#39;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;charging&#39;</span><span class="p">,</span> <span class="n">charge_bool</span><span class="p">,</span>
+                                   <span class="n">t</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">current_time</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;ir&#39;</span><span class="p">]:</span>
+            <span class="n">ir</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+            <span class="c"># bitwise &#39;or&#39; of all the ir data in last time_step</span>
+            <span class="k">for</span> <span class="n">temp</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;ir&#39;</span><span class="p">]:</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="p">[[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">format</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="s">&#39;#08b&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">:]]</span> <span class="k">for</span> <span class="n">temp</span> <span class="ow">in</span>
+                     <span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span> <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="n">temp</span><span class="o">.</span><span class="n">data</span><span class="p">]]</span>
+                <span class="n">ir</span> <span class="o">=</span> <span class="p">[[</span><span class="n">k</span> <span class="o">|</span> <span class="n">l</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">ir</span><span class="p">)]</span>
+
+            <span class="n">data</span><span class="p">[</span><span class="s">&#39;ir&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ir_temp</span><span class="p">]),</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span>
+                          <span class="n">ir_temp</span> <span class="ow">in</span> <span class="n">ir</span><span class="p">]</span>
+
+
+            <span class="c"># enter the data into rosbag</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">COLLECT_DATA_FLAG</span><span class="p">:</span>
+                <span class="n">ir_array</span> <span class="o">=</span> <span class="n">std_msg</span><span class="o">.</span><span class="n">Int32MultiArray</span><span class="p">()</span>
+                <span class="n">ir_array</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;ir&#39;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;ir&#39;</span><span class="p">,</span> <span class="n">ir_array</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">current_time</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;image&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span><span class="p">:</span>
+            <span class="c"># enter the data into rosbag</span>
+            <span class="c"># image_array = std_msg.Int32MultiArray()</span>
+            <span class="c"># image_array.data = data[&#39;image&#39;]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">COLLECT_DATA_FLAG</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;image&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;image&#39;</span><span class="p">],</span> <span class="n">t</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">current_time</span><span class="p">)</span>
+
+            <span class="c"># uncompressed image</span>
+            <span class="n">data</span><span class="p">[</span><span class="s">&#39;image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;image&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                                          <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">480</span><span class="p">,</span> <span class="mi">640</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+            <span class="c"># compressing image</span>
+
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;cimage&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s">&#39;image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imdecode</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;cimage&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                                                       <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">),</span>
+                                         <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;odom&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;odom&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">position</span>
+            <span class="n">lin_vel</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;odom&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">twist</span><span class="o">.</span><span class="n">twist</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">x</span>
+            <span class="n">ang_vel</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;odom&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">twist</span><span class="o">.</span><span class="n">twist</span><span class="o">.</span><span class="n">angular</span><span class="o">.</span><span class="n">z</span>
+            <span class="n">data</span><span class="p">[</span><span class="s">&#39;odom&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">pos</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">pos</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">lin_vel</span><span class="p">,</span> <span class="n">ang_vel</span><span class="p">])</span>
+
+            <span class="c"># enter the data into rosbag</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">COLLECT_DATA_FLAG</span><span class="p">:</span>
+                <span class="n">odom_x</span> <span class="o">=</span> <span class="n">std_msg</span><span class="o">.</span><span class="n">Float64</span><span class="p">()</span>
+                <span class="n">odom_x</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">x</span>
+                <span class="n">odom_y</span> <span class="o">=</span> <span class="n">std_msg</span><span class="o">.</span><span class="n">Float64</span><span class="p">()</span>
+                <span class="n">odom_y</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">y</span>
+                <span class="n">odom_lin</span> <span class="o">=</span> <span class="n">std_msg</span><span class="o">.</span><span class="n">Float64</span><span class="p">()</span>
+                <span class="n">odom_lin</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">lin_vel</span>
+                <span class="n">odom_ang</span> <span class="o">=</span> <span class="n">std_msg</span><span class="o">.</span><span class="n">Float64</span><span class="p">()</span>
+                <span class="n">odom_ang</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">ang_vel</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;odom_x&#39;</span><span class="p">,</span> <span class="n">odom_x</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">current_time</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;odom_y&#39;</span><span class="p">,</span> <span class="n">odom_y</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">current_time</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;odom_lin&#39;</span><span class="p">,</span> <span class="n">odom_lin</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">current_time</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;odom_ang&#39;</span><span class="p">,</span> <span class="n">odom_ang</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">current_time</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;imu&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s">&#39;imu&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;imu&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">z</span>
+            <span class="c"># TODO: enter the  data into rosbag</span>
+
+        <span class="k">if</span> <span class="s">&#39;bias&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_to_use</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s">&#39;bias&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="k">True</span>
+        <span class="n">data</span><span class="p">[</span><span class="s">&#39;weights&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gvfs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">learner</span><span class="o">.</span><span class="n">theta</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gvfs</span> <span class="k">else</span> <span class="k">None</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_manager</span><span class="o">.</span><span class="n">get_phi</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s">&#39;last_action&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_to_use</span><span class="p">:</span>
+            <span class="n">last_action</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">behavior_policy</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+            <span class="n">last_action</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">behavior_policy</span><span class="o">.</span><span class="n">last_index</span><span class="p">]</span> <span class="o">=</span> <span class="k">True</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">phi</span><span class="p">,</span> <span class="n">last_action</span><span class="p">])</span>
+
+            <span class="c"># update the visualization of the image data</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vis</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">update_colours</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;image&#39;</span><span class="p">])</span>
+
+        <span class="n">observation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_manager</span><span class="o">.</span><span class="n">get_observations</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">observation</span><span class="p">[</span><span class="s">&#39;action&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_action</span>
+
+        <span class="k">if</span> <span class="n">observation</span><span class="p">[</span><span class="s">&#39;bump&#39;</span><span class="p">]:</span>
+            <span class="c"># adds a tally for the added cumulant</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cumulant_counter</span><span class="o">.</span><span class="n">value</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">phi</span><span class="p">,</span> <span class="n">observation</span></div>
+
+<div class="viewcode-block" id="LearningForeground.take_action"><a class="viewcode-back" href="../pyrst/learning_foreground.html#learning_foreground.LearningForeground.take_action">[docs]</a>    <span class="k">def</span> <span class="nf">take_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">publishers</span><span class="p">[</span><span class="s">&#39;action&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">action</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LearningForeground.run"><a class="viewcode-back" href="../pyrst/learning_foreground.html#learning_foreground.LearningForeground.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Main learning loop.</span>
+
+<span class="sd">        Repeat:</span>
+<span class="sd">            1. Get new state.</span>
+<span class="sd">            2. Take an action.</span>
+<span class="sd">            3. Learn.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">avg_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">time_step</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">max_time</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
+            <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_time</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Time</span><span class="p">()</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+
+            <span class="c"># get new state</span>
+            <span class="n">phi_prime</span><span class="p">,</span> <span class="n">observation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_state</span><span class="p">()</span>
+
+            <span class="c"># select and take an action</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">behavior_policy</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">phi_prime</span><span class="p">,</span> <span class="n">observation</span><span class="p">)</span>
+            <span class="n">action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">behavior_policy</span><span class="o">.</span><span class="n">choose_action</span><span class="p">()</span>
+            <span class="n">mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">behavior_policy</span><span class="o">.</span><span class="n">get_probability</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">take_action</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">COLLECT_DATA_FLAG</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;action&#39;</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">current_time</span><span class="p">)</span>
+
+            <span class="c"># learn</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_observation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">update_gvfs</span><span class="p">(</span><span class="n">phi_prime</span><span class="p">,</span> <span class="n">observation</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
+
+            <span class="c"># check if episode is over and reset accordingly [episodic]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">control_gvf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">control_gvf</span><span class="o">.</span><span class="n">learner</span><span class="o">.</span><span class="n">episode_finished_last_step</span><span class="p">:</span>
+                    <span class="n">reset_actions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reset_episode</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">reset_actions</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">take_action</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+                        <span class="n">msg</span> <span class="o">=</span> <span class="s">&#39;taking random action number: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+                        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_replay_experience</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">control_gvf</span><span class="o">.</span><span class="n">learner</span><span class="o">.</span><span class="n">uniform_experience_replay</span><span class="p">()</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_replay_experience</span><span class="p">:</span>
+                    <span class="c"># not to replay when the episode resets at it will also</span>
+                    <span class="c"># include the experience at the start of new episode</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">control_gvf</span><span class="o">.</span><span class="n">learner</span><span class="o">.</span><span class="n">uniform_experience_replay</span><span class="p">()</span>
+
+            <span class="c"># save values</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_phi</span> <span class="o">=</span> <span class="n">phi_prime</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">phi_prime</span><span class="p">)</span> <span class="k">else</span> <span class="k">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_action</span> <span class="o">=</span> <span class="n">action</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_mu</span> <span class="o">=</span> <span class="n">mu</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_observation</span> <span class="o">=</span> <span class="n">observation</span>
+
+            <span class="c"># timestep logging</span>
+            <span class="n">total_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+            <span class="n">max_time</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_time</span><span class="p">,</span> <span class="n">total_time</span><span class="p">)</span>
+            <span class="n">time_step</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">avg_time</span> <span class="o">+=</span> <span class="p">(</span><span class="n">total_time</span> <span class="o">-</span> <span class="n">avg_time</span><span class="p">)</span> <span class="o">/</span> <span class="n">time_step</span>
+            <span class="n">time_msg</span> <span class="o">=</span> <span class="s">&quot;Current timestep took {:.4f} sec.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">total_time</span><span class="p">)</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">time_msg</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">total_time</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_scale</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">control_gvf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">control_gvf</span><span class="o">.</span><span class="n">learner</span><span class="o">.</span><span class="n">episode_finished_last_step</span><span class="p">:</span>
+                        <span class="n">rospy</span><span class="o">.</span><span class="n">logerr</span><span class="p">(</span><span class="s">&quot;Timestep took too long!&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">rospy</span><span class="o">.</span><span class="n">logerr</span><span class="p">(</span><span class="s">&quot;Timestep took too long!&quot;</span><span class="p">)</span>
+
+            <span class="c"># sleep until next time step</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">COLLECT_DATA_FLAG</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="start_learning_foreground"><a class="viewcode-back" href="../pyrst/learning_foreground.html#learning_foreground.start_learning_foreground">[docs]</a><span class="k">def</span> <span class="nf">start_learning_foreground</span><span class="p">(</span><span class="n">time_scale</span><span class="p">,</span>
+                              <span class="n">GVFs</span><span class="p">,</span>
+                              <span class="n">topics</span><span class="p">,</span>
+                              <span class="n">policy</span><span class="p">,</span>
+                              <span class="n">stats</span><span class="p">,</span>
+                              <span class="n">control_gvf</span><span class="o">=</span><span class="k">None</span><span class="p">,</span>
+                              <span class="n">cumulant_counter</span><span class="o">=</span><span class="k">None</span><span class="p">,</span>
+                              <span class="n">reset_episode</span><span class="o">=</span><span class="k">None</span><span class="p">,</span>
+                              <span class="n">custom_stats</span><span class="o">=</span><span class="k">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Function to call with multiprocessing or multithreading.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">foreground</span> <span class="o">=</span> <span class="n">LearningForeground</span><span class="p">(</span><span class="n">time_scale</span><span class="p">,</span>
+                                        <span class="n">GVFs</span><span class="p">,</span>
+                                        <span class="n">topics</span><span class="p">,</span>
+                                        <span class="n">policy</span><span class="p">,</span>
+                                        <span class="n">stats</span><span class="p">,</span>
+                                        <span class="n">control_gvf</span><span class="p">,</span>
+                                        <span class="n">cumulant_counter</span><span class="p">,</span>
+                                        <span class="n">reset_episode</span><span class="p">)</span>
+
+        <span class="n">foreground</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ROSInterruptException</span> <span class="k">as</span> <span class="n">detail</span><span class="p">:</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s">&quot;Handling: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">detail</span><span class="p">))</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

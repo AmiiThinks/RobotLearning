@@ -1,0 +1,566 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>state_representation &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../Overview.html">Code Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pyrst/modules.html">File Index</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>state_representation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for state_representation</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+
+<span class="sd">&quot;&quot;&quot;Uses tilecoding to create state.</span>
+
+<span class="sd">Authors:</span>
+<span class="sd">    Michele Albach, Shibhansh Dohare, David Quail, Parash Rahman, Niko Yasui.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">rospy</span>
+<span class="kn">from</span> <span class="nn">scipy.misc</span> <span class="k">import</span> <span class="n">comb</span>
+
+<span class="kn">from</span> <span class="nn">CTiles</span> <span class="k">import</span> <span class="n">tiles</span>
+<span class="kn">from</span> <span class="nn">tools</span> <span class="k">import</span> <span class="n">get_next_pow2</span><span class="p">,</span> <span class="n">timing</span>
+
+
+<div class="viewcode-block" id="StateConstants"><a class="viewcode-back" href="../pyrst/state_representation.html#state_representation.StateConstants">[docs]</a><span class="k">class</span> <span class="nc">StateConstants</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Constants useful for the tile coding in StateManager.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        The constants here are just for reference. You may change them</span>
+<span class="sd">        however you wish.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># image tiles</span>
+    <span class="n">NUM_RANDOM_POINTS</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">CHANNELS</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">NUM_IMAGE_TILINGS</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">NUM_IMAGE_INTERVALS</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">SCALE_RGB</span> <span class="o">=</span> <span class="n">NUM_IMAGE_INTERVALS</span> <span class="o">/</span> <span class="mf">256.0</span>
+    <span class="n">IMAGE_IHT_SIZE</span> <span class="o">=</span> <span class="n">get_next_pow2</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">NUM_IMAGE_INTERVALS</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">NUM_IMAGE_TILINGS</span><span class="p">)</span>
+    <span class="n">PIXEL_FEATURE_LENGTH</span> <span class="o">=</span> <span class="n">CHANNELS</span> <span class="o">*</span> <span class="n">IMAGE_IHT_SIZE</span>
+    <span class="n">TOTAL_IMAGE_FEATURE_LENGTH</span> <span class="o">=</span> <span class="n">NUM_RANDOM_POINTS</span> <span class="o">*</span> <span class="n">PIXEL_FEATURE_LENGTH</span>
+    <span class="n">IMAGE_START_INDEX</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c"># constants relating to image size recieved</span>
+    <span class="n">IMAGE_LI</span> <span class="o">=</span> <span class="mi">480</span>  <span class="c"># rows</span>
+    <span class="n">IMAGE_CO</span> <span class="o">=</span> <span class="mi">640</span>  <span class="c"># columns</span>
+
+    <span class="c"># IMU tiles</span>
+    <span class="n">NUM_IMU_TILINGS</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">NUM_IMU_TILES</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">SCALE_IMU</span> <span class="o">=</span> <span class="n">NUM_IMU_TILES</span> <span class="o">/</span> <span class="mf">2.0</span>  <span class="c"># range is [-1, 1]</span>
+    <span class="n">IMU_IHT_SIZE</span> <span class="o">=</span> <span class="n">get_next_pow2</span><span class="p">((</span><span class="n">NUM_IMU_TILES</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">NUM_IMU_TILINGS</span><span class="p">)</span>
+    <span class="n">IMU_START_INDEX</span> <span class="o">=</span> <span class="n">IMAGE_START_INDEX</span> <span class="o">+</span> <span class="n">TOTAL_IMAGE_FEATURE_LENGTH</span>
+
+    <span class="c"># Odom tiles</span>
+    <span class="n">NUM_ODOM_TILINGS</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">NUM_ODOM_TILES</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">SCALE_ODOM</span> <span class="o">=</span> <span class="n">NUM_ODOM_TILES</span> <span class="o">/</span> <span class="mf">2.0</span>  <span class="c"># range is [0, 2]</span>
+    <span class="n">ODOM_IHT_SIZE</span> <span class="o">=</span> <span class="n">get_next_pow2</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">NUM_ODOM_TILES</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">NUM_ODOM_TILES</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">NUM_ODOM_TILINGS</span><span class="p">)</span>
+    <span class="n">ODOM_START_INDEX</span> <span class="o">=</span> <span class="n">IMU_START_INDEX</span> <span class="o">+</span> <span class="n">IMU_IHT_SIZE</span>
+
+    <span class="c"># IR tiles</span>
+    <span class="n">IR_START_INDEX</span> <span class="o">=</span> <span class="n">ODOM_START_INDEX</span> <span class="o">+</span> <span class="n">ODOM_IHT_SIZE</span>
+    <span class="c"># IR_ITH_SIZE = 64*3</span>
+    <span class="c"># IR_ITH_SIZE = 6*3</span>
+    <span class="n">IR_ITH_SIZE</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="c"># IR_ITH_SIZE = 3</span>
+
+    <span class="c"># pixel pairs</span>
+    <span class="n">NUM_PP</span> <span class="o">=</span> <span class="n">comb</span><span class="p">(</span><span class="n">NUM_RANDOM_POINTS</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="k">True</span><span class="p">)</span>
+    <span class="n">NUM_PP_TILINGS</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">NUM_PP_TILES</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">SCALE_PP</span> <span class="o">=</span> <span class="n">NUM_PP_TILES</span> <span class="o">/</span> <span class="mf">2.</span>  <span class="c"># [-1, 1]</span>
+    <span class="n">PP_IHT_SIZE</span> <span class="o">=</span> <span class="n">get_next_pow2</span><span class="p">((</span><span class="n">NUM_PP_TILES</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">NUM_PP_TILINGS</span><span class="p">)</span>
+    <span class="n">PP_FEATURE_LENGTH</span> <span class="o">=</span> <span class="n">NUM_PP</span> <span class="o">*</span> <span class="n">PP_IHT_SIZE</span>
+    <span class="n">PP_START_INDEX</span> <span class="o">=</span> <span class="n">IR_START_INDEX</span> <span class="o">+</span> <span class="n">IR_ITH_SIZE</span>
+
+    <span class="c"># the 1 represents the bias unit, 3 for bump, </span>
+    <span class="n">TOTAL_FEATURE_LENGTH</span> <span class="o">=</span> <span class="p">(</span><span class="n">TOTAL_IMAGE_FEATURE_LENGTH</span> <span class="o">+</span> <span class="n">IMU_IHT_SIZE</span> <span class="o">+</span>
+                            <span class="n">ODOM_IHT_SIZE</span> <span class="o">+</span> <span class="n">IR_ITH_SIZE</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span>
+                            <span class="n">PP_FEATURE_LENGTH</span><span class="p">)</span>
+
+    <span class="n">indices_in_phi</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;image&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">IMAGE_START_INDEX</span><span class="p">,</span>
+                           <span class="n">IMAGE_START_INDEX</span> <span class="o">+</span> <span class="n">TOTAL_IMAGE_FEATURE_LENGTH</span><span class="p">),</span>
+        <span class="s">&#39;cimage&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">IMAGE_START_INDEX</span><span class="p">,</span>
+                            <span class="n">IMAGE_START_INDEX</span> <span class="o">+</span> <span class="n">TOTAL_IMAGE_FEATURE_LENGTH</span><span class="p">),</span>
+        <span class="s">&#39;imu&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">IMU_START_INDEX</span><span class="p">,</span> <span class="n">IMU_START_INDEX</span> <span class="o">+</span> <span class="n">IMU_IHT_SIZE</span><span class="p">),</span>
+        <span class="s">&#39;odom&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ODOM_START_INDEX</span><span class="p">,</span> <span class="n">ODOM_START_INDEX</span> <span class="o">+</span> <span class="n">ODOM_IHT_SIZE</span><span class="p">),</span>
+        <span class="s">&#39;ir&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">IR_START_INDEX</span><span class="p">,</span> <span class="n">IR_START_INDEX</span> <span class="o">+</span> <span class="n">IR_ITH_SIZE</span><span class="p">),</span>
+        <span class="s">&#39;pixel_pairs&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">PP_START_INDEX</span><span class="p">,</span>
+                                 <span class="n">PP_START_INDEX</span> <span class="o">+</span> <span class="n">PP_FEATURE_LENGTH</span><span class="p">),</span>
+        <span class="s">&#39;bump&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">PP_START_INDEX</span> <span class="o">+</span> <span class="n">PP_FEATURE_LENGTH</span><span class="p">,</span>
+                          <span class="n">PP_START_INDEX</span> <span class="o">+</span> <span class="n">PP_FEATURE_LENGTH</span> <span class="o">+</span> <span class="mi">3</span><span class="p">),</span>
+        <span class="s">&#39;bias&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">TOTAL_FEATURE_LENGTH</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]),</span>
+        <span class="s">&#39;last_action&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="n">num_active_features</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&quot;image&quot;</span><span class="p">:</span> <span class="n">NUM_RANDOM_POINTS</span> <span class="o">*</span> <span class="n">CHANNELS</span> <span class="o">*</span> <span class="n">NUM_IMAGE_TILINGS</span><span class="p">,</span>
+        <span class="s">&#39;cimage&#39;</span><span class="p">:</span> <span class="n">NUM_RANDOM_POINTS</span> <span class="o">*</span> <span class="n">CHANNELS</span> <span class="o">*</span> <span class="n">NUM_IMAGE_TILINGS</span><span class="p">,</span>
+        <span class="s">&#39;imu&#39;</span><span class="p">:</span> <span class="n">NUM_IMU_TILINGS</span><span class="p">,</span>
+        <span class="s">&#39;odom&#39;</span><span class="p">:</span> <span class="n">NUM_ODOM_TILINGS</span><span class="p">,</span>
+        <span class="s">&#39;ir&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="s">&#39;bump&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="s">&#39;bias&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s">&#39;last_action&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s">&#39;pixel_pairs&#39;</span><span class="p">:</span> <span class="n">NUM_PP</span> <span class="o">*</span> <span class="n">NUM_PP_TILINGS</span>
+    <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="StateManager"><a class="viewcode-back" href="../pyrst/state_representation.html#state_representation.StateManager">[docs]</a><span class="k">class</span> <span class="nc">StateManager</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">features_to_use</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets up the hash tables used for each feature encoding.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            features_to_use: strings representing which sensorimotor</span>
+<span class="sd">                information should actually be incorporated into phi</span>
+<span class="sd">                (see :py:meth:`~state_representation.StateManager.get_phi`).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">num_img_ihts</span> <span class="o">=</span> <span class="n">StateConstants</span><span class="o">.</span><span class="n">NUM_RANDOM_POINTS</span> <span class="o">*</span> \
+                       <span class="n">StateConstants</span><span class="o">.</span><span class="n">CHANNELS</span>
+        <span class="n">img_iht_size</span> <span class="o">=</span> <span class="n">StateConstants</span><span class="o">.</span><span class="n">IMAGE_IHT_SIZE</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">img_ihts</span> <span class="o">=</span> <span class="p">[</span><span class="n">tiles</span><span class="o">.</span><span class="n">CollisionTable</span><span class="p">(</span><span class="n">img_iht_size</span><span class="p">,</span> <span class="s">&quot;safe&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span>
+                         <span class="nb">range</span><span class="p">(</span><span class="n">num_img_ihts</span><span class="p">)]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pp_ihts</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">tiles</span><span class="o">.</span><span class="n">CollisionTable</span><span class="p">(</span><span class="n">StateConstants</span><span class="o">.</span><span class="n">PP_IHT_SIZE</span><span class="p">,</span> <span class="s">&quot;safe&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span>
+            <span class="nb">range</span><span class="p">(</span><span class="n">StateConstants</span><span class="o">.</span><span class="n">NUM_PP</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">imu_iht</span> <span class="o">=</span> <span class="n">tiles</span><span class="o">.</span><span class="n">CollisionTable</span><span class="p">(</span><span class="n">StateConstants</span><span class="o">.</span><span class="n">IMU_IHT_SIZE</span><span class="p">,</span>
+                                            <span class="s">&quot;safe&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">odom_iht</span> <span class="o">=</span> <span class="n">tiles</span><span class="o">.</span><span class="n">CollisionTable</span><span class="p">(</span><span class="n">StateConstants</span><span class="o">.</span><span class="n">ODOM_IHT_SIZE</span><span class="p">,</span>
+                                             <span class="s">&quot;safe&quot;</span><span class="p">)</span>
+
+        <span class="c"># set up mask to chose pixels</span>
+        <span class="n">num_pixels</span> <span class="o">=</span> <span class="n">StateConstants</span><span class="o">.</span><span class="n">IMAGE_LI</span> <span class="o">*</span> <span class="n">StateConstants</span><span class="o">.</span><span class="n">IMAGE_CO</span>
+        <span class="n">num_chosen</span> <span class="o">=</span> <span class="n">StateConstants</span><span class="o">.</span><span class="n">NUM_RANDOM_POINTS</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chosen_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">num_pixels</span><span class="p">,</span>
+                                               <span class="n">size</span><span class="o">=</span><span class="n">num_chosen</span><span class="p">,</span>
+                                               <span class="n">replace</span><span class="o">=</span><span class="k">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pixel_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_pixels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pixel_mask</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">chosen_indices</span><span class="p">]</span> <span class="o">=</span> <span class="k">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pixel_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_mask</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">StateConstants</span><span class="o">.</span><span class="n">IMAGE_LI</span><span class="p">,</span>
+                                                  <span class="n">StateConstants</span><span class="o">.</span><span class="n">IMAGE_CO</span><span class="p">)</span>
+
+        <span class="c"># most recent data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_image_raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">StateConstants</span><span class="o">.</span><span class="n">IMAGE_LI</span><span class="p">,</span>
+                                        <span class="n">StateConstants</span><span class="o">.</span><span class="n">IMAGE_CO</span><span class="p">,</span>
+                                        <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_imu_raw</span> <span class="o">=</span> <span class="nb">float</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_odom_raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_ir_raw</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_charging_raw</span> <span class="o">=</span> <span class="k">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_bump_raw</span> <span class="o">=</span> <span class="k">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">features_to_use</span> <span class="o">=</span> <span class="n">features_to_use</span>
+
+<div class="viewcode-block" id="StateManager.get_phi"><a class="viewcode-back" href="../pyrst/state_representation.html#state_representation.StateManager.get_phi">[docs]</a>    <span class="nd">@timing</span>
+    <span class="k">def</span> <span class="nf">get_phi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">bump</span><span class="p">,</span> <span class="n">ir</span><span class="p">,</span> <span class="n">imu</span><span class="p">,</span> <span class="n">odom</span><span class="p">,</span> <span class="n">bias</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the binary tile coding of all the pertinent fields.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">StateConstants</span><span class="o">.</span><span class="n">TOTAL_FEATURE_LENGTH</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+
+        <span class="c"># phi = np.zeros(2)</span>
+        <span class="c"># self.features_to_use = set()</span>
+        <span class="c"># phi[0] = imu if imu is not None else 0</span>
+        <span class="c"># phi[1] = 1</span>
+
+        <span class="k">def</span> <span class="nf">valid_image</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">img</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">img</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">img</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">valid_image</span><span class="p">(</span><span class="n">image</span><span class="p">):</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_image_raw</span>
+            <span class="k">if</span> <span class="s">&#39;image&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_to_use</span><span class="p">:</span>
+                <span class="n">rospy</span><span class="o">.</span><span class="n">logwarn</span><span class="p">(</span><span class="s">&quot;Image is empty.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_image_raw</span> <span class="o">=</span> <span class="n">image</span>
+
+        <span class="k">if</span> <span class="s">&#39;image&#39;</span> <span class="ow">or</span> <span class="s">&#39;cimage&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_to_use</span><span class="p">:</span>
+            <span class="n">rgb_points</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pixel_mask</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">rgb_points</span> <span class="o">*=</span> <span class="n">StateConstants</span><span class="o">.</span><span class="n">SCALE_RGB</span>
+            <span class="n">rgb_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">StateConstants</span><span class="o">.</span><span class="n">NUM_RANDOM_POINTS</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span>
+
+            <span class="n">tile_inds</span> <span class="o">=</span> <span class="p">[</span><span class="n">tiles</span><span class="o">.</span><span class="n">tiles</span><span class="p">(</span><span class="n">StateConstants</span><span class="o">.</span><span class="n">NUM_IMAGE_TILINGS</span><span class="p">,</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">img_ihts</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                     <span class="p">[</span><span class="n">rgb_points</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">rgb_inds</span><span class="p">]</span>
+
+            <span class="c"># tile_inds = np.ones((900,4), dtype=int)</span>
+
+            <span class="n">rgb_inds</span> <span class="o">*=</span> <span class="n">StateConstants</span><span class="o">.</span><span class="n">IMAGE_IHT_SIZE</span>
+
+            <span class="n">indices</span> <span class="o">=</span> <span class="p">(</span><span class="n">tile_inds</span> <span class="o">+</span> <span class="n">rgb_inds</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+            <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">StateConstants</span><span class="o">.</span><span class="n">IMAGE_START_INDEX</span>
+            <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="p">(</span>
+                                    <span class="n">StateConstants</span><span class="o">.</span><span class="n">IMAGE_START_INDEX</span> <span class="o">+</span>
+                                    <span class="n">StateConstants</span><span class="o">.</span><span class="n">TOTAL_IMAGE_FEATURE_LENGTH</span>
+                                    <span class="p">)</span>
+            <span class="n">phi</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="s">&#39;pixel_pairs&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_to_use</span><span class="p">:</span>
+            <span class="c"># get vector of pixels with each pixel=(Channel1,Channel2,...)</span>
+            <span class="n">num_channels</span> <span class="o">=</span> <span class="n">StateConstants</span><span class="o">.</span><span class="n">CHANNELS</span>
+            <span class="n">pixels</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pixel_mask</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+                                                    <span class="n">num_channels</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+
+            <span class="c"># get vector of L2 norms of above pixels</span>
+            <span class="n">norms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">pixels</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">norms</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">pixels</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="c"># find indices to multiply to get upper triangle</span>
+            <span class="c"># of the outer product of the arrays</span>
+            <span class="n">row</span><span class="p">,</span> <span class="n">col</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu_indices</span><span class="p">(</span><span class="n">norms</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="c"># calculate upper triangle of inner product: pixels, pixels</span>
+            <span class="n">dots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ij,ij-&gt;i&#39;</span><span class="p">,</span> <span class="n">pixels</span><span class="p">[</span><span class="n">row</span><span class="p">],</span> <span class="n">pixels</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
+
+            <span class="c"># calculate upper triangle of inner product: norms, norms</span>
+            <span class="n">norm_product</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;i,i-&gt;i&#39;</span><span class="p">,</span> <span class="n">norms</span><span class="p">[</span><span class="n">row</span><span class="p">],</span> <span class="n">norms</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
+
+            <span class="c"># find cosine similarity and avoid making nans</span>
+            <span class="n">div_by_zero</span> <span class="o">=</span> <span class="n">norm_product</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="n">cos_sim</span> <span class="o">=</span> <span class="n">dots</span>
+            <span class="n">cos_sim</span><span class="p">[</span><span class="n">div_by_zero</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">cos_sim</span><span class="p">[</span><span class="o">~</span><span class="n">div_by_zero</span><span class="p">]</span> <span class="o">/=</span> <span class="n">norm_product</span><span class="p">[</span><span class="o">~</span><span class="n">div_by_zero</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">cos_sim</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1.1</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+            <span class="c"># fix rounding errors</span>
+            <span class="n">cos_sim</span><span class="p">[</span><span class="n">cos_sim</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="n">cos_sim</span><span class="p">[</span><span class="n">cos_sim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">assert</span> <span class="n">cos_sim</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">StateConstants</span><span class="o">.</span><span class="n">NUM_PP</span>
+
+            <span class="n">cos_sim</span> <span class="o">*=</span> <span class="n">StateConstants</span><span class="o">.</span><span class="n">SCALE_PP</span>
+
+            <span class="c"># get indices form tile coding</span>
+            <span class="n">pp_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">StateConstants</span><span class="o">.</span><span class="n">NUM_PP</span><span class="p">)</span>
+            <span class="n">tile_inds</span> <span class="o">=</span> <span class="p">[</span><span class="n">tiles</span><span class="o">.</span><span class="n">tiles</span><span class="p">(</span><span class="n">StateConstants</span><span class="o">.</span><span class="n">NUM_PP_TILINGS</span><span class="p">,</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">pp_ihts</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                     <span class="p">[</span><span class="n">cos_sim</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">pp_inds</span><span class="p">]</span>
+
+            <span class="c"># offset tilecoding for each pixel by the IHT size to map</span>
+            <span class="c"># each pixel to a different set of PP_IHT_SIZE indices</span>
+            <span class="n">pp_inds</span> <span class="o">*=</span> <span class="n">StateConstants</span><span class="o">.</span><span class="n">PP_IHT_SIZE</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="p">(</span><span class="n">tile_inds</span> <span class="o">+</span> <span class="n">pp_inds</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+            <span class="c"># offset all indices to correspond to the Pixel pairs</span>
+            <span class="c"># section of the feature array</span>
+            <span class="n">indices</span> <span class="o">+=</span> <span class="n">StateConstants</span><span class="o">.</span><span class="n">PP_START_INDEX</span>
+
+            <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">StateConstants</span><span class="o">.</span><span class="n">PP_START_INDEX</span>
+            <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="p">(</span>
+                                    <span class="n">StateConstants</span><span class="o">.</span><span class="n">PP_START_INDEX</span> <span class="o">+</span>
+                                    <span class="n">StateConstants</span><span class="o">.</span><span class="n">PP_FEATURE_LENGTH</span>
+                                    <span class="p">)</span>
+            <span class="n">phi</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">imu</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+            <span class="n">imu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_imu_raw</span>
+            <span class="k">if</span> <span class="s">&#39;imu&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_to_use</span><span class="p">:</span>
+                <span class="n">rospy</span><span class="o">.</span><span class="n">logwarn</span><span class="p">(</span><span class="s">&quot;No imu value.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s">&#39;imu&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_to_use</span><span class="p">:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tiles</span><span class="o">.</span><span class="n">tiles</span><span class="p">(</span><span class="n">StateConstants</span><span class="o">.</span><span class="n">NUM_IMU_TILINGS</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">imu_iht</span><span class="p">,</span>
+                                           <span class="p">[</span><span class="n">imu</span> <span class="o">*</span> <span class="n">StateConstants</span><span class="o">.</span><span class="n">SCALE_IMU</span><span class="p">]))</span>
+
+            <span class="n">phi</span><span class="p">[</span><span class="n">indices</span> <span class="o">+</span> <span class="n">StateConstants</span><span class="o">.</span><span class="n">IMU_START_INDEX</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">odom</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+            <span class="n">odom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_odom_raw</span>
+            <span class="k">if</span> <span class="s">&#39;odom&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_to_use</span><span class="p">:</span>
+                <span class="n">rospy</span><span class="o">.</span><span class="n">logwarn</span><span class="p">(</span><span class="s">&quot;No odom value.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s">&#39;odom&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_to_use</span><span class="p">:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tiles</span><span class="o">.</span><span class="n">tiles</span><span class="p">(</span><span class="n">StateConstants</span><span class="o">.</span><span class="n">NUM_ODOM_TILINGS</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">odom_iht</span><span class="p">,</span>
+                                           <span class="p">(</span>
+                                               <span class="n">odom</span> <span class="o">*</span>
+                                               <span class="n">StateConstants</span><span class="o">.</span><span class="n">SCALE_ODOM</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+                                           <span class="p">[]))</span>
+
+            <span class="n">phi</span><span class="p">[</span><span class="n">indices</span> <span class="o">+</span> <span class="n">StateConstants</span><span class="o">.</span><span class="n">ODOM_START_INDEX</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">ir</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+            <span class="n">ir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_ir_raw</span>
+            <span class="k">if</span> <span class="s">&#39;ir&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_to_use</span><span class="p">:</span>
+                <span class="n">rospy</span><span class="o">.</span><span class="n">logwarn</span><span class="p">(</span><span class="s">&quot;No ir value.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s">&#39;ir&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_to_use</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">ir</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="c"># indices = np.asarray(ir)</span>
+            <span class="c"># indices += np.array([0,64,128])</span>
+
+            <span class="n">ir_1</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">format</span><span class="p">(</span><span class="n">ir</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s">&#39;#08b&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">:]]</span>
+            <span class="n">ir_2</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">format</span><span class="p">(</span><span class="n">ir</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s">&#39;#08b&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">:]]</span>
+            <span class="n">ir_3</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">format</span><span class="p">(</span><span class="n">ir</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="s">&#39;#08b&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">:]]</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">ir_1</span> <span class="o">+</span> <span class="n">ir_2</span> <span class="o">+</span> <span class="n">ir_3</span>
+
+            <span class="c"># # if only need the information about the region the robot is (</span>
+            <span class="c"># left,center,right)</span>
+            <span class="c"># in_right = ir_1[3] | ir_1[0] | ir_2[3] | ir_2[0] | ir_3[3] |</span>
+            <span class="c"># ir_3[0]</span>
+            <span class="c"># in_left = ir_1[5] | ir_1[1] | ir_2[5] | ir_2[1] | ir_3[5] |</span>
+            <span class="c"># ir_3[1]</span>
+            <span class="c"># in_center = ir_1[4] | ir_1[2] | ir_2[4] | ir_2[2] | ir_3[4] |</span>
+            <span class="c"># ir_3[2]</span>
+            <span class="c"># if in_center:</span>
+            <span class="c">#     in_left = 0</span>
+            <span class="c">#     in_right = 0</span>
+            <span class="c"># value = [in_left, in_center, in_right]</span>
+
+            <span class="c"># if only want to use the data from the center IR of the robot</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">ir_2</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">value</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">phi</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">+</span> <span class="n">StateConstants</span><span class="o">.</span><span class="n">IR_START_INDEX</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="c"># bump</span>
+        <span class="k">if</span> <span class="n">bump</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+            <span class="n">bump</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_bump_raw</span>
+            <span class="k">if</span> <span class="s">&#39;bump&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_to_use</span><span class="p">:</span>
+                <span class="n">rospy</span><span class="o">.</span><span class="n">logwarn</span><span class="p">(</span><span class="s">&quot;No bump value&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s">&#39;bump&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_to_use</span><span class="p">:</span>
+            <span class="n">phi</span><span class="p">[</span><span class="n">StateConstants</span><span class="o">.</span><span class="n">indices_in_phi</span><span class="p">[</span><span class="s">&#39;bump&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">bump</span>
+
+        <span class="c"># bias unit</span>
+        <span class="k">if</span> <span class="s">&#39;bias&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_to_use</span><span class="p">:</span>
+            <span class="n">phi</span><span class="p">[</span><span class="n">StateConstants</span><span class="o">.</span><span class="n">indices_in_phi</span><span class="p">[</span><span class="s">&#39;bias&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">phi</span></div>
+
+<div class="viewcode-block" id="StateManager.get_observations"><a class="viewcode-back" href="../pyrst/state_representation.html#state_representation.StateManager.get_observations">[docs]</a>    <span class="k">def</span> <span class="nf">get_observations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bump</span><span class="p">,</span> <span class="n">ir</span><span class="p">,</span> <span class="n">charging</span><span class="p">,</span> <span class="n">odom</span><span class="p">,</span> <span class="n">imu</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A way to access auxiliary state information.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">observations</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;bump&#39;</span><span class="p">:</span> <span class="nb">any</span><span class="p">(</span><span class="n">bump</span><span class="p">)</span> <span class="k">if</span> <span class="n">bump</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_bump_raw</span><span class="p">,</span>
+        <span class="s">&#39;ir&#39;</span><span class="p">:</span> <span class="n">ir</span> <span class="k">if</span> <span class="n">ir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_ir_raw</span><span class="p">,</span>
+        <span class="s">&#39;charging&#39;</span><span class="p">:</span> <span class="n">charging</span> <span class="k">if</span> <span class="n">charging</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_charging_raw</span><span class="p">,</span>
+        <span class="s">&#39;speed&#39;</span><span class="p">:</span> <span class="n">odom</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="k">if</span> <span class="n">odom</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_odom_raw</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+        <span class="s">&#39;imu&#39;</span><span class="p">:</span> <span class="n">imu</span> <span class="k">if</span> <span class="n">imu</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_imu_raw</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">observations</span></div></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

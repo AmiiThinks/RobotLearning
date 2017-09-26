@@ -1,0 +1,7 @@
+visualize\_pixels module
+========================
+
+.. automodule:: visualize_pixels
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -1,0 +1,324 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>evaluator &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../Overview.html">Code Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pyrst/modules.html">File Index</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>evaluator</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for evaluator</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Collects measurements of an agent&#39;s performance.</span>
+
+<span class="sd">Authors:</span>
+<span class="sd">    Banafsheh Rafiee, Niko Yasui</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="Evaluator"><a class="viewcode-back" href="../pyrst/evaluator.html#evaluator.Evaluator">[docs]</a><span class="k">class</span> <span class="nc">Evaluator</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Collects measurements of an agent&#39;s performance</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        gvf_name (str): Name of the GVF used for plotting.</span>
+<span class="sd">        num_features (int): Total number of features in the representation.</span>
+<span class="sd">        alpha_rupee (float): Primary learning rate for RUPEE.</span>
+<span class="sd">        beta0_rupee (float): Initial averaging weight for RUPEE.</span>
+<span class="sd">        use_MSRE (bool): Calculate Mean Squared Return Error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">gvf_name</span><span class="p">,</span>
+                 <span class="n">num_features</span><span class="p">,</span>
+                 <span class="n">alpha_rupee</span><span class="p">,</span>
+                 <span class="n">beta0_rupee</span><span class="p">,</span>
+                 <span class="n">use_MSRE</span><span class="p">):</span>
+
+        <span class="n">MAX_TIME_STEPS</span> <span class="o">=</span> <span class="mi">1000000</span>
+
+        <span class="c"># load the state representation and actual return for sample states</span>
+        <span class="k">if</span> <span class="n">use_MSRE</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;actual_return_&quot;</span> <span class="o">+</span> <span class="n">gvf_name</span> <span class="o">+</span> <span class="s">&quot;.npz&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">samples_phi</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">&quot;samples&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">samples_G</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">&quot;_return&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sample_size</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">&quot;sample_size&quot;</span><span class="p">]</span>
+
+        <span class="c"># # initialize the preformance measures</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">MSRE</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">MSRE_over_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">MAX_TIME_STEPS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">td_error</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">avg_td_error</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean_rho</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean_squared_rho</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ESS</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_MSRE</span> <span class="o">=</span> <span class="n">use_MSRE</span>
+
+        <span class="c"># See Adam White&#39;s PhD Thesis, section 8.4.2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha_rupee</span> <span class="o">=</span> <span class="n">alpha_rupee</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta0_rupee</span> <span class="o">=</span> <span class="n">beta0_rupee</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau_rupee</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hhat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_features</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">td_elig_avg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_features</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rupee</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+<div class="viewcode-block" id="Evaluator.update"><a class="viewcode-back" href="../pyrst/evaluator.html#evaluator.Evaluator.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_MSRE</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compute_MSRE</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute_avg_td_error</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute_rupee</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute_IS_ess</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Evaluator.compute_MSRE"><a class="viewcode-back" href="../pyrst/evaluator.html#evaluator.Evaluator.compute_MSRE">[docs]</a>    <span class="k">def</span> <span class="nf">compute_MSRE</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">return_error</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">phi</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples_phi</span><span class="p">):</span>
+            <span class="n">estimated_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">phi</span><span class="p">)</span>
+            <span class="n">return_error</span> <span class="o">=</span> <span class="n">return_error</span> <span class="o">+</span> <span class="p">(</span><span class="n">estimated_value</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples_G</span><span class="p">[</span>
+                <span class="n">i</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">estimated_value</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples_G</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">MSRE</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">return_error</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">MSRE</span> <span class="o">=</span> <span class="n">MSRE</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">MSRE_over_time</span><span class="p">[</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="n">MSRE</span>
+        <span class="k">if</span> <span class="n">time_step</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">savez</span><span class="p">(</span><span class="s">&quot;MSRE_over_time.npz&quot;</span><span class="p">,</span>
+                     <span class="n">MSRE</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">MSRE_over_time</span><span class="p">,</span>
+                     <span class="n">time_step</span><span class="o">=</span><span class="n">time_step</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Evaluator.compute_rupee"><a class="viewcode-back" href="../pyrst/evaluator.html#evaluator.Evaluator.compute_rupee">[docs]</a>    <span class="k">def</span> <span class="nf">compute_rupee</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tderr_elig</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="c"># update RUPEE</span>
+        <span class="c"># add condition to change for control gvf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hhat</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha_rupee</span> <span class="o">*</span> <span class="p">(</span><span class="n">tderr_elig</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hhat</span><span class="p">,</span> <span class="n">phi</span><span class="p">)</span>
+                                         <span class="o">*</span> <span class="n">phi</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau_rupee</span> <span class="o">*=</span> <span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta0_rupee</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau_rupee</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta0_rupee</span>
+        <span class="n">beta_rupee</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta0_rupee</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau_rupee</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">td_elig_avg</span> <span class="o">*=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">beta_rupee</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">td_elig_avg</span> <span class="o">+=</span> <span class="n">beta_rupee</span> <span class="o">*</span> <span class="n">tderr_elig</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">rupee</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hhat</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">td_elig_avg</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="Evaluator.compute_avg_td_error"><a class="viewcode-back" href="../pyrst/evaluator.html#evaluator.Evaluator.compute_avg_td_error">[docs]</a>    <span class="k">def</span> <span class="nf">compute_avg_td_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delta</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">avg_td_error</span> <span class="o">+=</span> <span class="p">(</span><span class="n">delta</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">avg_td_error</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">time_step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">td_error</span> <span class="o">=</span> <span class="n">delta</span></div>
+
+<div class="viewcode-block" id="Evaluator.compute_IS_ess"><a class="viewcode-back" href="../pyrst/evaluator.html#evaluator.Evaluator.compute_IS_ess">[docs]</a>    <span class="k">def</span> <span class="nf">compute_IS_ess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">time_step</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mean_rho</span> <span class="o">+=</span> <span class="p">(</span><span class="n">rho</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_rho</span><span class="p">)</span> <span class="o">/</span> <span class="n">time_step</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mean_squared_rho</span> <span class="o">+=</span> <span class="p">((</span><span class="n">rho</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_squared_rho</span><span class="p">)</span> <span class="o">/</span>
+                                      <span class="n">time_step</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ESS</span> <span class="o">=</span> <span class="n">time_step</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_rho</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_squared_rho</span></div></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

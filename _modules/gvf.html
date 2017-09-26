@@ -1,0 +1,346 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gvf &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../Overview.html">Code Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pyrst/modules.html">File Index</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>gvf</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gvf</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Authors:</span>
+<span class="sd">    Banafsheh Rafiee, Niko Yasui</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">evaluator</span> <span class="k">import</span> <span class="n">Evaluator</span>
+
+
+<div class="viewcode-block" id="GVF"><a class="viewcode-back" href="../pyrst/gvf.html#gvf.GVF">[docs]</a><span class="k">class</span> <span class="nc">GVF</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Implements General Value Functions.</span>
+
+<span class="sd">    General Value Functions pose a question defined by the cumulant, gamma,</span>
+<span class="sd">    and the target policy, that is learned by a learning algorithm, here called</span>
+<span class="sd">    the ``learner``.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        cumulant (fun): Function of observation that gives a float value.</span>
+<span class="sd">        gamma (fun): Function of observation that gives a float value. Together</span>
+<span class="sd">            with cumulant, makes the return that the agent tries to predict.</span>
+<span class="sd">        target_policy (Policy): Policy under which the agent makes its</span>
+<span class="sd">            predictions. Can be the same as the behavior policy.</span>
+<span class="sd">        num_features (int): Number of features that are used.</span>
+<span class="sd">        alpha0 (float): Value to calculate beta0 for RUPEE.</span>
+<span class="sd">        alpha (float): Value to calculate alpha for RUPEE.</span>
+<span class="sd">        name (str): Name of the GVF for recording data.</span>
+<span class="sd">        learner: Class instance with a ``predict`` and ``update`` function,</span>
+<span class="sd">            and ``theta``, ``tderr_elig``, and ``delta`` attributes. For</span>
+<span class="sd">            example, GTD.</span>
+<span class="sd">        feature_indices (numpy array of bool): Indices of the features to use.</span>
+<span class="sd">        use_MSRE (bool): Whether or not to calculate MSRE.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">cumulant</span><span class="p">,</span>
+                 <span class="n">gamma</span><span class="p">,</span>
+                 <span class="n">target_policy</span><span class="p">,</span>
+                 <span class="n">num_features</span><span class="p">,</span>
+                 <span class="n">alpha0</span><span class="p">,</span>
+                 <span class="n">alpha</span><span class="p">,</span>
+                 <span class="n">name</span><span class="p">,</span>
+                 <span class="n">learner</span><span class="p">,</span>
+                 <span class="n">feature_indices</span><span class="p">,</span>
+                 <span class="n">use_MSRE</span><span class="o">=</span><span class="k">False</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cumulant</span> <span class="o">=</span> <span class="n">cumulant</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">gamma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_policy</span> <span class="o">=</span> <span class="n">target_policy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_cumulant</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_features</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rho</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_prediction</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_indices</span> <span class="o">=</span> <span class="n">feature_indices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">learner</span> <span class="o">=</span> <span class="n">learner</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uses_action_state</span> <span class="o">=</span> <span class="n">feature_indices</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="n">num_features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_MSRE</span> <span class="o">=</span> <span class="n">use_MSRE</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c"># See Adam White&#39;s PhD Thesis, section 8.4.2</span>
+        <span class="n">alpha_rupee</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">alpha</span>
+        <span class="n">beta0_rupee</span> <span class="o">=</span> <span class="n">alpha0</span> <span class="o">/</span> <span class="mi">30</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span> <span class="o">=</span> <span class="n">Evaluator</span><span class="p">(</span><span class="n">gvf_name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                                   <span class="n">num_features</span><span class="o">=</span><span class="n">num_features</span><span class="p">,</span>
+                                   <span class="n">alpha_rupee</span><span class="o">=</span><span class="n">alpha_rupee</span><span class="p">,</span>
+                                   <span class="n">beta0_rupee</span><span class="o">=</span><span class="n">beta0_rupee</span><span class="p">,</span>
+                                   <span class="n">use_MSRE</span><span class="o">=</span><span class="n">use_MSRE</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GVF.predict"><a class="viewcode-back" href="../pyrst/gvf.html#gvf.GVF.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">uses_action_state</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">learner</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">phi</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_indices</span><span class="p">],</span> <span class="n">action</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">learner</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">phi</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_indices</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="GVF.update"><a class="viewcode-back" href="../pyrst/gvf.html#gvf.GVF.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+               <span class="n">last_observation</span><span class="p">,</span>
+               <span class="n">phi</span><span class="p">,</span>
+               <span class="n">last_action</span><span class="p">,</span>
+               <span class="n">observation</span><span class="p">,</span>
+               <span class="n">phi_prime</span><span class="p">,</span>
+               <span class="n">mu</span><span class="p">,</span>
+               <span class="n">action</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_prediction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">phi_prime</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
+
+        <span class="c"># update action probabilities and get probability of last action</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_policy</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">last_observation</span><span class="p">)</span>
+        <span class="n">pi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_policy</span><span class="o">.</span><span class="n">get_probability</span><span class="p">(</span><span class="n">last_action</span><span class="p">)</span>
+
+        <span class="n">cumulant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cumulant</span><span class="p">(</span><span class="n">observation</span><span class="p">)</span>
+
+        <span class="c"># get relevant indices in phi</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">phi</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_indices</span><span class="p">]</span>
+        <span class="n">phi_prime</span> <span class="o">=</span> <span class="n">phi_prime</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_indices</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">rho</span> <span class="o">=</span> <span class="n">pi</span> <span class="o">/</span> <span class="n">mu</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;phi&quot;</span><span class="p">:</span> <span class="n">phi</span><span class="p">,</span>
+                  <span class="s">&quot;last_action&quot;</span><span class="p">:</span> <span class="n">last_action</span><span class="p">,</span>
+                  <span class="s">&quot;phi_prime&quot;</span><span class="p">:</span> <span class="n">phi_prime</span><span class="p">,</span>
+                  <span class="s">&quot;rho&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rho</span><span class="p">,</span>
+                  <span class="s">&quot;gamma&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">observation</span><span class="p">),</span>
+                  <span class="s">&quot;cumulant&quot;</span><span class="p">:</span> <span class="n">cumulant</span><span class="p">,</span>
+                  <span class="p">}</span>
+
+        <span class="n">phi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">learner</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">theta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">learner</span><span class="o">.</span><span class="n">theta</span><span class="p">,</span>
+                              <span class="n">time_step</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span>
+                              <span class="n">tderr_elig</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">learner</span><span class="o">.</span><span class="n">tderr_elig</span><span class="p">,</span>
+                              <span class="n">delta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">learner</span><span class="o">.</span><span class="n">delta</span><span class="p">,</span>
+                              <span class="n">phi</span><span class="o">=</span><span class="n">phi</span><span class="p">,</span>
+                              <span class="n">rho</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rho</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">phi</span> <span class="o">=</span> <span class="n">phi_prime</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_cumulant</span> <span class="o">=</span> <span class="n">cumulant</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span> <span class="o">+=</span> <span class="mi">1</span></div></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

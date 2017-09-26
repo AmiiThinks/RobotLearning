@@ -1,0 +1,298 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Welcome &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="#"/>
+        <link rel="next" title="Code Overview" href="Overview.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="#" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="Overview.html">Code Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyrst/modules.html">File Index</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#">Docs</a> &raquo;</li>
+        
+      <li>Welcome</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="toctree-wrapper compound">
+</div>
+<div class="section" id="welcome">
+<h1>Welcome<a class="headerlink" href="#welcome" title="Permalink to this headline">¶</a></h1>
+<p>The Robot Learning Project is an initiative from the University of Alberta with the goal of creating agents to learn arbitrary information about the environment using low-level sensorimotor data. Learning directly from sensorimotor data is fundamental to the creation of robots that can perform complex tasks without human intervention. By using robotic platforms, researchers can address many obstacles that may be difficult to replicate in a simulation, such as the randomness in delays between sensing stimuli and the environment changing because of the robotic agent’s actions.</p>
+<p>Unfortunately, robotic learning platforms are often difficult to set up because of the hardware challenges that reinforcement learning researchers may not be used to facing. The Robot Learning Project aims to provide a launchpad for researchers to set up their own robotic learning platform, quickly set up experiments, and focus on reinforcement learning research rather than technical difficulties.</p>
+<div class="section" id="getting-started">
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
+<p>To get started, first follow the <a class="reference internal" href="TurtlebotSetup.html"><span class="doc">Robot Computer Setup</span></a> instructions.</p>
+<p>You also need to decide if the computer that will run the learning code should be physically attached to the robot. If not, the learning computer will have to communicate with the robot computer over a wireless network. See <a class="reference internal" href="RunningCode.html"><span class="doc">Running the code</span></a> for pros and cons to each setup.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p><strong>Wirelessly connected learning computer setup:</strong></p>
+<p>Dependencies:</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">ros</span><span class="o">-</span><span class="n">indigo</span><span class="o">-</span><span class="n">desktop</span><span class="o">-</span><span class="n">full</span> <span class="n">ros</span><span class="o">-</span><span class="n">indigo</span><span class="o">-</span><span class="n">kobuki</span> <span class="n">libblas</span><span class="o">-</span><span class="n">dev</span> <span class="n">liblapack</span><span class="o">-</span><span class="n">dev</span> <span class="n">libatlas</span><span class="o">-</span><span class="n">base</span><span class="o">-</span><span class="n">dev</span> <span class="n">gfortran</span>
+<span class="n">sudo</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">future</span> <span class="n">scipy</span>
+</pre></div>
+</div>
+<p>You will also have to set some environment variables on the wirelessly connected computer. Add the following to your <code class="docutils literal"><span class="pre">~/.bashrc</span></code>, while making sure to change any paths to match your installation.:</p>
+<div class="highlight-default"><div class="highlight"><pre># ROS setup.bash
+source /opt/ros/indigo/setup.bash
+# Catkin setup.bash
+source ~/catkin_ws/devel/setup.bash
+# Find your IP address
+export ROS_IP=$(hostname -I | awk &#39;{print $1;}&#39;)
+# Replace 10.0.1.20 with your turtlebot netbook&#39;s IP address
+export ROS_MASTER_URI=http://10.0.1.20:11311
+# ROS needs this sometimes; just in case
+export ROS_HOSTNAME=$ROS_IP
+</pre></div>
+</div>
+<p>and start ROS:</p>
+<div class="last highlight-default"><div class="highlight"><pre># as per your install
+source /opt/ros/indigo/setup.bash
+
+# set up networking
+export ROS_IP=$(hostname -I | awk &#39;{print $1;}&#39;)
+export ROS_HOSTNAME=$ROS_IP
+export ROS_MASTER_URI=http://$ROS_HOSTNAME:11311
+
+# as per your install
+source $HOME/catkin_ws/devel/setup.bash
+
+# start the ROS master node
+roscore &amp;
+
+# start the turtlebot
+roslaunch turtlebot_bringup minimal.launch &amp;
+
+# start the camera
+roslaunch astra_launch astra.launch &amp;
+</pre></div>
+</div>
+</div>
+<p>On the learning computer – whether directly or wirelessly connected to the robot – clone the repo:</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">AmiiThinks</span><span class="o">/</span><span class="n">RobotLearning</span><span class="o">.</span><span class="n">git</span>
+<span class="n">cd</span> <span class="n">RobotLearning</span>
+</pre></div>
+</div>
+<p>Finally, call the <a class="reference internal" href="pyrst/wall_demo_example.html#module-wall_demo_example" title="wall_demo_example"><code class="xref py py-mod docutils literal"><span class="pre">wall_demo_example</span></code></a> file:</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">python</span> <span class="n">src</span><span class="o">/</span><span class="n">wall_demo_example</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>Easy data plotting can be done using ROS’s <a class="reference external" href="http://wiki.ros.org/rqt_plot">rqt_plot</a>.</p>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Overview.html" class="btn btn-neutral float-right" title="Code Overview" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

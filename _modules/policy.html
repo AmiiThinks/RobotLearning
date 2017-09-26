@@ -1,0 +1,355 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>policy &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../Overview.html">Code Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pyrst/modules.html">File Index</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>policy</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for policy</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Module containing parent class for policies.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">tools</span>
+
+
+<div class="viewcode-block" id="Policy"><a class="viewcode-back" href="../pyrst/policy.html#policy.Policy">[docs]</a><span class="k">class</span> <span class="nc">Policy</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Parent class for policies.</span>
+
+<span class="sd">    Inherit this class to make a policy. Action selection is based on</span>
+<span class="sd">    maintaining a ``pi`` array which holds action selection</span>
+<span class="sd">    probabilities.</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        action_space (numpy array of action): Numpy array containing</span>
+<span class="sd">            all actions available to any agent.</span>
+<span class="sd">        value_function (fun, optional): A function used by the Policy to </span>
+<span class="sd">            update values of pi. This is usually a value function </span>
+<span class="sd">            learned by a GVF.</span>
+<span class="sd">        action_equality (fun, optional): The function used to compare</span>
+<span class="sd">            two action objects to determine whether they are equivalent. </span>
+<span class="sd">            Returns True if the actions are equivalent and False </span>
+<span class="sd">            otherwise.</span>
+<span class="sd">        feature_indices (numpy array of bool, optional): Indices of the</span>
+<span class="sd">            feature vector corresponding to indices used by the</span>
+<span class="sd">            :py:obj:`value_function`.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        action_space (numpy array of action): Numpy array containing</span>
+<span class="sd">            all actions available to any agent.</span>
+<span class="sd">        value_function (fun): A function used by the Policy to </span>
+<span class="sd">            update values of pi. This is usually a value function </span>
+<span class="sd">            learned by a GVF.</span>
+<span class="sd">        action_equality (fun): The function used to compare two </span>
+<span class="sd">            action objects to determine whether they are equivalent. </span>
+<span class="sd">            Returns True if the actions are equivalent and False </span>
+<span class="sd">            otherwise.</span>
+<span class="sd">        feature_indices (numpy array of bool): The indices of the</span>
+<span class="sd">            feature vector corresponding to the indices used by the</span>
+<span class="sd">            :py:obj:`value_function`.</span>
+<span class="sd">        pi (numpy array of float): Numpy array containing probabilities</span>
+<span class="sd">            corresponding to the actions at the corresponding index in</span>
+<span class="sd">            ``action_space``.</span>
+<span class="sd">        last_index (int): The index of the last action chosen by the</span>
+<span class="sd">            policy.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">action_space</span><span class="p">,</span>
+                 <span class="n">feature_indices</span><span class="o">=</span><span class="k">None</span><span class="p">,</span>
+                 <span class="n">value_function</span><span class="o">=</span><span class="k">None</span><span class="p">,</span>
+                 <span class="n">action_equality</span><span class="o">=</span><span class="n">tools</span><span class="o">.</span><span class="n">equal_twists</span><span class="p">,</span>
+                 <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">action_space</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">action_space</span><span class="o">.</span><span class="n">size</span><span class="p">)</span> <span class="o">/</span> <span class="n">action_space</span><span class="o">.</span><span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value_function</span> <span class="o">=</span> <span class="n">value_function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_equality</span> <span class="o">=</span> <span class="n">action_equality</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_indices</span> <span class="o">=</span> <span class="n">feature_indices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_index</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="Policy.update"><a class="viewcode-back" href="../pyrst/policy.html#policy.Policy.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">observation</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Updates the probilities of taking each action</span>
+
+<span class="sd">        This function should be replaced when creating a new policy. It</span>
+<span class="sd">        takes a state ``(phi, observation)`` and modifies the ``pi``</span>
+<span class="sd">        array accordingly. </span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            phi (numpy array of bool): Binary feature vector.</span>
+<span class="sd">            observation (dictionary): User-defined dictionary containing</span>
+<span class="sd">                miscellaneous information about the state that should</span>
+<span class="sd">                not be included in the feature vector ``phi``.</span>
+<span class="sd">            *args: Ignored.</span>
+<span class="sd">            **kwargs: Ignored. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span><span class="p">:</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">phi</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_indices</span><span class="p">]</span>
+
+            <span class="n">q_fun</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_function</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">a</span><span class="p">))</span>
+            <span class="n">q_values</span> <span class="o">=</span> <span class="n">q_fun</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">pi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">q_values</span><span class="p">)</span> <span class="o">/</span> <span class="n">q_values</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Policy.get_probability"><a class="viewcode-back" href="../pyrst/policy.html#policy.Policy.get_probability">[docs]</a>    <span class="k">def</span> <span class="nf">get_probability</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">choice</span><span class="o">=</span><span class="k">True</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the probability of taking the provided action.</span>
+
+<span class="sd">        This function can usually be used without being overwritten.</span>
+<span class="sd">        Throws an error if the provided action is not equal to an action</span>
+<span class="sd">        in ``action_space`` according to ``action_equality``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            action (action): Find the probability of this action.</span>
+<span class="sd">            choice (bool): If set to true, updates ``last_index``.</span>
+<span class="sd">            *args: Ignored.</span>
+<span class="sd">            **kwargs: Ignored. </span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Float from ``pi`` corresponding to ``action``. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">equal_action</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_equality</span><span class="p">(</span><span class="n">action</span><span class="p">,</span>
+                                                      <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="n">equal_action</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">size</span><span class="p">)))</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+        <span class="n">index</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">choice</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_index</span> <span class="o">=</span> <span class="n">index</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pi</span><span class="p">[</span><span class="n">index</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Policy.choose_action"><a class="viewcode-back" href="../pyrst/policy.html#policy.Policy.choose_action">[docs]</a>    <span class="k">def</span> <span class="nf">choose_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Updates ``last_index`` and chooses an action according to ``pi``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *args: Ignored.</span>
+<span class="sd">            **kwargs: Ignored.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Action at the sampled index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">last_index</span><span class="p">]</span></div></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

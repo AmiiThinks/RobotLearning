@@ -1,0 +1,24 @@
+src
+===
+
+.. toctree::
+   :maxdepth: 4
+
+   action_manager
+   align_ir_example
+   auto_docking_policies
+   calculate_return_example
+   evaluator
+   greedy_gq
+   gtd
+   gvf
+   learning_foreground
+   policy
+   return_calculator
+   state_representation
+   to_gtd
+   tools
+   visualize_pixels
+   wall_demo_example
+   wis_gtd
+   wis_to_gtd

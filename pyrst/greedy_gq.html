@@ -1,0 +1,399 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>greedy_gq module &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="../index.html"/>
+        <link rel="up" title="src" href="modules.html"/>
+        <link rel="next" title="gtd module" href="gtd.html"/>
+        <link rel="prev" title="evaluator module" href="evaluator.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../Overview.html">Code Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">File Index</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="action_manager.html">action_manager module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="align_ir_example.html">align_ir_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_docking_policies.html">auto_docking_policies module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_return_example.html">calculate_return_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluator.html">evaluator module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">greedy_gq module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtd.html">gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gvf.html">gvf module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning_foreground.html">learning_foreground module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="policy.html">policy module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="return_calculator.html">return_calculator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="state_representation.html">state_representation module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="to_gtd.html">to_gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">tools module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize_pixels.html">visualize_pixels module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wall_demo_example.html">wall_demo_example module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wis_gtd.html">wis_gtd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wis_to_gtd.html">wis_to_gtd module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">src</a> &raquo;</li>
+        
+      <li>greedy_gq module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/pyrst/greedy_gq.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-greedy_gq">
+<span id="greedy-gq-module"></span><h1>greedy_gq module<a class="headerlink" href="#module-greedy_gq" title="Permalink to this headline">¶</a></h1>
+<p>Module containing the GreedyGQ algorithm.</p>
+<p>Also supports prioritized and uniform experience replay</p>
+<dl class="docutils">
+<dt>Authors:</dt>
+<dd>Shibhansh Dohare, Niko Yasui.</dd>
+</dl>
+<dl class="class">
+<dt id="greedy_gq.GreedyGQ">
+<em class="property">class </em><code class="descclassname">greedy_gq.</code><code class="descname">GreedyGQ</code><span class="sig-paren">(</span><em>action_space</em>, <em>finished_episode</em>, <em>num_features</em>, <em>alpha</em>, <em>beta</em>, <em>lmbda</em>, <em>decay=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/greedy_gq.html#GreedyGQ"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#greedy_gq.GreedyGQ" title="Permalink to this definition">¶</a></dt>
+<dd><p>An implementation of GreedyGQ learning algoritm.</p>
+<p>Implementation on greedy_gq based on
+<a class="reference external" href="https://era.library.ualberta.ca/files/8s45q967t/Hamid_Maei_PhDThesis.pdf">https://era.library.ualberta.ca/files/8s45q967t/Hamid_Maei_PhDThesis.pdf</a>
+and prioritized experience replay based on
+<a class="reference external" href="https://arxiv.org/pdf/1511.05952.pdf">https://arxiv.org/pdf/1511.05952.pdf</a>
+Doesn’t update some paramenters when we are replaying experience
+(either uniform or prioritized).</p>
+<dl class="attribute">
+<dt id="greedy_gq.GreedyGQ.action_space">
+<code class="descname">action_space</code><a class="headerlink" href="#greedy_gq.GreedyGQ.action_space" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>numpy array of action</em> – Numpy array containing
+all actions available to any agent.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="greedy_gq.GreedyGQ.finished_episode">
+<code class="descname">finished_episode</code><a class="headerlink" href="#greedy_gq.GreedyGQ.finished_episode" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>fun</em> – Function that evaluates if an episode
+has been finished or not.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="greedy_gq.GreedyGQ.num_features">
+<code class="descname">num_features</code><a class="headerlink" href="#greedy_gq.GreedyGQ.num_features" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – The number of features in the state-action
+representation.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="greedy_gq.GreedyGQ.alpha">
+<code class="descname">alpha</code><a class="headerlink" href="#greedy_gq.GreedyGQ.alpha" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – Primary learning rate.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="greedy_gq.GreedyGQ.beta">
+<code class="descname">beta</code><a class="headerlink" href="#greedy_gq.GreedyGQ.beta" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – Secondary learning rate</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="greedy_gq.GreedyGQ.lmbda">
+<code class="descname">lmbda</code><a class="headerlink" href="#greedy_gq.GreedyGQ.lmbda" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – Trace decay rate.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="greedy_gq.GreedyGQ.Note">
+<code class="descname">Note</code><a class="headerlink" href="#greedy_gq.GreedyGQ.Note" title="Permalink to this definition">¶</a></dt>
+<dd><p>A copy of phi is created during the construction process.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="greedy_gq.GreedyGQ.predict">
+<code class="descname">predict</code><span class="sig-paren">(</span><em>phi</em>, <em>action</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/greedy_gq.html#GreedyGQ.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#greedy_gq.GreedyGQ.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds the action state reperesentaiton and multiplies by theta.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>phi</strong> (<em>numpy array of bool</em>) – Boolean feature vector.</li>
+<li><strong>action</strong> (<a class="reference internal" href="action_manager.html#action_manager.ActionManager.action" title="action_manager.ActionManager.action"><em>action</em></a>) – Action that was taken.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="greedy_gq.GreedyGQ.td_error_prioritized_experience_replay">
+<code class="descname">td_error_prioritized_experience_replay</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/greedy_gq.html#GreedyGQ.td_error_prioritized_experience_replay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#greedy_gq.GreedyGQ.td_error_prioritized_experience_replay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replays worst experiences from memory.</p>
+<p><code class="docutils literal"><span class="pre">self.worst_experiences</span></code> stores the last 100 experiences.
+The <code class="docutils literal"><span class="pre">num_updates_to_make</span></code> experiences with the highest TD
+error are chosen for replay.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="greedy_gq.GreedyGQ.uniform_experience_replay">
+<code class="descname">uniform_experience_replay</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/greedy_gq.html#GreedyGQ.uniform_experience_replay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#greedy_gq.GreedyGQ.uniform_experience_replay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replays experiences from saved memory.</p>
+<p>Replays <code class="docutils literal"><span class="pre">num_updates_to_make</span></code> experiences.
+<code class="docutils literal"><span class="pre">self.worst_experiences</span></code> stores the most recent 100
+experiences.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="greedy_gq.GreedyGQ.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>phi</em>, <em>last_action</em>, <em>phi_prime</em>, <em>cumulant</em>, <em>gamma</em>, <em>rho</em>, <em>replaying_experience=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/greedy_gq.html#GreedyGQ.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#greedy_gq.GreedyGQ.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the parameters (weights) of the greedy_gq learner.</p>
+<p>Doesn’t update some paramenters when we are replaying experience
+(either uniform or prioritized).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>phi</strong> (<em>numpy array of bool</em>) – State at time t.</li>
+<li><strong>last_action</strong> (<a class="reference internal" href="action_manager.html#action_manager.ActionManager.action" title="action_manager.ActionManager.action"><em>action</em></a>) – Action at time t.</li>
+<li><strong>phi_prime</strong> (<em>numpy array of bool</em>) – State at time t+1.</li>
+<li><strong>cumulant</strong> (<em>float</em>) – Cumulant at time t.</li>
+<li><strong>gamma</strong> (<em>float</em>) – Discounting factor at time t+1.</li>
+<li><strong>rho</strong> (<em>float</em>) – Off policy importance sampling ratio at time t.</li>
+<li><strong>replaying_experience</strong> (<em>bool</em>) – True if replaying an
+experience, false if gathering a new experience from the
+environment.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>Representation for the</dt>
+<dd><p class="first last">state-action pair at time t. Only used to calculate
+RUPEE.</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">self.action_phi (numpy array of bool)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="gtd.html" class="btn btn-neutral float-right" title="gtd module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="evaluator.html" class="btn btn-neutral" title="evaluator module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

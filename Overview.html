@@ -1,0 +1,360 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Code Overview &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="index.html"/>
+        <link rel="next" title="Robot Computer Setup" href="TurtlebotSetup.html"/>
+        <link rel="prev" title="Welcome" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Code Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#wall-demo-example"><code class="docutils literal"><span class="pre">Wall</span> <span class="pre">Demo</span> <span class="pre">Example</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#action-manager"><code class="docutils literal"><span class="pre">Action</span> <span class="pre">Manager</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#learning-foreground"><code class="docutils literal"><span class="pre">Learning</span> <span class="pre">Foreground</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#learningforeground"><code class="docutils literal"><span class="pre">LearningForeground</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#init"><code class="docutils literal"><span class="pre">init()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#run"><code class="docutils literal"><span class="pre">run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#create-state"><code class="docutils literal"><span class="pre">create_state()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#update-gvfs"><code class="docutils literal"><span class="pre">update_gvfs()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#state-representation"><code class="docutils literal"><span class="pre">State</span> <span class="pre">Representation</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#stateconstants"><code class="docutils literal"><span class="pre">StateConstants</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#statemanager"><code class="docutils literal"><span class="pre">StateManager</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id1"><code class="docutils literal"><span class="pre">init()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#get-phi"><code class="docutils literal"><span class="pre">get_phi()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#get-observations"><code class="docutils literal"><span class="pre">get_observations()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="TurtlebotSetup.html">Robot Computer Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyrst/modules.html">File Index</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Code Overview</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/Overview.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="code-overview">
+<h1>Code Overview<a class="headerlink" href="#code-overview" title="Permalink to this headline">¶</a></h1>
+<p>The general structure of the code is shown in the figure below.</p>
+<img alt="_images/data_flow.png" src="_images/data_flow.png" />
+<p>The <a class="reference internal" href="pyrst/wall_demo_example.html#module-wall_demo_example" title="wall_demo_example"><code class="xref py py-mod docutils literal"><span class="pre">wall_demo_example</span></code></a> file creates two ROS nodes as subprocesses which are found in <a class="reference internal" href="pyrst/learning_foreground.html#module-learning_foreground" title="learning_foreground"><code class="xref py py-mod docutils literal"><span class="pre">learning_foreground</span></code></a> and <a class="reference internal" href="pyrst/action_manager.html#module-action_manager" title="action_manager"><code class="xref py py-mod docutils literal"><span class="pre">action_manager</span></code></a>. The <code class="xref py py-class docutils literal"><span class="pre">learning</span> <span class="pre">foreground</span></code> gathers data from sensors and chooses actions, which it publishes to the <code class="docutils literal"><span class="pre">action_cmd</span></code> ROS topic. It can also publish auxiliary information to the <code class="docutils literal"><span class="pre">pause</span></code> or <code class="docutils literal"><span class="pre">termination</span></code> topics. The <code class="xref py py-class docutils literal"><span class="pre">action</span> <span class="pre">manager</span></code> subscribes to these topics and publishes the action to the <code class="docutils literal"><span class="pre">cmd_vel_mux/input/teleop</span></code> topic, which the <code class="docutils literal"><span class="pre">Turtlebot</span></code> uses to determine its actions.</p>
+<p>Below are general descriptions of the major modules. More technical documentation can be found by clicking their names.</p>
+<div class="section" id="wall-demo-example">
+<h2><a class="reference internal" href="pyrst/wall_demo_example.html#module-wall_demo_example" title="wall_demo_example"><code class="xref py py-mod docutils literal"><span class="pre">Wall</span> <span class="pre">Demo</span> <span class="pre">Example</span></code></a><a class="headerlink" href="#wall-demo-example" title="Permalink to this headline">¶</a></h2>
+<p>This is the primary python file that one will run in order to start the wall demo.  The main method starts a separate process to create the <a class="reference internal" href="pyrst/action_manager.html#action_manager.ActionManager" title="action_manager.ActionManager"><code class="xref py py-class docutils literal"><span class="pre">action</span> <span class="pre">manager</span></code></a>, defines the action space of the robot and initializes the hyper parameters for learning (alpha, lambda, beta, etc).  Within this main method the GVF(s) and the policy used for the GVF(s) are initialized.  The behavior policy is defined and another process for the <a class="reference internal" href="pyrst/learning_foreground.html#learning_foreground.LearningForeground" title="learning_foreground.LearningForeground"><code class="xref py py-class docutils literal"><span class="pre">learning</span> <span class="pre">foreground</span></code></a> is created.  The subprocesses are joined within wall demo so when <code class="docutils literal"><span class="pre">ctrl+c</span></code> is pressed in the terminal the subprocesses terminate as expected.</p>
+<p>The important stages of the main method for the wall demo are listed in order of appearance below:</p>
+<ol class="arabic simple">
+<li>Create and start a process for the action_manager.</li>
+<li>Define the action space of the robot.</li>
+<li>Selects which sensors will be used and calculates the number of total and active features.</li>
+<li>Define hyperparameters for learning during the wall demo (<code class="docutils literal"><span class="pre">lmbda</span></code>, <code class="docutils literal"><span class="pre">alpha</span></code>, <code class="docutils literal"><span class="pre">beta</span></code>, etc).</li>
+<li>Selects the target policy for the prediction (<code class="docutils literal"><span class="pre">dtb_policy</span></code>).</li>
+<li>Selects the learning algorithm (dtb_learner) used for GVF predictions (found in python files named for their containing algorithm. e.g. :py:module`gtd.py &lt;gtd&gt;`).</li>
+<li>Initializes the behavior policy for the learning foreground (<code class="docutils literal"><span class="pre">behavior_policy</span></code>); in this case it is <a class="reference internal" href="pyrst/wall_demo_example.html#wall_demo_example.PavlovSoftmax" title="wall_demo_example.PavlovSoftmax"><code class="xref py py-class docutils literal"><span class="pre">PavlovSoftmax</span></code></a>.</li>
+<li>Initializes the GVF (<code class="docutils literal"><span class="pre">distance_to_bump</span></code>) with the target policy <code class="docutils literal"><span class="pre">dtb_policy</span></code>, hyperparameters (<code class="docutils literal"><span class="pre">lmbda</span></code>, <code class="docutils literal"><span class="pre">alpha</span></code>, <code class="docutils literal"><span class="pre">beta</span></code>, etc), and learner (<code class="docutils literal"><span class="pre">dtb_learner</span></code>) from prior steps.</li>
+<li>Creates another process for the learning foreground and initializes it using the policy selected above.</li>
+</ol>
+</div>
+<div class="section" id="action-manager">
+<h2><a class="reference internal" href="pyrst/action_manager.html#module-action_manager" title="action_manager"><code class="xref py py-mod docutils literal"><span class="pre">Action</span> <span class="pre">Manager</span></code></a><a class="headerlink" href="#action-manager" title="Permalink to this headline">¶</a></h2>
+<p>The main purpose of this class is to simply relay commands from the <a class="reference internal" href="pyrst/learning_foreground.html#learning_foreground.LearningForeground" title="learning_foreground.LearningForeground"><code class="xref py py-class docutils literal"><span class="pre">learning</span> <span class="pre">foreground</span></code></a> to the Turtlebot. The action manager subscribes to the <code class="docutils literal"><span class="pre">action_cmd</span></code>, <code class="docutils literal"><span class="pre">termination</span></code> and <code class="docutils literal"><span class="pre">pause</span></code> ROS topics.  When data is received through one of the subscribed topics, the data is passed to the appropriate callback method. Actions are published on the <code class="docutils literal"><span class="pre">cmd_vel_mux/input/teleop</span></code> topic, which the TurtleBot uses to move at a rate of 40 Hz (every 1/40 seconds). The action to be published is stored in <a class="reference internal" href="pyrst/action_manager.html#action_manager.ActionManager.action" title="action_manager.ActionManager.action"><code class="xref py py-attr docutils literal"><span class="pre">self.action</span></code></a>, which is modified by the aforementioned callback methods.</p>
+<p>Further details:</p>
+<ul class="simple">
+<li>When a movement command is received on the <code class="docutils literal"><span class="pre">action_cmd</span></code> topic, the <a class="reference internal" href="pyrst/action_manager.html#action_manager.ActionManager.update_action" title="action_manager.ActionManager.update_action"><code class="xref py py-meth docutils literal"><span class="pre">update_action</span></code></a> method is called.</li>
+<li>When a command is received on the <code class="docutils literal"><span class="pre">termination</span></code> topic, the <a class="reference internal" href="pyrst/action_manager.html#action_manager.ActionManager.set_termination_flag" title="action_manager.ActionManager.set_termination_flag"><code class="xref py py-meth docutils literal"><span class="pre">set_termination_flag</span></code></a> method is called.</li>
+<li>When a command is received on the <code class="docutils literal"><span class="pre">pause</span></code> topic, the <a class="reference internal" href="pyrst/action_manager.html#action_manager.ActionManager.set_pause_flag" title="action_manager.ActionManager.set_pause_flag"><code class="xref py py-meth docutils literal"><span class="pre">set_pause_flag</span></code></a> method is called.</li>
+</ul>
+</div>
+<div class="section" id="learning-foreground">
+<h2><a class="reference internal" href="pyrst/learning_foreground.html#module-learning_foreground" title="learning_foreground"><code class="xref py py-mod docutils literal"><span class="pre">Learning</span> <span class="pre">Foreground</span></code></a><a class="headerlink" href="#learning-foreground" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="learningforeground">
+<h3><a class="reference internal" href="pyrst/learning_foreground.html#learning_foreground.LearningForeground" title="learning_foreground.LearningForeground"><code class="xref py py-class docutils literal"><span class="pre">LearningForeground</span></code></a><a class="headerlink" href="#learningforeground" title="Permalink to this headline">¶</a></h3>
+<p>The purpose of the learning foreground is to receive all data from the sensory stream of the robot and centrally organize the GVF(s). It maintains a record of recent sensory data and uses it to generate a state representation. It also publishes useful diagnostic information to topics (such as the cumulant or the prediction values), and can bag sensory data for offline use.</p>
+<p>Further details can be found below for each of the important methods used in the learning foreground:</p>
+<div class="section" id="init">
+<h4><code class="xref py py-meth docutils literal"><span class="pre">init()</span></code><a class="headerlink" href="#init" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li>The time scale for the robot is passed to the init method</li>
+<li>A StateManager class is initialized with a list of features to be used (StateManager is found in state_representation.py)</li>
+<li>Creates a visualization object in order to see the camera data if desired</li>
+<li>Publishers are defined that correspond to ‘action_cmd’, ‘pause’ and ‘termination’ topics used in the action manager</li>
+<li>Publishers are also generated for each GVF’s data and parameters such as the cumulant, td_error, rupee, MSRE, rho, etc.</li>
+</ul>
+</div>
+<div class="section" id="run">
+<h4><a class="reference internal" href="pyrst/learning_foreground.html#learning_foreground.LearningForeground.run" title="learning_foreground.LearningForeground.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a><a class="headerlink" href="#run" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li>This method is where main learning steps occur that one might be familiar with in reinforcement learning.  It is here that we generate the state (phi) using current observations, select actions, observe the new state and perform the actual learning steps by updating the GVF.</li>
+</ul>
+</div>
+<div class="section" id="create-state">
+<h4><a class="reference internal" href="pyrst/learning_foreground.html#learning_foreground.LearningForeground.create_state" title="learning_foreground.LearningForeground.create_state"><code class="xref py py-meth docutils literal"><span class="pre">create_state()</span></code></a><a class="headerlink" href="#create-state" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li>The purpose of this method is to generate the state in the format used for learning (phi).  This is accomplished by looking in a dictionary that contains all of the sensory data received via ROS topics.  The read_source method is used here to return the most recent value from the topics (set ‘history’ to True to retrieve all the recent values since the last time step as is done with ‘ir’ and ‘core’ sensors).</li>
+<li>There are dictionary entries for each possible form of sensor data (examples include bump data, infrared sensor data and image data). Each entry stores a <code class="docutils literal"><span class="pre">Queue</span></code> of sensory data since the last time step.</li>
+</ul>
+</div>
+<div class="section" id="update-gvfs">
+<h4><a class="reference internal" href="pyrst/learning_foreground.html#learning_foreground.LearningForeground.update_gvfs" title="learning_foreground.LearningForeground.update_gvfs"><code class="xref py py-meth docutils literal"><span class="pre">update_gvfs()</span></code></a><a class="headerlink" href="#update-gvfs" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li>This method passes all of the relevant data to each GVF via a call to their update method.  It then publishes each GVF’s data to the corresponding topic.</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="state-representation">
+<h2><a class="reference internal" href="pyrst/state_representation.html#module-state_representation" title="state_representation"><code class="xref py py-mod docutils literal"><span class="pre">State</span> <span class="pre">Representation</span></code></a><a class="headerlink" href="#state-representation" title="Permalink to this headline">¶</a></h2>
+<p>This state_representation.py file contains two classes: <a class="reference internal" href="pyrst/state_representation.html#state_representation.StateConstants" title="state_representation.StateConstants"><code class="xref py py-class docutils literal"><span class="pre">StateConstants</span></code></a> and <a class="reference internal" href="pyrst/state_representation.html#state_representation.StateManager" title="state_representation.StateManager"><code class="xref py py-class docutils literal"><span class="pre">StateManager</span></code></a>. Both of these classes are used in conjunction with the <code class="docutils literal"><span class="pre">CTiles</span></code> library to generate the feature representation (phi) that is used for learning within the learning foreground.</p>
+<div class="section" id="stateconstants">
+<h3><a class="reference internal" href="pyrst/state_representation.html#state_representation.StateConstants" title="state_representation.StateConstants"><code class="xref py py-class docutils literal"><span class="pre">StateConstants</span></code></a><a class="headerlink" href="#stateconstants" title="Permalink to this headline">¶</a></h3>
+<p>This class is used to establish all of the parameters and settings for the creation of the vector phi.  This is also where the tile coding parameters are set, such as the number of tiles and tilings for each sensor.</p>
+</div>
+<div class="section" id="statemanager">
+<h3><a class="reference internal" href="pyrst/state_representation.html#state_representation.StateManager" title="state_representation.StateManager"><code class="xref py py-class docutils literal"><span class="pre">StateManager</span></code></a><a class="headerlink" href="#statemanager" title="Permalink to this headline">¶</a></h3>
+<p>This class manages the objects used to tile code and creates the feature representation <code class="docutils literal"><span class="pre">phi</span></code> and auxiliary state information <code class="docutils literal"><span class="pre">observation</span></code>. Data from the last valid sensor readings are stored to use in case no valid data was read since the last timestep.</p>
+<div class="section" id="id1">
+<h4><code class="xref py py-meth docutils literal"><span class="pre">init()</span></code><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li>Initializes hash tables used for tile coding each sensor. Also creates the random pixel mask used to select pixels from the camera image.</li>
+</ul>
+</div>
+<div class="section" id="get-phi">
+<h4><a class="reference internal" href="pyrst/state_representation.html#state_representation.StateManager.get_phi" title="state_representation.StateManager.get_phi"><code class="xref py py-meth docutils literal"><span class="pre">get_phi()</span></code></a><a class="headerlink" href="#get-phi" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li>Initializes an empty array <code class="docutils literal"><span class="pre">phi</span></code> of size <a class="reference internal" href="pyrst/state_representation.html#state_representation.StateConstants.TOTAL_FEATURE_LENGTH" title="state_representation.StateConstants.TOTAL_FEATURE_LENGTH"><code class="xref py py-attr docutils literal"><span class="pre">TOTAL_FEATURE_LENGTH</span></code></a>.</li>
+<li>If a sensor is in <cite>features_to_use</cite>, tile codes the sensor data and sets the corresponding indices in <code class="docutils literal"><span class="pre">phi</span></code> to 1.</li>
+</ul>
+</div>
+<div class="section" id="get-observations">
+<h4><a class="reference internal" href="pyrst/state_representation.html#state_representation.StateManager.get_observations" title="state_representation.StateManager.get_observations"><code class="xref py py-meth docutils literal"><span class="pre">get_observations()</span></code></a><a class="headerlink" href="#get-observations" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li>Creates an <code class="docutils literal"><span class="pre">observation</span></code> that is passed to the <code class="xref py py-meth docutils literal"><span class="pre">cumulant</span></code>, <code class="xref py py-meth docutils literal"><span class="pre">gamma</span></code>, <code class="xref py py-meth docutils literal"><span class="pre">target_policy.update</span></code>, and <code class="xref py py-meth docutils literal"><span class="pre">behavior_policy.update</span></code> methods. It creates a dictionary with auxiliary state information, which may or may not overlap with information used to create <code class="docutils literal"><span class="pre">phi</span></code>. Users may find it useful to pass the dictionary output by this function to other methods.</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="TurtlebotSetup.html" class="btn btn-neutral float-right" title="Robot Computer Setup" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Welcome" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,384 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Robot Computer Setup &mdash; Robot Learning Project 0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Robot Learning Project 0 documentation" href="index.html"/>
+        <link rel="next" title="Running the code" href="RunningCode.html"/>
+        <link rel="prev" title="Code Overview" href="Overview.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Robot Learning Project
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Overview.html">Code Overview</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Robot Computer Setup</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bash-environment-setup">Bash Environment Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#astra-camera">Astra Camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#start-ros">Start ROS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#optional-automatically-start-ros-on-netbook-boot">[Optional] Automatically start ROS on Netbook Boot</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#turn-on-automatic-login-in-the-system-settings">Turn on automatic login in the system settings:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edit-the-login-script">Edit the login script</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#optional-network-hotspot">[Optional] Network Hotspot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#optional-save-ssh-key-on-turtlebot-netbook">[Optional] Save SSH key on turtlebot netbook</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RunningCode.html">Running the Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyrst/modules.html">File Index</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Robot Learning Project</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Robot Computer Setup</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/TurtlebotSetup.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="robot-computer-setup">
+<span id="robot-computer-setup"></span><h1>Robot Computer Setup<a class="headerlink" href="#robot-computer-setup" title="Permalink to this headline">¶</a></h1>
+<p>This page details the steps needed to get the computer that is attached to your robot set up correctly.</p>
+<div class="section" id="dependencies">
+<span id="dependencies"></span><h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<p>We use <a class="reference external" href="http://wiki.ros.org/indigo">ROS Indigo Igloo</a>, but any version of ROS after Indigo should work.</p>
+<blockquote>
+<div><p>If your netbook did not come with ROS preinstalled, you will first have to run the following (use the appropriate ROS version for your TurtleBot's Ubuntu distribution):</p>
+<div class="highlight-bash"><div class="highlight"><pre>sudo apt-get install ros-indigo-desktop-full
+</pre></div>
+</div>
+</div></blockquote>
+<div class="highlight-bash"><div class="highlight"><pre>sudo apt-get install ros-indigo-kobuki libblas-dev liblapack-dev libatlas-base-dev gfortran
+sudo pip install future scipy
+</pre></div>
+</div>
+</div>
+<div class="section" id="bash-environment-setup">
+<span id="bash-environment-setup"></span><h2>Bash Environment Setup<a class="headerlink" href="#bash-environment-setup" title="Permalink to this headline">¶</a></h2>
+<p>Add the following to your <code class="docutils literal"><span class="pre">~/.bashrc</span></code> file, which will be run whenever you open a terminal. Make sure to change any paths to match your installation.</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="c"># ROS setup.bash</span>
+<span class="nb">source</span> /opt/ros/indigo/setup.bash
+<span class="c"># Catkin setup.bash</span>
+<span class="nb">source</span> ~/catkin_ws/devel/setup.bash
+<span class="c"># Find your IP address</span>
+<span class="nb">export </span><span class="nv">ROS_IP</span><span class="o">=</span><span class="k">$(</span>hostname -I | awk <span class="s1">&#39;{print $1;}&#39;</span><span class="k">)</span>
+<span class="c"># Replace 10.0.1.20 with your turtlebot netbook&#39;s IP address</span>
+<span class="nb">export </span><span class="nv">ROS_MASTER_URI</span><span class="o">=</span>http://10.0.1.20:11311
+<span class="c"># ROS needs this sometimes; just in case</span>
+<span class="nb">export </span><span class="nv">ROS_HOSTNAME</span><span class="o">=</span><span class="nv">$ROS_IP</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="astra-camera">
+<span id="astra-camera"></span><h2>Astra Camera<a class="headerlink" href="#astra-camera" title="Permalink to this headline">¶</a></h2>
+<p>We use an Astra brand camera. If your camera is different, you may skip this section.
+First, clone the <code class="docutils literal"><span class="pre">ros_astra_camera</span></code> and <code class="docutils literal"><span class="pre">ros_astra_launch</span></code> repos into <code class="docutils literal"><span class="pre">~/catkin_ws/src</span></code> as follows:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nb">cd</span> ~/catkin_ws/src
+git clone https://github.com/orbbec/ros_astra_camera
+git clone https://github.com/orbbec/ros_astra_launch
+</pre></div>
+</div>
+<p>Then make the astra_camera package and create the udev rules.</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nb">cd</span> ~/catkin_ws
+catkin_make --pkg astra_camera -DFILTER<span class="o">=</span>OFF
+<span class="nb">source </span>devel/setup.bash
+roscd astra_camera <span class="o">&amp;&amp;</span> ./scripts/create_udev_rules
+</pre></div>
+</div>
+<p>Finally, to use the camera call:</p>
+<div class="highlight-bash"><div class="highlight"><pre>roslaunch astra_launch astra.launch
+</pre></div>
+</div>
+</div>
+<div class="section" id="start-ros">
+<span id="start-ros"></span><h2>Start ROS<a class="headerlink" href="#start-ros" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-bash"><div class="highlight"><pre><span class="c"># as per your install</span>
+<span class="nb">source</span> /opt/ros/indigo/setup.bash
+
+<span class="c"># set up networking </span>
+<span class="nb">export </span><span class="nv">ROS_IP</span><span class="o">=</span><span class="k">$(</span>hostname -I | awk <span class="s1">&#39;{print $1;}&#39;</span><span class="k">)</span>
+<span class="nb">export </span><span class="nv">ROS_HOSTNAME</span><span class="o">=</span><span class="nv">$ROS_IP</span>
+<span class="nb">export </span><span class="nv">ROS_MASTER_URI</span><span class="o">=</span>http://<span class="nv">$ROS_HOSTNAME</span>:11311
+
+<span class="c"># as per your install</span>
+<span class="nb">source</span> <span class="nv">$HOME</span>/catkin_ws/devel/setup.bash
+
+<span class="c"># start the ROS master node</span>
+roscore &amp;
+
+<span class="c"># start the turtlebot</span>
+roslaunch turtlebot_bringup minimal.launch &amp;
+
+<span class="c"># start the camera</span>
+roslaunch astra_launch astra.launch &amp;
+</pre></div>
+</div>
+</div>
+<div class="section" id="optional-automatically-start-ros-on-netbook-boot">
+<span id="optional-automatically-start-ros-on-netbook-boot"></span><h2>[Optional] Automatically start ROS on Netbook Boot<a class="headerlink" href="#optional-automatically-start-ros-on-netbook-boot" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="turn-on-automatic-login-in-the-system-settings">
+<span id="turn-on-automatic-login-in-the-system-settings"></span><h3>Turn on automatic login in the system settings:<a class="headerlink" href="#turn-on-automatic-login-in-the-system-settings" title="Permalink to this headline">¶</a></h3>
+<p>In the top right, click the <code class="docutils literal"><span class="pre">power</span> <span class="pre">gear</span> <span class="pre">icon</span></code>. Then go to <code class="docutils literal"><span class="pre">System</span> <span class="pre">Settings</span></code> and click <code class="docutils literal"><span class="pre">User</span> <span class="pre">Accounts</span></code> in the bottom right. Click <code class="docutils literal"><span class="pre">unlock</span></code> in the top right of the window if the options are locked, then click <code class="docutils literal"><span class="pre">Automatic</span> <span class="pre">Login</span></code> so that the slider icon reads &quot;on&quot;.</p>
+</div>
+<div class="section" id="edit-the-login-script">
+<span id="edit-the-login-script"></span><h3>Edit the login script<a class="headerlink" href="#edit-the-login-script" title="Permalink to this headline">¶</a></h3>
+<p>In your favorite text editor, open <code class="docutils literal"><span class="pre">~/.profile</span></code> or your preferred boot script. At the end, add the following:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="k">if</span> ! <span class="o">([</span> -n <span class="s2">&quot;$SSH_CLIENT&quot;</span> <span class="o">]</span> <span class="o">||</span> <span class="o">[</span> -n <span class="s2">&quot;$SSH_TTY&quot;</span> <span class="o">])</span>; <span class="k">then</span>  
+
+  <span class="c"># as per your install</span>
+  <span class="nb">source</span> /opt/ros/indigo/setup.bash
+
+  <span class="c"># sleep to allow network manager to start up</span>
+  sleep 5
+
+  <span class="c"># get the IP of this machine</span>
+  <span class="nb">export </span><span class="nv">ROS_IP</span><span class="o">=</span><span class="k">$(</span>hostname -I | awk <span class="s1">&#39;{print $1;}&#39;</span><span class="k">)</span>
+  <span class="nb">export </span><span class="nv">ROS_HOSTNAME</span><span class="o">=</span><span class="nv">$ROS_IP</span>
+  <span class="nb">export </span><span class="nv">ROS_MASTER_URI</span><span class="o">=</span>http://<span class="nv">$ROS_HOSTNAME</span>:11311
+
+  <span class="c"># as per your install</span>
+  <span class="nb">source</span> <span class="nv">$HOME</span>/catkin_ws/devel/setup.bash
+
+  roscore &amp;
+  <span class="c"># wait for roscore to start so we can start</span>
+  <span class="c"># other ros packages</span>
+  sleep 10 
+  roslaunch turtlebot_bringup minimal.launch &amp;
+  roslaunch astra_launch astra.launch &amp;
+<span class="k">fi</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="optional-network-hotspot">
+<span id="optional-network-hotspot"></span><h2>[Optional] Network Hotspot<a class="headerlink" href="#optional-network-hotspot" title="Permalink to this headline">¶</a></h2>
+<p>If you don't have a wireless network set up, you can create a hotspot originating from the turtlebot netbook. Note: you will not be able to access the internet while connected to this network.</p>
+<p>We followed the instructions <a class="reference external" href="https://askubuntu.com/questions/318973/how-do-i-create-a-wifi-hotspot-sharing-wireless-internet-connection-single-adap/609199#609199">here</a> to create a hotspot. Note that you may get an ssh error, in which case <a class="reference external" href="https://askubuntu.com/questions/30080/how-to-solve-connection-refused-errors-in-ssh-connection">this answer</a> might help you.</p>
+<p>Sometimes ROS will not be able to connect your hostname with your IP address. You will need to set the <code class="docutils literal"><span class="pre">ROS_IP</span></code> variable to your IP address.</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">ROS_IP</span><span class="o">=</span><span class="k">$(</span>hostname -I | awk <span class="s1">&#39;{print $1;}&#39;</span><span class="k">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="optional-save-ssh-key-on-turtlebot-netbook">
+<span id="optional-save-ssh-key-on-turtlebot-netbook"></span><h2>[Optional] Save SSH key on turtlebot netbook<a class="headerlink" href="#optional-save-ssh-key-on-turtlebot-netbook" title="Permalink to this headline">¶</a></h2>
+<p>To avoid logging in every time you want to ssh or rsync the netbook, use the following commands:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="c"># follow prompts to generate your ssh key</span>
+ssh-keygen
+
+<span class="c"># might need to modify slightly to include your ssh file</span>
+<span class="c"># and the netbook&#39;s user/hostname combo</span>
+cat ~/.ssh/id_rsa.pub | ssh user@hostname <span class="s1">&#39;cat &gt;&gt; .ssh/authorized_keys&#39;</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="RunningCode.html" class="btn btn-neutral float-right" title="Running the code" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Overview.html" class="btn btn-neutral" title="Code Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Michele Albach, Michael Disyak, Shibhansh Dohare, David Quail, Banafsheh Rafiee, Parash Rahman, Niko Yasui.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
