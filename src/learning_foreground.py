@@ -40,6 +40,7 @@ class LearningForeground:
             times the cumulant is non-zero. Could be incorporated into the
             Evaluator.
         reset_episode (fun): Whether the episode should be reset.
+        custom_stats (dictionary[string:lambda]): The custom topics defined by the user.
 
     Attributes:
         COLLECT_DATA_FLAG (bool): Whether or not to save data in bags.
@@ -58,7 +59,8 @@ class LearningForeground:
                  stats,
                  control_gvf=None,
                  cumulant_counter=None,
-                 reset_episode=None):
+                 reset_episode=None,
+                 custom_stats=None):
 
         # function that generates a list of actions to perform to reset episode
         self.reset_episode = reset_episode 
@@ -156,6 +158,10 @@ class LearningForeground:
                           'rho': lambda g: g.rho,
                           'ESS': lambda g: g.evaluator.ESS}
         self.stats = filter(lambda s: s in valid_stats, stats)
+
+        if custom_stats != None:
+            self.stat_data.update(custom_stats)
+            self.stats += custom_stats.keys()
 
         def publisher_name(gvf, label):
             return '{}/{}'.format(gvf, label) if gvf else label
@@ -433,7 +439,8 @@ def start_learning_foreground(time_scale,
                               stats,
                               control_gvf=None,
                               cumulant_counter=None,
-                              reset_episode=None):
+                              reset_episode=None,
+                              custom_stats=None):
     """Function to call with multiprocessing or multithreading.
     """
     try:
